@@ -241,7 +241,13 @@
    "width": null
   }
  ],
+<<<<<<< HEAD
  "custom_perms": [],
+=======
+ "custom_perms": [
+  
+ ],
+>>>>>>> eaa607b (Update)
  "doctype": "Stock Entry",
  "property_setters": [
   

@@ -131,11 +131,15 @@
   "variable_deduction_section",
   "variable_deduction_debit_account",
   "column_break_mdeo2",
+<<<<<<< HEAD
+  "variable_deduction_credit_account"
+=======
   "variable_deduction_credit_account",
   "section_break_0cpzy",
   "loan_deduction_debit_account",
   "column_break_kai1g",
   "loan_deduction_credit_account"
+>>>>>>> eaa607b (Update)
  ],
  "fields": [
   {
@@ -773,7 +777,11 @@
   {
    "fieldname": "variable_deduction_debit_account",
    "fieldtype": "Link",
+<<<<<<< HEAD
+   "label": "Variable Deduction Dedit Account",
+=======
    "label": "Variable Deduction Debit Account",
+>>>>>>> eaa607b (Update)
    "options": "Account"
   },
   {
@@ -785,10 +793,13 @@
    "fieldtype": "Link",
    "label": "Variable Deduction Credit Account",
    "options": "Account"
+<<<<<<< HEAD
+=======
   },
   {
    "fieldname": "section_break_0cpzy",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Loan Deduction"
   },
   {
@@ -806,12 +817,17 @@
    "fieldtype": "Link",
    "label": "Loan Deduction Credit Account",
    "options": "Account"
+>>>>>>> eaa607b (Update)
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-12-19 07:21:59.608339",
+<<<<<<< HEAD
+ "modified": "2024-09-11 13:31:48.180322",
+=======
+ "modified": "2024-10-30 13:53:02.611784",
+>>>>>>> eaa607b (Update)
  "modified_by": "Administrator",
  "module": "Milk Entry",
  "name": "Dairy Settings",

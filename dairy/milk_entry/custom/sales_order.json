@@ -1081,10 +1081,20 @@
    "width": null
   }
  ],
+<<<<<<< HEAD
  "custom_perms": [],
  "doctype": "Sales Order",
  "links": [],
  "property_setters": [
+=======
+ "custom_perms": [
+  
+ ],
+ "doctype": "Sales Order",
+ "links": [],
+ "property_setters": [
+ 
+>>>>>>> eaa607b (Update)
  ],
  "sync_on_migrate": 1
 }
