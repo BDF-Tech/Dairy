@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "creation": "2020-08-21 14:41:40.352322",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "crate_type",
+  "incoming_count",
+  "outgoing_count",
+  "damaged_count"
+ ],
+ "fields": [
+  {
+   "fieldname": "crate_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Crate Type",
+   "options": "Crate Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "incoming_count",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Incoming Count"
+  },
+  {
+   "fieldname": "outgoing_count",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Outgoing Count"
+  },
+  {
+   "fieldname": "damaged_count",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Damaged Count"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2020-08-21 14:41:40.352322",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Gate Pass Crate Count",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

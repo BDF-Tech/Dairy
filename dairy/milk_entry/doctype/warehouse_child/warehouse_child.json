@@ -1,0 +1,30 @@
+{
+ "creation": "2019-12-04 12:00:54.080845",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "warehouse_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "warehouse_id",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  }
+ ],
+ "istable": 1,
+ "modified": "2019-12-04 12:00:54.080845",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Warehouse Child",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

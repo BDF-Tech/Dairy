@@ -1,0 +1,492 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2019-10-21 11:30:37.621544",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "dcs_id",
+  "column_break_cytfx",
+  "station",
+  "shift",
+  "sb1",
+  "date",
+  "time",
+  "column_break_n1z3g",
+  "sb2",
+  "member",
+  "milk_type",
+  "sb3",
+  "sample",
+  "volume",
+  "stock_uom",
+  "get_quality",
+  "get_weight",
+  "section_break_7",
+  "fat",
+  "fat_kg",
+  "column_break_9",
+  "snf",
+  "snf_kg",
+  "column_break_eacwp",
+  "clr",
+  "clr_kg",
+  "section_break_2naub",
+  "fat_deduction",
+  "fat_deduction_per",
+  "incentive",
+  "column_break_ei8hi",
+  "snf_deduction",
+  "snf_deduction_per",
+  "incentive_per",
+  "sb4",
+  "milk_rate",
+  "litre",
+  "extra_rate",
+  "extra_rate_amount",
+  "cb5",
+  "unit_price",
+  "unit_price_with_incentive",
+  "rate_chart_amount",
+  "total",
+  "lft",
+  "rgt",
+  "is_group",
+  "old_parent",
+  "parent_milk_entry",
+  "section_break_25",
+  "status",
+  "van_collection_completed",
+  "amended_from",
+  "column_break_28",
+  "company",
+  "sample_created",
+  "print_format_section",
+  "letter_head"
+ ],
+ "fields": [
+  {
+   "fieldname": "milk_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Milk Type",
+   "options": "Cow\nBuffalo\nMix"
+  },
+  {
+   "fieldname": "fat",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "FAT%"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "total",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "time",
+   "fieldtype": "Time",
+   "label": "Time",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "volume",
+   "fieldtype": "Float",
+   "label": "Volume"
+  },
+  {
+   "fieldname": "lft",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Left",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "rgt",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Right",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_group",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Is Group"
+  },
+  {
+   "fieldname": "old_parent",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Old Parent",
+   "options": "Milk Entry"
+  },
+  {
+   "fieldname": "parent_milk_entry",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Parent Milk Entry",
+   "options": "Milk Entry"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Name",
+   "options": "E"
+  },
+  {
+   "fieldname": "dcs_id",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "DCS",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Shift",
+   "options": "Morning\nEvening"
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break",
+   "label": "Milk Information"
+  },
+  {
+   "fieldname": "sample",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sample",
+   "options": "Raw Milk Sample",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "clr",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "CLR%"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sb4",
+   "fieldtype": "Section Break",
+   "label": "Rate Information"
+  },
+  {
+   "fieldname": "cb5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "unit_price",
+   "fieldtype": "Currency",
+   "label": "Unit Price",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Milk Entry",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "member",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Member",
+   "options": "Supplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "milk_rate",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Milk Rate",
+   "options": "Milk Rate",
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fetch_if_empty": 1,
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nSubmitted\nTo Bill\nCompleted\nCancelled\nClosed\nTo Post and Sample\nTo Sample\nTo Post\nPosted\nBilled",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "sample_created",
+   "fieldtype": "Check",
+   "label": "Sample Created",
+   "read_only": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_25",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_28",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "fat_kg",
+   "fieldtype": "Float",
+   "label": "Fat In Kg",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_7",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "snf_kg",
+   "fieldtype": "Float",
+   "label": "SNF In kg",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "print_format_section",
+   "fieldtype": "Section Break",
+   "label": "Print Format"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "letter_head",
+   "fieldtype": "Link",
+   "label": "Letter Head",
+   "options": "Letter Head"
+  },
+  {
+   "fieldname": "snf",
+   "fieldtype": "Percent",
+   "label": "SNF%"
+  },
+  {
+   "fieldname": "stock_uom",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Stock UOM",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "fieldname": "clr_kg",
+   "fieldtype": "Float",
+   "label": "CLR in kg",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "van_collection_completed",
+   "fieldtype": "Check",
+   "label": "Van Collection Completed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "litre",
+   "fieldtype": "Float",
+   "label": "Weight",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fat_deduction",
+   "fieldtype": "Currency",
+   "label": "FAT Deduction",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snf_deduction",
+   "fieldtype": "Currency",
+   "label": "SNF Deduction",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_eacwp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_2naub",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_ei8hi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "incentive",
+   "fieldtype": "Currency",
+   "label": "Incentive",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fat_deduction_per",
+   "fieldtype": "Currency",
+   "label": "Fat Deduction Per Liter",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snf_deduction_per",
+   "fieldtype": "Currency",
+   "label": "SNF Deduction Per Liter",
+   "read_only": 1
+  },
+  {
+   "fieldname": "incentive_per",
+   "fieldtype": "Currency",
+   "label": "Incentive Per Volume",
+   "read_only": 1
+  },
+  {
+   "fieldname": "unit_price_with_incentive",
+   "fieldtype": "Currency",
+   "label": "Rate",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "extra_rate",
+   "fieldtype": "Currency",
+   "label": "Extra Rate",
+   "precision": "2"
+  },
+  {
+   "fieldname": "extra_rate_amount",
+   "fieldtype": "Currency",
+   "label": "Extra Rate Amount",
+   "precision": "2"
+  },
+  {
+   "fieldname": "rate_chart_amount",
+   "fieldtype": "Currency",
+   "label": "Rate Chart Amount",
+   "precision": "2"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "get_quality",
+   "fieldtype": "Button",
+   "label": "Get Quality"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "get_weight",
+   "fieldtype": "Button",
+   "label": "Get Weight"
+  },
+  {
+   "fieldname": "station",
+   "fieldtype": "Select",
+   "label": "Station",
+   "options": "Station1\nStation2\nStation3\nStation4\nStation5\nStation6\nStation7\nStation8\nStation9\nStation10\nStation11\nStation12\nStation13\nStation14\nStation15\nStation16\nStation17\nStation18\nStation19\nStation20"
+  },
+  {
+   "fieldname": "column_break_cytfx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_n1z3g",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "is_submittable": 1,
+ "is_tree": 1,
+ "links": [],
+ "modified": "2024-07-01 11:01:51.940597",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Milk Entry",
+ "name_case": "Title Case",
+ "naming_rule": "By \"Naming Series\" field",
+ "nsm_parent_field": "parent_milk_entry",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Dairy",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "member,milk_rate,milk_type",
+ "show_name_in_global_search": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "track_views": 1
+}

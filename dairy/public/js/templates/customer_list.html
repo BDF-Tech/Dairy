@@ -1,0 +1,16 @@
+<div class="clearfix"></div>
+{% for(var i=0, l=customer_list.length; i<l; i++) { %}
+<div class="address-box">
+	<p class="h6">
+		{%= i+1 %}. {%= customer_list[i].name %}
+		<a href="#Form/Customer/{%= encodeURIComponent(customer_list[i].name) %}" class="btn btn-default btn-xs pull-right"
+			style="margin-top:-3px; margin-right: -5px;">
+			{%= __("Edit") %}</a>
+	</p>
+	<p>{%= customer_list[i].display %}</p>
+</div>
+{% } %}
+{% if(!customer_list.length) { %}
+<p class="text-muted small">{%= __("No Customer added yet.") %}</p>
+{% } %}
+<p><button class="btn btn-xs btn-default btn-address">{{ __("New Customer") }}</button></p>

@@ -1,0 +1,612 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"ooRlmK6d6T\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Dairy</span>\",\"col\":12}},{\"id\":\"uOEy_M3rFi\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ddZ7aotson\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"Qul-wqvcx4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Milk Entry\",\"col\":3}},{\"id\":\"HfYw2S8_Mz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"RMRD\",\"col\":3}},{\"id\":\"-BECXnxwCC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Order\",\"col\":3}},{\"id\":\"BbRhnA3LqT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer Demand Order\",\"col\":3}},{\"id\":\"1avz4F_480\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Milk Rate\",\"col\":3}},{\"id\":\"JfCAH1_BTm\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Milk Ledger\",\"col\":3}},{\"id\":\"NCa3gn35BY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Milk Entry Vs van Collection\",\"col\":3}},{\"id\":\"LqCuzexFN6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Van Collection\",\"col\":3}},{\"id\":\"Ifd1aIu_BT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Receipts\",\"col\":3}},{\"id\":\"wPYuluFtJL\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payments\",\"col\":3}},{\"id\":\"Jv1xzfBCHg\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Analytics\",\"col\":3}},{\"id\":\"YQQ1G7It22\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"CUMukkTB1h\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Master, Transactions &amp; Reports</b></span>\",\"col\":12}},{\"id\":\"FwKlrd6UBG\",\"type\":\"card\",\"data\":{\"card_name\":\"Milk Marketing Master\",\"col\":4}},{\"id\":\"ktFM-XKkAP\",\"type\":\"card\",\"data\":{\"card_name\":\"Milk Procurement Master\",\"col\":4}},{\"id\":\"MvE738rfne\",\"type\":\"card\",\"data\":{\"card_name\":\"Marketing Transactions\",\"col\":4}},{\"id\":\"INP3szKK_6\",\"type\":\"card\",\"data\":{\"card_name\":\"Procurement Transaction\",\"col\":4}},{\"id\":\"NBMfxfFNw7\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}},{\"id\":\"IAtQ0IyCyC\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}},{\"id\":\"qCg45YD2vI\",\"type\":\"card\",\"data\":{\"card_name\":\"Deduction\",\"col\":4}},{\"id\":\"6ktyOefcLV\",\"type\":\"card\",\"data\":{\"card_name\":\"Apply Extra Rate\",\"col\":4}},{\"id\":\"n7fBUjxMac\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Dairy Dashboard\",\"col\":12}}]",
+ "creation": "2023-03-28 16:34:25.792077",
+ "custom_blocks": [
+  {
+   "custom_block_name": "Dairy Dashboard",
+   "label": "Dairy Dashboard"
+  }
+ ],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "quantity-1",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Dairy",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Milk Marketing Master",
+   "link_count": 7,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item",
+   "link_count": 0,
+   "link_to": "Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Route",
+   "link_count": 0,
+   "link_to": "Route Master",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Territory",
+   "link_count": 0,
+   "link_to": "Territory",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Price List",
+   "link_count": 0,
+   "link_to": "Price List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item price",
+   "link_count": 0,
+   "link_to": "Item Price",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer Group",
+   "link_count": 0,
+   "link_to": "Customer Group",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Milk Procurement Master",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Milk Rate",
+   "link_count": 0,
+   "link_to": "Milk Rate",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Vehicle",
+   "link_count": 0,
+   "link_to": "Vehicle",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Supplier",
+   "link_count": 0,
+   "link_to": "Supplier",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Warehouse",
+   "link_count": 0,
+   "link_to": "Warehouse",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Member Bank Account",
+   "link_count": 0,
+   "link_to": "Bank Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Marketing Transactions",
+   "link_count": 10,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Demand",
+   "link_count": 0,
+   "link_to": "Quotation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Order",
+   "link_count": 0,
+   "link_to": "Sales Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Pick List",
+   "link_count": 0,
+   "link_to": "Pick List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Note",
+   "link_count": 0,
+   "link_to": "Delivery Note",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Invoice",
+   "link_count": 0,
+   "link_to": "Sales Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Receipt",
+   "link_count": 0,
+   "link_to": "Payment Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Field Order",
+   "link_count": 0,
+   "link_to": "Field Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Gate Pass",
+   "link_count": 0,
+   "link_to": "Gate Pass",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Crate Reconciliation",
+   "link_count": 0,
+   "link_to": "Crate Reconciliation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Crate Opening Entry",
+   "link_count": 0,
+   "link_to": "Crate Opening Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Procurement Transaction",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Milk Entry",
+   "link_count": 0,
+   "link_to": "Milk Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Van Collection",
+   "link_count": 0,
+   "link_to": "Van Collection",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Raw Milk Reception Dock",
+   "link_count": 0,
+   "link_to": "RMRD",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Order",
+   "link_count": 0,
+   "link_to": "Purchase Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Invoice",
+   "link_count": 0,
+   "link_to": "Purchase Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Settings",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Dairy Settings",
+   "link_count": 0,
+   "link_to": "Dairy Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Selling Settings",
+   "link_count": 0,
+   "link_to": "Selling Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Buying Settings",
+   "link_count": 0,
+   "link_to": "Buying Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accounts Settings",
+   "link_count": 0,
+   "link_to": "Accounts Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 7,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Milk Balance",
+   "link_count": 0,
+   "link_to": "Milk Balance",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Milk Entry Trends",
+   "link_count": 0,
+   "link_to": "Milk Entry Trends",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Milk Ledger",
+   "link_count": 0,
+   "link_to": "Milk Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Milk Entry vs Van Collection",
+   "link_count": 0,
+   "link_to": "Milk Entry vs Van Collection",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Van Collection vs RMRD",
+   "link_count": 0,
+   "link_to": "Van Collection vs RMRD",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Member Milk Ledger",
+   "link_count": 0,
+   "link_to": "Member Milk Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Milk Entry Detail",
+   "link_count": 0,
+   "link_to": "Milk Entry Detail",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Deduction",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Standard Deduction",
+   "link_count": 0,
+   "link_to": "Standard Deduction",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Standard Deduction Type",
+   "link_count": 0,
+   "link_to": "Standard Deduction Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Variable Deduction",
+   "link_count": 0,
+   "link_to": "Variable Deduction",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Variable Deduction Type",
+   "link_count": 0,
+   "link_to": "Variable Deduction Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Apply Extra Rate",
+   "link_count": 1,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Add Extra Rate",
+   "link_count": 0,
+   "link_to": "Apply Extra Rate",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2024-01-23 10:06:22.561857",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Dairy",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Sales Order",
+   "link_to": "Sales Order",
+   "stats_filter": "{\"docstatus\":[\"!=\",\"2\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "RMRD",
+   "link_to": "RMRD",
+   "stats_filter": "{\"status\":[\"=\",\"In-Progress\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Payments",
+   "link_to": "Payment Entry",
+   "stats_filter": "{\"payment_type\":[\"=\",\"Pay\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Milk Entry",
+   "link_to": "Milk Entry",
+   "stats_filter": "{\"date\":[\"=\",\"2023-04-05\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Milk Entry Vs van Collection",
+   "link_to": "Milk Entry vs Van Collection",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Sales Analytics",
+   "link_to": "Sales Analytics",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Customer Demand Order",
+   "link_to": "Quotation",
+   "stats_filter": "{\"status\":[\"=\",\"Open\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Milk Rate",
+   "link_to": "Milk Rate",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Van Collection",
+   "link_to": "Van Collection",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Receipts",
+   "link_to": "Payment Entry",
+   "stats_filter": "{\"payment_type\":[\"=\",\"Receive\"]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Milk Ledger",
+   "link_to": "Milk Ledger",
+   "type": "Report"
+  }
+ ],
+ "title": "Dairy"
+}

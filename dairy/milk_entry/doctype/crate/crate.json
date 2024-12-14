@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "creation": "2020-08-18 16:54:00.480585",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "crate_quantity",
+  "crate_type",
+  "warehouse",
+  "uom"
+ ],
+ "fields": [
+  {
+   "fieldname": "crate_quantity",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Crate Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "crate_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Crate Type",
+   "options": "Crate Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "UOM",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2020-08-25 10:54:15.661390",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Crate",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

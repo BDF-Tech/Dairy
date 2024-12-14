@@ -1,0 +1,468 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2020-01-23 13:36:53.798464",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "van_collection",
+  "route",
+  "vehicle",
+  "shift",
+  "date",
+  "column_break_4",
+  "dcs",
+  "to_shift",
+  "to_date",
+  "inspection_required",
+  "company",
+  "sb2",
+  "cow_milk_collected",
+  "cow_milk_cans",
+  "cow_milk_vol",
+  "cow_milk_sam",
+  "cb1",
+  "cow_milk_snf",
+  "cow_milk_snfin_kg",
+  "cb2",
+  "cow_milk_fat",
+  "cow_milk_fatin_kg",
+  "cb3",
+  "cow_milk_clr",
+  "sb3",
+  "buffalow_milk_collected",
+  "buf_milk_cans",
+  "buf_milk_vol",
+  "buf_milk_sam",
+  "cb4",
+  "buffalow_milk_snf",
+  "buffalo_milk_snfin_kg",
+  "column_break_18",
+  "buf_milk_fat",
+  "buffalo_milk_fatin_kg",
+  "column_break_34",
+  "buf_milk_clr",
+  "sb4",
+  "mix_milk_collected",
+  "mix_milk_cans",
+  "mix_milk_vol",
+  "mix_milk_sam",
+  "column_break_20",
+  "mix_milk_snf",
+  "mix_milk_snfin_kg",
+  "cb5",
+  "mix_milk_fat",
+  "mix_milk_fatin_kg",
+  "column_break_47",
+  "mix_milk_clr",
+  "section_break_40",
+  "gate_pass",
+  "sb6",
+  "time",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Name",
+   "options": "COLI-.DD.-.MM.-",
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "dcs",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "DCS",
+   "options": "Warehouse",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "fieldname": "cow_milk_vol",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Cow Milk Entry",
+   "read_only": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "fieldname": "buf_milk_vol",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Buffalo Milk Entry"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "fieldname": "mix_milk_vol",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Mix Milk Entry"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "fieldname": "cow_milk_cans",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Cow Milk Cans",
+   "read_only": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "fieldname": "buf_milk_cans",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Buffalo Milk Cans",
+   "read_only": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "fieldname": "mix_milk_cans",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Mix Milk Cans",
+   "read_only": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "cow_milk_sam",
+   "fieldtype": "Table MultiSelect",
+   "label": "Cow Sample Number",
+   "options": "Multi Row Milk Sample"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "buf_milk_sam",
+   "fieldtype": "Table MultiSelect",
+   "label": "Buffalo Sample Number",
+   "options": "Multi Row Milk Sample"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "mix_milk_sam",
+   "fieldtype": "Table MultiSelect",
+   "label": "Mix Sample Number",
+   "options": "Multi Row Milk Sample"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "gate_pass",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Gate Pass",
+   "read_only": 1
+  },
+  {
+   "fieldname": "time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Time",
+   "read_only": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "sb2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "sb3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "sb4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "cb4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "cb5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sb6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "fieldname": "cow_milk_collected",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Cow Milk Collected"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "fieldname": "buffalow_milk_collected",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Buffalo Milk Collected"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "column_break_18",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "default": "0",
+   "fieldname": "mix_milk_collected",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Mix Milk Collected"
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "column_break_20",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "van_collection",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Van Collection",
+   "options": "Van Collection",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "allow_in_quick_entry": 1,
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "van_collection.route",
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Route",
+   "options": "Route Master",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "van_collection.shift",
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "label": "From Shift",
+   "options": "Morning\nEvening"
+  },
+  {
+   "fetch_from": "van_collection.date",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "From Date",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "cow_milk_fat",
+   "fieldtype": "Percent",
+   "label": "Cow Milk FAT%",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "buf_milk_fat",
+   "fieldtype": "Percent",
+   "label": "Buffalo Milk FAT%",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "mix_milk_fat",
+   "fieldtype": "Percent",
+   "label": "Mix Milk FAT%",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "cow_milk_clr",
+   "fieldtype": "Percent",
+   "label": "Cow Milk CLR%",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "buf_milk_clr",
+   "fieldtype": "Percent",
+   "label": "Buffalo Milk CLR%",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "mix_milk_clr",
+   "fieldtype": "Percent",
+   "label": "Mix Milk CLR%",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_40",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_from": "van_collection.vehicle",
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Vehicle",
+   "options": "Vehicle"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "cow_milk_snf",
+   "fieldtype": "Percent",
+   "label": "Cow Milk SNF%",
+   "read_only": 1
+  },
+  {
+   "fieldname": "buffalow_milk_snf",
+   "fieldtype": "Percent",
+   "label": "Buffalo Milk SNF%",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mix_milk_snf",
+   "fieldtype": "Percent",
+   "label": "Mix Milk SNF%",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cow_milk_fatin_kg",
+   "fieldtype": "Float",
+   "label": "Cow Milk FAT(in kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cow_milk_snfin_kg",
+   "fieldtype": "Float",
+   "label": "Cow Milk SNF(in kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "buffalo_milk_snfin_kg",
+   "fieldtype": "Float",
+   "label": "Buffalo Milk SNF(in kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "buffalo_milk_fatin_kg",
+   "fieldtype": "Float",
+   "label": "Buffalo Milk FAT(in kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mix_milk_snfin_kg",
+   "fieldtype": "Float",
+   "label": "Mix Milk SNF(in kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mix_milk_fatin_kg",
+   "fieldtype": "Float",
+   "label": "Mix Milk FAT(in kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_34",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_47",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "van_collection.to_shift",
+   "fieldname": "to_shift",
+   "fieldtype": "Select",
+   "label": "To Shift",
+   "options": "Morning\nEvening"
+  },
+  {
+   "fetch_from": "van_collection.to_date",
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Van Collection Items",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "inspection_required",
+   "fieldtype": "Check",
+   "label": "Inspection Required",
+   "options": "0"
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2023-11-23 17:04:50.650174",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Van Collection Items",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Dairy",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

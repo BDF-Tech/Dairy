@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "creation": "2020-03-20 14:35:56.060011",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "crate_type",
+  "incoming_count",
+  "outgoing_count",
+  "damaged_count",
+  "free_qty",
+  "column_break_6",
+  "item_code",
+  "item_name",
+  "qty",
+  "batch_no",
+  "uom",
+  "warehouse"
+ ],
+ "fields": [
+  {
+   "fieldname": "crate_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Crate Type",
+   "options": "Crate Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "incoming_count",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Crate Return"
+  },
+  {
+   "fieldname": "outgoing_count",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Out Crate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "damaged_count",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Damaged Count"
+  },
+  {
+   "fieldname": "free_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Free Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Data",
+   "label": "Item_code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Int",
+   "label": "Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "batch_no",
+   "fieldtype": "Data",
+   "label": "Batch No",
+   "read_only": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2020-09-15 17:32:03.050472",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Crate Count Child",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

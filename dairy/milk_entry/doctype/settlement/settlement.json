@@ -1,0 +1,74 @@
+{
+ "actions": [],
+ "creation": "2020-09-07 15:32:49.663982",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "crate_type",
+  "total_outgoing",
+  "total_incoming",
+  "total_damaged",
+  "difference",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "total_outgoing",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Outgoing ",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_incoming",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Incoming"
+  },
+  {
+   "fieldname": "total_damaged",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Damaged"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Settlement",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Difference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "crate_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Crate Type",
+   "options": "Crate Type",
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2023-03-20 11:16:59.548126",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Settlement",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

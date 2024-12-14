@@ -1,0 +1,88 @@
+{
+ "cards": [
+  {
+   "hidden": 0,
+   "label": "Dairy",
+   "links": "[  \n    {  \n        \"type\": \"doctype\",       \n        \"name\": \"Milk Entry\",\n        \"label\": \"Milk Entry\",\n        \"description\": \"Milk Entry\",\n        \"onboard\": 1   \n    },\n    {\n        \"type\": \"doctype\",\n        \"name\": \"Raw Milk Sample\",\n        \"label\": \"Raw Milk Sample\",\n        \"description\": \"Raw Milk Sample\",\n        \"onboard\": 1\n    },\n    {       \n        \"type\": \"doctype\",       \n        \"name\": \"Van Collection\",       \n        \"label\": \"Van Collection\",       \n        \"description\": \"Van Collection\",       \n        \"onboard\": 1   \n    },  \n    {       \n        \"type\": \"doctype\",       \n        \"name\": \"Van Collection Items\",       \n        \"label\": \"Van Collection Items\",       \n        \"description\": \"Van Collection Items\",      \n        \"onboard\": 1  \n    },   \n    {       \n        \"type\": \"doctype\",       \n        \"name\": \"Warehouse\",       \n        \"label\": \"DCS\",       \n        \"description\": \"DCS\",       \n        \"onboard\": 1  \n    },   \n    {       \n        \"type\": \"doctype\",       \n        \"name\": \"Supplier\",       \n        \"label\": \"Member\",       \n        \"description\": \"Member\",       \n        \"onboard\": 1   \n    }\n]"
+  },
+  {
+   "hidden": 0,
+   "label": "Raw Milk Reception Dock",
+   "links": "[   \n    {      \n        \"type\": \"doctype\",       \n        \"name\": \"RMRD\",       \n        \"label\":\"RMRD\",       \n        \"description\":\"RMRD\",       \n        \"onboard\": 1   \n    },   \n    {      \n        \"type\": \"doctype\",       \n        \"name\": \"RMRD Lines\",       \n        \"label\":\"RMRD Lines\",       \n        \"description\":\"RMRD Lines\",       \n        \"onboard\": 1   \n        \n    }\n]"
+  },
+  {
+   "hidden": 0,
+   "label": "Field Order",
+   "links": "[    \n    {        \n        \"type\": \"doctype\",      \n        \"name\": \"Field Order\",        \n        \"label\":\"Field Order\",        \n        \"description\":\"Field Order\",        \n        \"onboard\": 1    \n    }\n]\n "
+  },
+  {
+   "hidden": 0,
+   "label": "Order Book",
+   "links": "[    \n    {          \n        \"type\": \"doctype\",        \n        \"name\": \"Order Book\",        \n        \"label\": \"Order Book\",        \n        \"description\": \"Order Book\",        \n        \"onboard\": 1    \n    },    \n    {        \n        \"type\": \"doctype\",        \n        \"name\": \"Sales Order\",        \n        \"label\": \"Sales Order\",        \n        \"description\": \"Sales Order\",        \n        \"onboard\": 1    \n        \n    },    \n    {        \n        \"type\": \"doctype\",        \n        \"name\": \"Quotation\",       \n        \"label\": \"Quotation\",        \n        \"description\": \"Quotation\",        \n        \"onboard\": 1    \n    }\n]\n"
+  },
+  {
+   "hidden": 0,
+   "label": "Settings",
+   "links": "[    \n    {        \n        \"type\": \"doctype\",        \n        \"name\": \"Dairy Settings\",        \n        \"label\": \"Dairy Settings\",        \n        \"description\": \"Dairy Settings\",        \n        \"onboard\": 1    \n    },    \n    {        \n        \"type\": \"doctype\",        \n        \"name\": \"Route Master\",        \n        \"label\": \"Route Master\",        \n        \"description\": \"Route Master\",        \n        \"onboard\": 1    \n    },    \n    {        \n        \"type\": \"doctype\",        \n        \"name\": \"Milk Rate\",        \n        \"label\": \"Milk Rate\",        \n        \"description\": \"Milk Rate\",        \n        \"onboard\": 1    \n    },    \n    {        \n        \"type\": \"doctype\",        \n        \"name\": \"Crate Type\",        \n        \"label\": \"Crate Type\",        \n        \"description\": \"Crate Type\",        \n        \"onboard\": 1    \n    },\n     {        \n        \"type\": \"doctype\",        \n        \"name\": \"Bulk Milk Price List\",        \n        \"label\": \"Bulk Milk Price List\",        \n        \"description\": \"Bulk Milk Price List\",        \n        \"onboard\": 1    \n    }\n]\n"
+  },
+  {
+   "hidden": 0,
+   "label": "Crate Management",
+   "links": "[      \n    {       \n        \"type\": \"doctype\",       \n        \"name\": \"Crate Reconciliation\",       \n        \"label\": \"Crate Reconciliation\",       \n        \"description\": \"Crate Reconciliation\",       \n        \"onboard\": 1   \n    }\n]\n"
+  },
+  {
+   "hidden": 0,
+   "label": "Reports",
+   "links": "[    \n    {        \n        \"type\": \"report\",        \n        \"is_query_report\": 1,        \n        \"name\": \"Stock Ledger\",        \n        \"reference_doctype\": \"Stock Ledger Entry\",        \n        \"onboard\": 1    \n    },    \n    {       \n        \"type\": \"report\",        \n        \"is_query_report\": 1,        \n        \"name\": \"Received Items To Be Billed\",        \n        \"reference_doctype\": \"Purchase Invoice\",        \n        \"onboard\": 1    \n    },    \n    {        \n        \"type\": \"report\",        \n        \"is_query_report\": 1,       \n        \"name\": \"Milk Entry Detail\",        \n        \"reference_doctype\": \"Milk Entry\",        \n        \"onboard\": 1    \n    },    \n    {        \n        \"type\": \"report\",        \n        \"is_query_report\": 1,        \n        \"name\": \"Vehicle Wise Crate Summary\",        \n        \"reference_doctype\": \"Delivery Note\",        \n        \"onboard\": 1    \n    },\n    {        \n        \"type\": \"report\",        \n        \"is_query_report\": 1,        \n        \"name\": \"Milk Ledger\",        \n        \"reference_doctype\": \"Milk Ledger Entry\",        \n        \"onboard\": 1    \n    }\n]\n"
+  },
+  {
+   "hidden": 0,
+   "label": "Key Reports",
+   "links": "[   \n    {       \n        \"type\": \"report\",       \n        \"is_query_report\": 1,       \n        \"name\": \"Milk Entry Trends\",       \n        \"reference_doctype\": \"Milk Entry\",       \n        \"onboard\": 1   \n    },   \n    {       \n        \"type\": \"report\",       \n        \"is_query_report\": 1,      \n        \"name\": \"Milk Entry vs Van Collection\",       \n        \"reference_doctype\": \"Van Collection Items\",       \n        \"onboard\": 1   \n    },   \n    {       \n        \"type\": \"report\",       \n        \"is_query_report\": 1,       \n        \"name\": \"Van Collection vs RMRD\",       \n        \"reference_doctype\": \"Van Collection vs RMRD\",       \n        \"onboard\": 1   \n    }\n]\n"
+  }
+ ],
+ "category": "Domains",
+ "charts": [],
+ "charts_label": "",
+ "creation": "2020-03-12 10:36:30.921482",
+ "developer_mode_only": 0,
+ "disable_user_customization": 0,
+ "docstatus": 0,
+ "doctype": "Desk Page",
+ "extends_another_page": 0,
+ "hide_custom": 0,
+ "idx": 0,
+ "is_standard": 1,
+ "label": "Dairy",
+ "modified": "2020-11-06 10:59:45.377052",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Dairy",
+ "owner": "Administrator",
+ "pin_to_bottom": 0,
+ "pin_to_top": 0,
+ "restrict_to_domain": "Dairy",
+ "shortcuts": [
+  {
+   "label": "Milk Entry",
+   "link_to": "Milk Entry",
+   "type": "DocType"
+  },
+  {
+   "label": "RMRD",
+   "link_to": "RMRD",
+   "type": "DocType"
+  },
+  {
+   "label": "Van Collection",
+   "link_to": "Van Collection",
+   "type": "DocType"
+  },
+  {
+   "label": "Delivery Note",
+   "link_to": "Delivery Note",
+   "type": "DocType"
+  }
+ ],
+ "shortcuts_label": "SHORTCUTS"
+}

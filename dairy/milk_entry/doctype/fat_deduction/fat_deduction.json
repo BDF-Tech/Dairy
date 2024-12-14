@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-03-25 12:15:33.417155",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "from_fat",
+  "to_fat",
+  "per_kg_deduction"
+ ],
+ "fields": [
+  {
+   "fieldname": "from_fat",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "From Fat%"
+  },
+  {
+   "fieldname": "to_fat",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "To Fat%"
+  },
+  {
+   "fieldname": "per_kg_deduction",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Per Kg Deduction"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2023-03-25 12:34:46.912547",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Fat Deduction",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

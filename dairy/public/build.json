@@ -1,0 +1,7 @@
+{
+  "js/vehicle.min.js": [
+        "public/js/templates/vehicle_list.html",
+        "public/js/templates/customer_list.html",
+        "public/js/utils/vehicle_dynamic_link.js"
+        ]
+}

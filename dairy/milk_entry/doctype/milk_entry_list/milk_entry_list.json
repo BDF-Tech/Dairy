@@ -1,0 +1,129 @@
+{
+ "allow_auto_repeat": 1,
+ "autoname": "code",
+ "creation": "2019-10-21 17:12:23.817967",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "code",
+  "member_name",
+  "milk_type",
+  "volume",
+  "fat",
+  "snf",
+  "unit",
+  "total",
+  "price_list",
+  "time",
+  "image",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "code",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Code",
+   "search_index": 1
+  },
+  {
+   "fieldname": "milk_type",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Milk Type"
+  },
+  {
+   "fieldname": "fat",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Fat",
+   "search_index": 1
+  },
+  {
+   "fieldname": "snf",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Snf",
+   "search_index": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total",
+   "options": "Currency",
+   "search_index": 1
+  },
+  {
+   "fieldname": "member_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Member Name",
+   "length": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Time",
+   "search_index": 1
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Unit",
+   "options": "UOM",
+   "search_index": 1
+  },
+  {
+   "fieldname": "price_list",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "PriceList",
+   "search_index": 1
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Milk Entry List",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "volume",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Volume",
+   "search_index": 1
+  }
+ ],
+ "image_field": "image",
+ "is_submittable": 1,
+ "istable": 1,
+ "modified": "2019-10-22 16:02:42.789078",
+ "modified_by": "admin1@gmail.com",
+ "module": "Milk Entry",
+ "name": "Milk Entry List",
+ "name_case": "Title Case",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "show_name_in_global_search": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

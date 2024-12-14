@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include dairy *.css
+recursive-include dairy *.csv
+recursive-include dairy *.html
+recursive-include dairy *.ico
+recursive-include dairy *.js
+recursive-include dairy *.json
+recursive-include dairy *.md
+recursive-include dairy *.png
+recursive-include dairy *.py
+recursive-include dairy *.svg
+recursive-include dairy *.txt
+recursive-exclude dairy *.pyc

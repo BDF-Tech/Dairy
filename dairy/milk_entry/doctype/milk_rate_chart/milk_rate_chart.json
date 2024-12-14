@@ -1,0 +1,49 @@
+{
+ "actions": [],
+ "creation": "2019-11-05 17:10:28.434108",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "fat",
+  "snf_clr",
+  "rate"
+ ],
+ "fields": [
+  {
+   "fieldname": "snf_clr",
+   "fieldtype": "Float",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "label": "SNF%"
+  },
+  {
+   "fieldname": "fat",
+   "fieldtype": "Float",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "label": "FAT%"
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Rate"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2023-11-06 12:22:25.414708",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Milk Rate Chart",
+ "name_case": "Title Case",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "show_name_in_global_search": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

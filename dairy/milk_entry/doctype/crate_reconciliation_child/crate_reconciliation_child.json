@@ -1,0 +1,137 @@
+{
+ "actions": [],
+ "creation": "2020-03-20 15:29:28.450756",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "delivery_date",
+  "delivery_note",
+  "gate_pass",
+  "sales_invoice",
+  "crate_log",
+  "customer",
+  "transporter",
+  "route",
+  "crate_type",
+  "column_break_6",
+  "vehicle",
+  "incoming",
+  "outgoing",
+  "damaged",
+  "difference"
+ ],
+ "fields": [
+  {
+   "fieldname": "delivery_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Delivery Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "delivery_note",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Delivery Note",
+   "options": "Delivery Note",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Vehicle",
+   "options": "Vehicle"
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Route",
+   "options": "Route Master"
+  },
+  {
+   "default": "0.0",
+   "fieldname": "outgoing",
+   "fieldtype": "Float",
+   "label": "Outgoing"
+  },
+  {
+   "default": "0.0",
+   "fieldname": "incoming",
+   "fieldtype": "Float",
+   "label": "Incoming"
+  },
+  {
+   "default": "0.0",
+   "fieldname": "damaged",
+   "fieldtype": "Float",
+   "label": "Damaged"
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Float",
+   "label": "Difference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "crate_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Crate Type",
+   "options": "Crate Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gate_pass",
+   "fieldtype": "Link",
+   "label": "Gate Pass",
+   "options": "Gate Pass",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transporter",
+   "fieldtype": "Link",
+   "label": "Transporter",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "crate_log",
+   "fieldtype": "Link",
+   "label": "Crate Log",
+   "options": "Crate Log"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2023-03-24 19:05:50.030643",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Crate Reconciliation Child",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

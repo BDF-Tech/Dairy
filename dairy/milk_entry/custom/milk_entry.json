@@ -1,0 +1,9 @@
+{
+ "custom_fields": [],
+ "custom_perms": [],
+ "doctype": "Milk Entry",
+ "property_setters": [
+  
+ ],
+ "sync_on_migrate": 1
+}

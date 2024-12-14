@@ -1,0 +1,383 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2020-08-20 11:49:22.958472",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "date",
+  "shift",
+  "company",
+  "from_warehouse",
+  "to_warehouse",
+  "column_break_5",
+  "transporter",
+  "customer",
+  "transporter_name",
+  "route",
+  "warehouse",
+  "vehicle",
+  "driver",
+  "items_section",
+  "item",
+  "merge_items",
+  "merge_item",
+  "total_qty",
+  "total_crate",
+  "total_free_qty",
+  "total_leakage",
+  "total_crate_return",
+  "calculate_crate",
+  "crate",
+  "loose_crate_section",
+  "loose_crates",
+  "leakage_section",
+  "leakage_item",
+  "crate_summary_details_section",
+  "crate_summary",
+  "no_crate_invoice",
+  "section_break_23",
+  "crate_reconcilation_done",
+  "gate_crate_cal_done",
+  "status",
+  "print_settings_section",
+  "print_language",
+  "letter_head",
+  "column_break_35",
+  "print_heading",
+  "group_same_items",
+  "amended_from",
+  "get_stock_entries",
+  "check"
+ ],
+ "fields": [
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "label": "Delivery Shift",
+   "options": "\nMorning\nEvening",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "route.transporter",
+   "fieldname": "transporter",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Transporter",
+   "options": "Supplier",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "route.vehicle",
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "label": "Vehicle",
+   "options": "Vehicle"
+  },
+  {
+   "fetch_from": "route.driver",
+   "fieldname": "driver",
+   "fieldtype": "Link",
+   "label": "Driver",
+   "options": "Driver"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Gate Pass",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Table",
+   "ignore_user_permissions": 1,
+   "label": "Gate Pass Item",
+   "no_copy": 1,
+   "options": "Gate Pass Item"
+  },
+  {
+   "fieldname": "merge_items",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "fieldname": "merge_item",
+   "fieldtype": "Table",
+   "label": "Merge Gate Pass Item",
+   "options": "Merge Gate Pass Item"
+  },
+  {
+   "fieldname": "calculate_crate",
+   "fieldtype": "Button",
+   "label": "Calculate Crate"
+  },
+  {
+   "fieldname": "crate",
+   "fieldtype": "Table",
+   "label": "Outgoing Crate Count",
+   "options": "Gate Pass Crate Count"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "loose_crate_section",
+   "fieldtype": "Section Break",
+   "label": "Loose Crate"
+  },
+  {
+   "fieldname": "loose_crates",
+   "fieldtype": "Table",
+   "label": "Loose Crates",
+   "options": "Loose Crate"
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "label": "Route",
+   "options": "Route Master",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "crate_reconcilation_done",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Crate Reconcilation Done"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "status"
+  },
+  {
+   "fieldname": "total_qty",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Total Qty"
+  },
+  {
+   "fieldname": "total_crate",
+   "fieldtype": "Int",
+   "label": "Total Crate"
+  },
+  {
+   "fieldname": "total_free_qty",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Total Free Qty"
+  },
+  {
+   "depends_on": "eval:doc.docstatus == 1",
+   "fieldname": "leakage_section",
+   "fieldtype": "Section Break",
+   "label": "Leakage"
+  },
+  {
+   "fieldname": "leakage_item",
+   "fieldtype": "Table",
+   "label": "Leakage Item",
+   "options": "Leakage Item"
+  },
+  {
+   "fieldname": "section_break_23",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.docstatus == 1",
+   "fieldname": "crate_summary_details_section",
+   "fieldtype": "Section Break",
+   "label": "Crate Summary Details"
+  },
+  {
+   "fieldname": "crate_summary",
+   "fieldtype": "Table",
+   "label": "Crate Summary",
+   "options": "Crate Summary"
+  },
+  {
+   "fieldname": "total_leakage",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Total Leakage"
+  },
+  {
+   "fieldname": "total_crate_return",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Total Crate Return"
+  },
+  {
+   "fieldname": "gate_crate_cal_done",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Crate Cal Done"
+  },
+  {
+   "fetch_from": "transporter.supplier_name",
+   "fieldname": "transporter_name",
+   "fieldtype": "Data",
+   "label": "Transporter Name"
+  },
+  {
+   "fieldname": "print_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Print Settings"
+  },
+  {
+   "default": "en",
+   "fieldname": "print_language",
+   "fieldtype": "Data",
+   "label": "Print Language",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "letter_head",
+   "fieldtype": "Link",
+   "label": "Letter Head",
+   "options": "Letter Head"
+  },
+  {
+   "fieldname": "column_break_35",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "print_heading",
+   "fieldtype": "Link",
+   "label": "Print Heading",
+   "options": "Print Heading"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "group_same_items",
+   "fieldtype": "Check",
+   "label": "Group same items"
+  },
+  {
+   "description": "Customer For Leakage Items",
+   "fetch_from": "transporter.customer_for_leakge",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "route.source_warehouse",
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "read_only": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "DD.-.MM.-.YYYY.##",
+   "reqd": 1
+  },
+  {
+   "fieldname": "no_crate_invoice",
+   "fieldtype": "Table",
+   "label": "No Crate Invoice",
+   "no_copy": 1,
+   "options": "No Crate Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "get_stock_entries",
+   "fieldtype": "Table",
+   "label": "Get Stock Entries",
+   "options": "Get Stock Entries"
+  },
+  {
+   "default": "0",
+   "fieldname": "check",
+   "fieldtype": "Check",
+   "label": "check"
+  },
+  {
+   "fieldname": "from_warehouse",
+   "fieldtype": "Link",
+   "label": "Source Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "to_warehouse",
+   "fieldtype": "Link",
+   "label": "Target Warehouse",
+   "options": "Warehouse"
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-03-28 12:23:32.033298",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Gate Pass",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Dairy",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "transporter,customer,transporter_name,shift,route",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

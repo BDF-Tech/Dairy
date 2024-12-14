@@ -1,0 +1,47 @@
+{
+ "actions": [],
+ "creation": "2020-03-30 18:48:43.747579",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sample_lines",
+  "milk_type",
+  "dcs"
+ ],
+ "fields": [
+  {
+   "fieldname": "sample_lines",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sample lines",
+   "options": "Sample lines",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "sample_lines.milk_type",
+   "fieldname": "milk_type",
+   "fieldtype": "Select",
+   "label": "Milk type",
+   "options": "Cow\nBuffalo\nMix"
+  },
+  {
+   "fetch_from": "sample_lines.dcs",
+   "fieldname": "dcs",
+   "fieldtype": "Data",
+   "label": "DCS"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2023-02-16 13:33:04.408422",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Multi Row Milk Sample",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

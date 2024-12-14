@@ -1,0 +1,292 @@
+{
+ "actions": [],
+ "allow_copy": 1,
+ "autoname": "MAT-MLE-.YYYY.-.#####",
+ "creation": "2020-10-28 17:08:38.105714",
+ "doctype": "DocType",
+ "document_type": "Other",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "serial_no",
+  "batch_no",
+  "warehouse",
+  "posting_date",
+  "posting_time",
+  "voucher_type",
+  "voucher_no",
+  "voucher_detail_no",
+  "actual_qty",
+  "fat",
+  "fat_per",
+  "snf",
+  "snf_per",
+  "stock_uom",
+  "qty_after_transaction",
+  "fat_after_transaction",
+  "snf_after_transaction",
+  "project",
+  "company",
+  "fiscal_year",
+  "is_cancelled",
+  "to_rename"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Code",
+   "oldfieldname": "item_code",
+   "oldfieldtype": "Link",
+   "options": "Item",
+   "print_width": "100px",
+   "read_only": 1,
+   "search_index": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Long Text",
+   "in_list_view": 1,
+   "label": "Serial No",
+   "print_width": "100px",
+   "read_only": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "batch_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Batch No",
+   "oldfieldname": "batch_no",
+   "oldfieldtype": "Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Warehouse",
+   "oldfieldname": "warehouse",
+   "oldfieldtype": "Link",
+   "options": "Warehouse",
+   "print_width": "100px",
+   "read_only": 1,
+   "search_index": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "label": "Posting Date",
+   "oldfieldname": "posting_date",
+   "oldfieldtype": "Date",
+   "print_width": "100px",
+   "read_only": 1,
+   "search_index": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "posting_time",
+   "fieldtype": "Time",
+   "label": "Posting Time",
+   "oldfieldname": "posting_time",
+   "oldfieldtype": "Time",
+   "print_width": "100px",
+   "read_only": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "voucher_type",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "label": "Voucher Type",
+   "oldfieldname": "voucher_type",
+   "oldfieldtype": "Data",
+   "options": "DocType",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "voucher_no",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_standard_filter": 1,
+   "label": "Voucher No",
+   "oldfieldname": "voucher_no",
+   "oldfieldtype": "Data",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "voucher_detail_no",
+   "fieldtype": "Data",
+   "label": "Voucher Detail No",
+   "oldfieldname": "voucher_detail_no",
+   "oldfieldtype": "Data",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "actual_qty",
+   "fieldtype": "Float",
+   "in_filter": 1,
+   "label": "Actual Quantity",
+   "oldfieldname": "actual_qty",
+   "oldfieldtype": "Currency",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "fat",
+   "fieldtype": "Float",
+   "label": "Fat (in Kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snf",
+   "fieldtype": "Float",
+   "label": "SNF/CLR (in Kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "stock_uom",
+   "fieldtype": "Link",
+   "label": "Stock UOM",
+   "oldfieldname": "stock_uom",
+   "oldfieldtype": "Data",
+   "options": "UOM",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "qty_after_transaction",
+   "fieldtype": "Float",
+   "in_filter": 1,
+   "label": "Actual Qty After Transaction",
+   "oldfieldname": "bin_aqat",
+   "oldfieldtype": "Currency",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "fat_after_transaction",
+   "fieldtype": "Float",
+   "label": "FAT After Transaction (in Kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snf_after_transaction",
+   "fieldtype": "Float",
+   "label": "SNF/CLR After Transaction (in Kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "label": "Company",
+   "oldfieldname": "company",
+   "oldfieldtype": "Data",
+   "options": "Company",
+   "print_width": "150px",
+   "read_only": 1,
+   "search_index": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "fiscal_year",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "label": "Fiscal Year",
+   "oldfieldname": "fiscal_year",
+   "oldfieldtype": "Data",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_cancelled",
+   "fieldtype": "Check",
+   "label": "Is Cancelled",
+   "report_hide": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "to_rename",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "To Rename",
+   "search_index": 1
+  },
+  {
+   "fieldname": "fat_per",
+   "fieldtype": "Percent",
+   "label": "Fat %"
+  },
+  {
+   "fieldname": "snf_per",
+   "fieldtype": "Percent",
+   "label": "SNF %"
+  }
+ ],
+ "hide_toolbar": 1,
+ "icon": "fa fa-list",
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2023-02-28 18:40:11.781583",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Milk Ledger Entry",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User"
+  },
+  {
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Dairy",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

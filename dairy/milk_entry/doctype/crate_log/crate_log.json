@@ -1,0 +1,242 @@
+{
+ "actions": [],
+ "creation": "2020-09-03 13:35:47.217242",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "crate_type",
+  "crate_opening",
+  "crate_issue",
+  "crate_return",
+  "crate_balance",
+  "transporter",
+  "customer",
+  "customer_name",
+  "vehicle",
+  "shift",
+  "column_break_9",
+  "route",
+  "date",
+  "voucher_type",
+  "voucher",
+  "gate_pass",
+  "company",
+  "source_warehouse",
+  "damaged",
+  "note",
+  "crate_reconsilliation_done",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "crate_type",
+   "fieldtype": "Link",
+   "label": "Crate Type",
+   "options": "Crate Type"
+  },
+  {
+   "fieldname": "crate_opening",
+   "fieldtype": "Int",
+   "label": "Crate Opening"
+  },
+  {
+   "fieldname": "crate_issue",
+   "fieldtype": "Int",
+   "label": "Crate Issue"
+  },
+  {
+   "fieldname": "crate_return",
+   "fieldtype": "Int",
+   "label": "Crate Return"
+  },
+  {
+   "fieldname": "crate_balance",
+   "fieldtype": "Int",
+   "label": "Crate Balance"
+  },
+  {
+   "fieldname": "transporter",
+   "fieldtype": "Link",
+   "label": "Transporter",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "label": "Vehicle",
+   "options": "Vehicle"
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "label": "Route",
+   "options": "Route Master"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "voucher_type",
+   "fieldtype": "Link",
+   "label": "Voucher Type",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "voucher",
+   "fieldtype": "Dynamic Link",
+   "label": "Voucher",
+   "options": "voucher_type"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "source_warehouse",
+   "fieldtype": "Link",
+   "label": "Source Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "damaged",
+   "fieldtype": "Int",
+   "label": "Damaged"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Crate Log",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Data",
+   "label": "Note"
+  },
+  {
+   "default": "0",
+   "fieldname": "crate_reconsilliation_done",
+   "fieldtype": "Check",
+   "label": "Crate Reconciliation Done",
+   "read_only": 1
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "label": "Delivery Shift",
+   "options": "\nMorning\nEvening"
+  },
+  {
+   "fieldname": "gate_pass",
+   "fieldtype": "Link",
+   "label": "Gate Pass",
+   "options": "Gate Pass",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "customer.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name"
+  }
+ ],
+ "in_create": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2023-05-08 18:11:33.938951",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Crate Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Dairy",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

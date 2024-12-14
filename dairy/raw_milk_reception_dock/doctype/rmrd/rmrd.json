@@ -1,0 +1,488 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2020-03-06 17:24:55.289856",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "route",
+  "target_warehouse",
+  "company",
+  "shift",
+  "vehicle",
+  "column_break_3",
+  "status",
+  "date",
+  "to_date",
+  "to_shift",
+  "inspection_required",
+  "section_break_7",
+  "t_g_cow_can",
+  "t_g_cow_wt",
+  "cb_10",
+  "t_g_buf_can",
+  "t_g_buf_wt",
+  "cb_11",
+  "t_g_mix_can",
+  "t_g_mix_wt",
+  "section_break_23",
+  "t_s_cow_can",
+  "t_s_cow_wt",
+  "column_break_23",
+  "t_s_buf_can",
+  "t_s_buf_wt",
+  "column_break_27",
+  "t_s_mix_can",
+  "t_s_mix_wt",
+  "curd_milk_summary_section",
+  "t_c_cow_can",
+  "t_c_cow_wt",
+  "column_break_35",
+  "t_c_buf_can",
+  "t_c_buf_wt",
+  "column_break_38",
+  "t_c_mix_can",
+  "t_c_mix_wt",
+  "total_sample_section",
+  "t_cow_sam",
+  "cb34",
+  "t_buf_sam",
+  "cb35",
+  "t_mix_sam",
+  "section_break_46",
+  "t_cow_m_fat",
+  "t_cow_m_fat_kg",
+  "t_cow_m_clr",
+  "t_cow_m_clr_kg",
+  "column_break_60",
+  "t_buf_m_clr",
+  "t_buf_m_clr_kg",
+  "t_buf_m_fat",
+  "t_buf_m_fat_kg",
+  "column_break_50",
+  "t_mix_m_clr",
+  "t_mix_m_clr_kg",
+  "t_mix_m_fat",
+  "t_mix_m_fat_kg",
+  "section_break_42",
+  "amended_from",
+  "cb50",
+  "hide_start_rmrd_button"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "From Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "From Shift",
+   "options": "\nMorning\nEvening",
+   "reqd": 1
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Route",
+   "options": "Route Master",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.docstatus ==1",
+   "fieldname": "section_break_7",
+   "fieldtype": "Section Break",
+   "label": "Good Milk Summary"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Name",
+   "options": "RMRD -.YYYY./"
+  },
+  {
+   "fieldname": "cb_10",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cb_11",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "RMRD",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.docstatus ==1",
+   "fieldname": "section_break_23",
+   "fieldtype": "Section Break",
+   "label": "Sour Milk Summary"
+  },
+  {
+   "default": "0",
+   "fieldname": "t_g_cow_can",
+   "fieldtype": "Int",
+   "label": "Total Good Cow Milk Can",
+   "read_only": 1
+  },
+  {
+   "default": "0.0",
+   "fieldname": "t_g_cow_wt",
+   "fieldtype": "Float",
+   "label": "Total Good Cow Milk Weight",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "t_g_buf_can",
+   "fieldtype": "Int",
+   "label": "Total Good Buffalo Milk Can",
+   "read_only": 1
+  },
+  {
+   "default": "0.0",
+   "fieldname": "t_g_buf_wt",
+   "fieldtype": "Float",
+   "label": "Total Good Buffalo Milk Weight",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "t_g_mix_can",
+   "fieldtype": "Int",
+   "label": "Total Good Mix Milk Can",
+   "read_only": 1
+  },
+  {
+   "default": "0.0",
+   "fieldname": "t_g_mix_wt",
+   "fieldtype": "Float",
+   "label": "Total  Good Mix Milk Weight",
+   "read_only": 1
+  },
+  {
+   "fieldname": "t_s_cow_can",
+   "fieldtype": "Int",
+   "label": "Total Sour Cow Milk Can"
+  },
+  {
+   "fieldname": "t_s_cow_wt",
+   "fieldtype": "Float",
+   "label": "Total  Sour Cow Milk Weight"
+  },
+  {
+   "fieldname": "column_break_23",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "t_s_buf_can",
+   "fieldtype": "Int",
+   "label": "Total Sour Buffalo Milk Can"
+  },
+  {
+   "fieldname": "t_s_buf_wt",
+   "fieldtype": "Float",
+   "label": "Total  Sour Buffalo Milk Weight"
+  },
+  {
+   "fieldname": "column_break_27",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "t_s_mix_can",
+   "fieldtype": "Int",
+   "label": "Total Sour Mix Milk Can"
+  },
+  {
+   "fieldname": "t_s_mix_wt",
+   "fieldtype": "Float",
+   "label": "Total  Sour Mix Milk Weight"
+  },
+  {
+   "depends_on": "eval:doc.docstatus ==1",
+   "fieldname": "curd_milk_summary_section",
+   "fieldtype": "Section Break",
+   "label": "Curd Milk Summary"
+  },
+  {
+   "fieldname": "t_c_cow_can",
+   "fieldtype": "Int",
+   "label": "Total Curd Cow Milk Can"
+  },
+  {
+   "fieldname": "t_c_cow_wt",
+   "fieldtype": "Float",
+   "label": "Total  Curd Cow Milk Weight"
+  },
+  {
+   "fieldname": "column_break_35",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "t_c_buf_can",
+   "fieldtype": "Int",
+   "label": "Total Curd Buffalo Milk Can"
+  },
+  {
+   "fieldname": "t_c_buf_wt",
+   "fieldtype": "Float",
+   "label": "Total  Curd Buffalo Milk Weight"
+  },
+  {
+   "fieldname": "column_break_38",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "t_c_mix_can",
+   "fieldtype": "Int",
+   "label": "Total Curd Mix Milk Can"
+  },
+  {
+   "fieldname": "section_break_42",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "hide_start_rmrd_button",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Hidden Star RMRD Button",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.docstatus ==1",
+   "fieldname": "section_break_46",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "t_cow_m_fat",
+   "fieldtype": "Float",
+   "label": "Total Cow Milk Fat"
+  },
+  {
+   "fieldname": "t_buf_m_fat",
+   "fieldtype": "Float",
+   "label": "Total Buffalo Milk Fat"
+  },
+  {
+   "fieldname": "t_mix_m_fat",
+   "fieldtype": "Float",
+   "label": "Total Mix Milk Fat"
+  },
+  {
+   "fieldname": "column_break_50",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "t_cow_m_clr",
+   "fieldtype": "Float",
+   "label": "Total Cow Milk CLR"
+  },
+  {
+   "fieldname": "t_buf_m_clr",
+   "fieldtype": "Float",
+   "label": "Total Buffalo Milk CLR"
+  },
+  {
+   "fieldname": "t_mix_m_clr",
+   "fieldtype": "Float",
+   "label": "Total Mix Milk CLR"
+  },
+  {
+   "depends_on": "eval:doc.docstatus ==1",
+   "fieldname": "total_sample_section",
+   "fieldtype": "Section Break",
+   "label": "Total Sample"
+  },
+  {
+   "fieldname": "t_cow_sam",
+   "fieldtype": "Int",
+   "label": "Total Cow Milk Sample"
+  },
+  {
+   "fieldname": "cb34",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "t_buf_sam",
+   "fieldtype": "Int",
+   "label": "Total Buffalo Milk Sample"
+  },
+  {
+   "fieldname": "cb35",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "t_mix_sam",
+   "fieldtype": "Int",
+   "label": "Total Mix Milk Sample"
+  },
+  {
+   "fieldname": "t_c_mix_wt",
+   "fieldtype": "Float",
+   "label": "Total  Curd Mix Milk Weight"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb50",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Target Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "inspection_required",
+   "fieldtype": "Check",
+   "label": "Inspection Required"
+  },
+  {
+   "fetch_from": "route.vehicle",
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Vehicle",
+   "options": "Vehicle"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nSubmitted\nIn-Progress\nCompleted\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_60",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "t_cow_m_fat_kg",
+   "fieldtype": "Float",
+   "label": "Total Cow Milk Fat( In Kg)"
+  },
+  {
+   "fieldname": "t_cow_m_clr_kg",
+   "fieldtype": "Float",
+   "label": "Total Cow Milk Fat( In Kg)"
+  },
+  {
+   "fieldname": "t_buf_m_clr_kg",
+   "fieldtype": "Float",
+   "label": "Total Buffalo Milk CLR( In kg)"
+  },
+  {
+   "fieldname": "t_buf_m_fat_kg",
+   "fieldtype": "Float",
+   "label": "Total Buffalo Milk FAT( In Kg)"
+  },
+  {
+   "fieldname": "t_mix_m_clr_kg",
+   "fieldtype": "Float",
+   "label": "Total Mix Milk CLR( In Kg)"
+  },
+  {
+   "fieldname": "t_mix_m_fat_kg",
+   "fieldtype": "Float",
+   "label": "Total Mix Milk Fat( in Kg)"
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date"
+  },
+  {
+   "fieldname": "to_shift",
+   "fieldtype": "Select",
+   "label": "To Shift",
+   "options": "\nMorning\nEvening"
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2023-05-12 10:28:00.033792",
+ "modified_by": "Administrator",
+ "module": "Raw Milk Reception Dock",
+ "name": "RMRD",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Dairy",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

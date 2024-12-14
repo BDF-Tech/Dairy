@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-03-25 12:19:29.476641",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "from_snf",
+  "to_snf",
+  "per_kg_deduction"
+ ],
+ "fields": [
+  {
+   "fieldname": "from_snf",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "From SNF%"
+  },
+  {
+   "fieldname": "to_snf",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "To SNF%"
+  },
+  {
+   "fieldname": "per_kg_deduction",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Per Kg Deduction"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2023-03-25 12:35:20.374240",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "SNF Deduction",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

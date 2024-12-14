@@ -1,0 +1,82 @@
+{
+ "actions": [],
+ "creation": "2020-09-03 13:11:19.275333",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "voucher_type",
+  "voucher",
+  "crate_opening",
+  "crate_issue",
+  "crate_return",
+  "crate_balance",
+  "check"
+ ],
+ "fields": [
+  {
+   "fieldname": "crate_opening",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Crate Opening",
+   "read_only": 1
+  },
+  {
+   "fieldname": "crate_issue",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Crate Issue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "crate_return",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Crate Return",
+   "read_only": 1
+  },
+  {
+   "fieldname": "crate_balance",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Crate Balance",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voucher_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Voucher Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voucher",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Voucher",
+   "options": "voucher_type",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "check",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Check"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2024-03-30 14:49:27.447957",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Crate Summary",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,140 @@
+{% extends "templates/web.html" %}
+
+{% block title %} {{ _("Shopping Cart") }} {% endblock %}
+
+{% block header %}
+<div class="step-progress">
+      <ul class="progressbar">
+          <li>Select Item</li>
+          <li>Place Order</li>
+          <!-- <li>Payment</li> -->
+      </ul>
+</div>
+<div class="next">
+    
+    <div class="left"><h1>{{ _("Products") }}</h1></div> 
+    <!-- <a href="/cart"></a> -->
+    <div class="right"><input class = "submit-btn" type="submit" name="next" value="Next" id="next" onclick="handleNext()"></div>
+    <div style="margin-top: 100px;"><input type="text" onkeyup="myFunction()" id="myInput"  placeholder="Search for names.." ></div>
+</div>
+
+
+{% endblock %}
+
+{% block header_actions %}
+{% endblock %}
+    {% block page_content %}
+    <label><b>Delivery date:</b></label>
+    <input class = "date" type="date" id = "del_date"  onchange="handle_date(document.getElementById('del_date').value)">
+    <label>Delivery Shift:</label>
+    
+    <select class="shift" type="select" id="delivery_shift" onchange="handle_shift(document.getElementById('delivery_shift').value)"></table>
+        <option value="morning">Morning</option>
+        <option value="evening">Evening</option>
+    </select>
+    <table class="table table-striped" id="owned_stock_table">
+        <thead>
+        <tr>
+            <th>Image</th>
+            <th>Item Name</th>
+            <th>Item code</th>            
+            <!-- <th>Stock</th> -->
+
+            <th>Rate</th>
+            <th>Default Uom</th>
+            <th>Select Qty</th>
+
+            
+            <!-- <th>Add to Cart</th> -->
+        </tr>
+    </thead>
+    
+    {% set doc = frappe.get_doc('Bulk Order Settings')%}
+    {% set d=frappe.db.get_value("Contact",{"user":frappe.session.user},['name'])%}
+    {% if d %}
+        {% set contact_doc = frappe.get_doc("Contact", d)%} 
+        {% for j in contact_doc.links %}
+            {% if j.idx==1 %}
+                {% set cus =frappe.get_doc("Customer",j.link_name)%} 
+            {% endif %}
+    
+   
+            {% for item in items %}
+   
+                {% set it=frappe.get_doc ("Item",item.item_code)%}
+                {% set avl_qty = frappe.db.get_value("Stock Ledger Entry", {'item_code':item.item_code} , "qty_after_transaction") %}
+                {% if not warehouse %}
+                    {% set website_warehouse = frappe.db.get_value("Website Item", {'item_code':item.item_code} , "website_warehouse") %}
+                    {% set avl_qty = frappe.db.get_value("Stock Ledger Entry", {'item_code':item.item_code ,'warehouse': website_warehouse} , "qty_after_transaction") %}
+                {% endif %}
+    
+                {% if warehouse %}
+                     {% set avl_qty = frappe.db.get_value("Stock Ledger Entry", {'item_code':item.item_code ,'warehouse': warehouse} , "qty_after_transaction") %}
+                {% endif %}
+                
+                {% set price = frappe.db.get_value("Item Price", {'item_code':item.item_code,'price_list':cus.default_price_list} , "price_list_rate") %}
+                
+                {% if price %}
+                {% if doc.allow_ordering==0 %}
+
+                        <tr>
+                            {% if item.website_image %}
+                            <td><img  src={{ item.website_image}} alt="NA" style="width:70px;height:50px;"></td>
+                            {% else %}
+                           <td><img src={{ item.website_image}} width=70px; height=50px; alt="#" onerror="this.onerror=null;this.src='assets/dairy/images/cow.jpg';" > </td>
+                           {% endif %}
+                            <td>{{item.item_name}}</td>
+                            <td>{{item.item_code}}</td>
+                            <td> {{price}}</td>
+                            <td>{{it.stock_uom}}</td>
+                            <td><input type="number" id="{{item.item_code}}+date" name="quantity" min="0" max="1000" value="0" onchange="handle_qty('{{item.item_code}}', document.getElementById('{{item.item_code}}+date').value)" style="width: 70px;"></td>
+
+                            
+                        </tr>
+                {% else %}
+                        <tr>
+                            {% if item.website_image %}
+
+                            <td><img  src={{ item.website_image}} alt="NA" style="width:70px;height:50px;"></td>
+                            {% else %}
+                            <td><img src={{ item.website_image}} width=70px; height=50px; alt="#" onerror="this.onerror=null;this.src='assets/dairy/images/cow.jpg';" > </td>
+                            {% endif %}
+                        <td>{{item.item_name}}</td>
+                        <td>{{item.item_code}}</td>
+
+                       
+                        <td> {{price}}</td>
+                        <td>{{it.stock_uom}}</td>
+
+                        <td><input type="number" id="{{item.item_code}}+date" name="quantity" min="0" max="1000" value="0" onchange="handle_qty('{{item.item_code}}', document.getElementById('{{item.item_code}}+date').value)" style="width: 70px;"></td>
+                        
+                        
+                        </tr>
+                {% endif %}
+                {% endif %}
+      {% endfor %}
+      {% endfor %}
+      {% endif %}
+      
+    </table>
+    <script>
+        function myFunction() {
+          var input, filter, table, tr, td, i, txtValue;
+          input = document.getElementById("myInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("owned_stock_table");
+          tr = table.getElementsByTagName("tr");
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[1];
+            if (td) {
+              txtValue = td.textContent || td.innerText;
+              if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+              } else {
+                tr[i].style.display = "none";
+              }
+            }       
+          }
+        }
+        </script>
+    {%  endblock %}

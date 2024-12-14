@@ -1,0 +1,47 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2020-03-23 18:05:51.872498",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "crate_type",
+  "difference",
+  "naming_series"
+ ],
+ "fields": [
+  {
+   "fieldname": "crate_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Crate Type",
+   "options": "Crate Type"
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Difference"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "name",
+   "options": "CTC -"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2020-03-24 11:19:17.272063",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Crate Type Summary Child",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

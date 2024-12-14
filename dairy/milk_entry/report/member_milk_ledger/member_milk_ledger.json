@@ -1,0 +1,30 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2023-03-01 17:06:18.148900",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "bdf",
+ "modified": "2023-03-02 17:48:23.029565",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Member Milk Ledger",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Milk Entry",
+ "report_name": "Member Milk Ledger",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Dairy"
+  }
+ ]
+}

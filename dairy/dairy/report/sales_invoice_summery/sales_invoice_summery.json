@@ -1,0 +1,72 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2024-03-27 14:51:53.505156",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2024-03-27 15:11:03.416521",
+ "modified_by": "Administrator",
+ "module": "dairy",
+ "name": "Sales Invoice Summery",
+ "owner": "vikas.deshmukh@erpdata.in",
+ "prepared_report": 0,
+ "query": "SELECT\r\n    si.customer AS \"Customer\",\r\n    si.customer_name AS \"Customer Name\",\r\n    si.route,si.set_warehouse AS \"Source Warehouse\",\r\n    sii.item_code AS \"Item Code\",\r\n    sii.item_name AS \"Item Name\",\r\n    \r\n    CONCAT(MONTHNAME(si.posting_date), ' ', YEAR(si.posting_date)) AS \"Month and year\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 1 THEN si.grand_total ELSE 0 END) AS \"Jan\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 2 THEN si.grand_total ELSE 0 END) AS \"Feb\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 3 THEN si.grand_total ELSE 0 END) AS \"Mar\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 4 THEN si.grand_total ELSE 0 END) AS \"Apr\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 5 THEN si.grand_total ELSE 0 END) AS \"May\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 6 THEN si.grand_total ELSE 0 END) AS \"Jun\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 7 THEN si.grand_total ELSE 0 END) AS \"Jul\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 8 THEN si.grand_total ELSE 0 END) AS \"Aug\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 9 THEN si.grand_total ELSE 0 END) AS \"Sep\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 10 THEN si.grand_total ELSE 0 END) AS \"Oct\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 11 THEN si.grand_total ELSE 0 END) AS \"Nov\",\r\n    SUM(CASE WHEN MONTH(si.posting_date) = 12 THEN si.grand_total ELSE 0 END) AS \"Dec\", \r\n    SUM(si.grand_total) AS \"Grand Total\",\r\n    SUM(si.rounded_total) AS \"Rounded Total\"\r\nFROM \r\n    `tabSales Invoice` si\r\nLEFT JOIN \r\n    `tabSales Invoice Item` sii ON si.name = sii.parent\r\n\r\nGROUP BY \r\n    si.customer,\r\n    si.customer_name,\r\n    si.route,\r\n    si.set_warehouse,\r\n    sii.item_code,\r\n    sii.item_name,\r\n    CONCAT(MONTHNAME(si.posting_date), ' ', YEAR(si.posting_date))\r\nORDER BY\r\n     YEAR(si.posting_date);\r\n",
+ "ref_doctype": "Sales Invoice",
+ "report_name": "Sales Invoice Summery",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Warehouse Manager"
+  },
+  {
+   "role": "BDF Sales Manager"
+  },
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "BDF Recovery"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "BDF Auditor"
+  },
+  {
+   "role": "BDF CA"
+  },
+  {
+   "role": "BDF Sales Invoice Creator"
+  },
+  {
+   "role": "BDF Billing Executive"
+  },
+  {
+   "role": "BDF Sales Return Approvers"
+  },
+  {
+   "role": "BDF Outstanding View"
+  },
+  {
+   "role": "BDF Account Manager"
+  },
+  {
+   "role": "BDF Plant Cash and Ledger Viewer"
+  },
+  {
+   "role": "Employee Self Service"
+  }
+ ]
+}
