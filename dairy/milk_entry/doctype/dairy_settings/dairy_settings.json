@@ -131,7 +131,11 @@
   "variable_deduction_section",
   "variable_deduction_debit_account",
   "column_break_mdeo2",
-  "variable_deduction_credit_account"
+  "variable_deduction_credit_account",
+  "section_break_0cpzy",
+  "loan_deduction_debit_account",
+  "column_break_kai1g",
+  "loan_deduction_credit_account"
  ],
  "fields": [
   {
@@ -769,7 +773,7 @@
   {
    "fieldname": "variable_deduction_debit_account",
    "fieldtype": "Link",
-   "label": "Variable Deduction Dedit Account",
+   "label": "Variable Deduction Debit Account",
    "options": "Account"
   },
   {
@@ -781,12 +785,33 @@
    "fieldtype": "Link",
    "label": "Variable Deduction Credit Account",
    "options": "Account"
+  },
+  {
+   "fieldname": "section_break_0cpzy",
+   "fieldtype": "Section Break",
+   "label": "Loan Deduction"
+  },
+  {
+   "fieldname": "loan_deduction_debit_account",
+   "fieldtype": "Link",
+   "label": "Loan Deduction Debit Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "column_break_kai1g",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "loan_deduction_credit_account",
+   "fieldtype": "Link",
+   "label": "Loan Deduction Credit Account",
+   "options": "Account"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-09-11 13:31:48.180322",
+ "modified": "2024-12-19 07:21:59.608339",
  "modified_by": "Administrator",
  "module": "Milk Entry",
  "name": "Dairy Settings",
