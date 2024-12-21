@@ -9,6 +9,7 @@
  "field_order": [
   "crate_name",
   "item",
+  "limit",
   "column_break_3",
   "company",
   "currency_and_price_section",
@@ -69,13 +70,20 @@
   {
    "fieldname": "column_break_7",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "limit",
+   "fieldtype": "Check",
+   "label": "Calculate Even Less Than Limit"
   }
  ],
  "links": [],
- "modified": "2020-09-11 16:11:40.094935",
+ "modified": "2024-12-19 23:00:24.062841",
  "modified_by": "Administrator",
  "module": "Milk Entry",
  "name": "Crate Type",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
@@ -95,5 +103,6 @@
  "search_fields": "item",
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }
