@@ -92,10 +92,11 @@ class DairySettings(Document):
 		if p_inv.custom_date:
 			if p_inv.default_payment_type == 'Days':
 				n_days_ago = (datetime.datetime.strptime(p_inv.previous_sync_date,'%Y-%m-%d')) + timedelta(days= p_inv.days-1)
-				purchase = frappe.db.sql("""select distinct(supplier) as name 
-												from `tabPurchase Receipt` 
-												where docstatus =1 and posting_date BETWEEN '{0}' and '{1}'
-												""".format(p_inv.previous_sync_date,getdate(n_days_ago)), as_dict =True)
+				purchase = frappe.db.sql("""
+					SELECT DISTINCT supplier AS name 
+					FROM `tabPurchase Receipt`
+					WHERE docstatus = 1 AND posting_date BETWEEN %s AND %s
+				""", (p_inv.previous_sync_date, n_days_ago), as_dict=True)
 				for i in purchase:
 					milk_entry_li=[]
 					milk_type=""
@@ -117,7 +118,7 @@ class DairySettings(Document):
 										milk_type=pri.custom_milk_type
 									pi.supplier = milk.member if  ware.is_third_party_dcs == 0 else ware.supplier
 									pi.set_posting_time = 1
-									# pi.posting_date = p_inv.custom_date
+									pi.posting_date = p_inv.custom_date
 									for itm in pri.items:
 										pi.append(
 											"items",
@@ -215,7 +216,7 @@ class DairySettings(Document):
 						pi.append("taxes", tax_row3)
 						pi.allocate_advances_automatically=True
 						pi.save(ignore_permissions = True)
-						pi.submit()
+						# pi.submit()
 						frappe.msgprint(str(f"Purchase Invoice Generated {pi.name}"))
 						if (pi.docstatus == 1):
 							if(len(milk_entry_li)>=1):
