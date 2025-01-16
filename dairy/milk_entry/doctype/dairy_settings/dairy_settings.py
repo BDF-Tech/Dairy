@@ -108,7 +108,7 @@ class DairySettings(Document):
 						SELECT milk_entry, status, supplier
 						FROM `tabPurchase Receipt`
 						WHERE docstatus = 1 AND supplier = %s AND posting_date BETWEEN %s AND %s 
-						AND per_billed < 100 AND milk_entry IS NOT NULL
+						AND per_billed < 100 AND milk_entry IS NOT NULL AND custom_purchase_invoice_done = 0
 					""", (supplier.name, p_inv.previous_sync_date, n_days_ago), as_dict=True)
 
 					if not receipts:
@@ -121,10 +121,7 @@ class DairySettings(Document):
 
 					for receipt in receipts:
 						if receipt.milk_entry:
-							existing_invoice = frappe.db.exists(
-								"Purchase Invoice",
-								{"docstatus": 1, "supplier": supplier.name, "milk_entry": receipt.milk_entry}
-							)
+							existing_invoice = frappe.db.exists("Purchase Invoice",{"docstatus": 1, "supplier": supplier.name, "custom_remark": supplier.name})
 							if existing_invoice:
 								continue
 
@@ -141,7 +138,6 @@ class DairySettings(Document):
 								if pri.custom_milk_type:
 									milk_type = pri.custom_milk_type
 
-								# Add items to Purchase Invoice
 								for itm in pri.items:
 									pi.append("items", {
 										'item_code': itm.item_code,
@@ -163,18 +159,17 @@ class DairySettings(Document):
 										'snf_per': itm.snf_clr_per,
 										'milk_entry': milk.name
 									})
-
-					# Set standard deductions
 					set_standard_deductions(pi, milk, milk_type, p_inv)
 
-					# Save and submit Purchase Invoice
-					if pi.items:  # Only save if there are items
+					if pi.items:
 						pi.save(ignore_permissions=True)
+						for ip in pi.items:
+							if ip.purchase_receipt:
+								frappe.db.set_value("Purchase Receipt", ip.purchase_receipt, 'custom_purchase_invoice_done', 1)
 						pi.submit()
 
 						frappe.msgprint(f"Purchase Invoice Generated: {pi.name}")
 
-						# Update milk entry status to Billed
 						for milk_entry in milk_entry_li:
 							milk_doc = frappe.get_doc('Milk Entry', milk_entry)
 							milk_doc.db_set('status', 'Billed')
