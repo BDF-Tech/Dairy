@@ -218,11 +218,11 @@ class DairySettings(Document):
 						pi.save(ignore_permissions = True)
 						# pi.submit()
 						frappe.msgprint(str(f"Purchase Invoice Generated {pi.name}"))
-						if (pi.docstatus == 1):
-							if(len(milk_entry_li)>=1):
-								for i in milk_entry_li:
-									milk =frappe.get_doc('Milk Entry',str(i))
-									milk.db_set('status','Billed')
+						# if (pi.docstatus == 1):
+						if(len(milk_entry_li)>=1):
+							for i in milk_entry_li:
+								milk =frappe.get_doc('Milk Entry',str(i))
+								milk.db_set('status','Billed')
 						frappe.db.commit()
 				p_inv.previous_sync_date=getdate(n_days_ago)
 				p_inv.save()
