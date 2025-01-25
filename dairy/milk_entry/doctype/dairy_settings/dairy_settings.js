@@ -81,14 +81,6 @@ frappe.ui.form.on('Dairy Settings', {
 		    frappe.throw(__("Set Days greater than the Zero!"));
 		}
 	},
-	
-	// purchase_invoice: function(frm){
-    //     frappe.call({
-	// 		method: 'dairy.milk_entry.doctype.dairy_settings.dairy_settings.purchase_invoice',
-	// 		// args: {employee: frm.doc.employee, fieldname: property},
-	// 	});
-    //     console.log('purchase_incoiveEEEEEEEEEEEEEEEEEEEE')
-    // },
     refresh : function(frm){
         frm.add_custom_button(__('Custom Payment'),function() {
             return frappe.call({

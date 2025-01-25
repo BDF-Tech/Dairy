@@ -1,859 +1,843 @@
 {
- "actions": [],
- "creation": "2019-10-21 13:33:18.062242",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "dairy_settings",
-  "section_break_2",
-  "def_buf_milk_rate",
-  "def_cow_milk_rate",
-  "def_mix_milk_rate",
-  "column_break_5",
-  "can_volume",
-  "max_allowed",
-  "section_break_8",
-  "cow_pro",
-  "cb21",
-  "buf_pro",
-  "cb6",
-  "mix_pro",
-  "sb21",
-  "s_cow_milk",
-  "cb22",
-  "s_buf_milk",
-  "cb23",
-  "s_mix_milk",
-  "sb22",
-  "c_cow_milk",
-  "cb25",
-  "c_buf_milk",
-  "cb26",
-  "c_mix_milk",
-  "section_break_14",
-  "pricelist_settings",
-  "section_break_11",
-  "data_12",
-  "data_13",
-  "data_14",
-  "data_15",
-  "column_break_16",
-  "min",
-  "fat_min_cow_milk",
-  "fat_min_buf_milk",
-  "fat_min_mix_milk",
-  "column_break_13",
-  "max",
-  "fat_max_cow_milk",
-  "fat_max_buf_milk",
-  "fat_max_mix_milk",
-  "column_break_17",
-  "fat_interval",
-  "fat_interval_cow_milk",
-  "fat_interval_buf_milk",
-  "fat_interval_mix_milk",
-  "sb3",
-  "head12",
-  "cow_1",
-  "data_52",
-  "date_53",
-  "cb11",
-  "head13",
-  "snf_min_cow_milk",
-  "snf_min_buf_milk",
-  "snf_min_mix_milk",
-  "cb16",
-  "head14",
-  "snf_max_cow_milk",
-  "snf_max_buf_milk",
-  "snf_max_mix_milk",
-  "cb17",
-  "head15",
-  "snf_interval_cow_milk",
-  "snf_interval_buf_milk",
-  "snf_interval_mix_milk",
-  "section_break_21",
-  "default_payment",
-  "default_payment_type",
-  "days",
-  "column_break_73",
-  "previous_sync_date",
-  "section_break_xznf1",
-  "custom_date",
-  "section_break_60",
-  "order_locking_time",
-  "morning_locking_time",
-  "evening_locking_time",
-  "h3d",
-  "order_controller",
-  "get_territory",
-  "section_break_77",
-  "invoice_morning",
-  "invoice_controller",
-  "column_break_68fll",
-  "invoice_evening_shift",
-  "section_break_lu4nq",
-  "auto_print_milk_receipt",
-  "quality_inspection_required_for_van_collection",
-  "column_break_82",
-  "restrict_multiple_orders_in_single_shift",
-  "allow_changing",
-  "milk_leakage_section",
-  "applicable_on",
-  "leakage_calculated_on",
-  "column_break_81",
-  "leakage_percentage",
-  "leakage_qty",
-  "crate_section",
-  "crate_reconciliation_based_on",
-  "column_break_91",
-  "crate_loss_billed_to",
-  "section_break_jsl50",
-  "items_to_add_fat",
-  "item_to_add_snf_fat",
-  "cream_item",
-  "column_break_ypomu",
-  "items_to_add_snf",
-  "threshold_for_fat_separation",
-  "operation",
-  "workstation_type",
-  "workstation",
-  "operation_time",
-  "accounting_section",
-  "file_path_download_csv",
-  "standard_and_variable_deduction_section",
-  "bill_wise_ded_account",
-  "column_break_hnekh",
-  "liter_wise_ded_account",
-  "column_break_wbmp7",
-  "percentage_wise_ded_account",
-  "variable_deduction_section",
-  "variable_deduction_debit_account",
-  "column_break_mdeo2",
-<<<<<<< HEAD
-  "variable_deduction_credit_account"
-=======
-  "variable_deduction_credit_account",
-  "section_break_0cpzy",
-  "loan_deduction_debit_account",
-  "column_break_kai1g",
-  "loan_deduction_credit_account"
->>>>>>> eaa607b (Update)
- ],
- "fields": [
-  {
-   "fieldname": "dairy_settings",
-   "fieldtype": "Heading",
-   "label": "Dairy Settings"
-  },
-  {
-   "fieldname": "section_break_2",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "def_buf_milk_rate",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Default Buffalo Milk Rate"
-  },
-  {
-   "fieldname": "def_cow_milk_rate",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Default Cow Milk Rate"
-  },
-  {
-   "fieldname": "def_mix_milk_rate",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Default Mix Milk Rate"
-  },
-  {
-   "fieldname": "column_break_5",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "can_volume",
-   "fieldtype": "Data",
-   "label": "Can Volume"
-  },
-  {
-   "fieldname": "max_allowed",
-   "fieldtype": "Data",
-   "label": "Max Allowed Capacity"
-  },
-  {
-   "fieldname": "section_break_8",
-   "fieldtype": "Section Break",
-   "label": "Good Milk Item"
-  },
-  {
-   "fieldname": "pricelist_settings",
-   "fieldtype": "Heading",
-   "label": "PriceList Settings"
-  },
-  {
-   "fieldname": "section_break_11",
-   "fieldtype": "Section Break",
-   "label": "Fat"
-  },
-  {
-   "fieldname": "data_12",
-   "fieldtype": "Heading",
-   "label": "Milk Type"
-  },
-  {
-   "default": "Cow Milk",
-   "fieldname": "data_13",
-   "fieldtype": "Data",
-   "label": " ",
-   "read_only": 1
-  },
-  {
-   "default": "Buffalo Milk",
-   "fieldname": "data_14",
-   "fieldtype": "Data",
-   "label": " ",
-   "read_only": 1
-  },
-  {
-   "default": "Mix Milk",
-   "fieldname": "data_15",
-   "fieldtype": "Data",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_16",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "min",
-   "fieldtype": "Heading",
-   "label": "Min"
-  },
-  {
-   "fieldname": "column_break_13",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "max",
-   "fieldtype": "Heading",
-   "label": "Max"
-  },
-  {
-   "fieldname": "column_break_17",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_21",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "default_payment",
-   "fieldtype": "Heading",
-   "label": "Default Payment"
-  },
-  {
-   "fieldname": "default_payment_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Default Payments",
-   "options": "Days"
-  },
-  {
-   "depends_on": "eval:doc.default_payment_type == 'Days'",
-   "fieldname": "days",
-   "fieldtype": "Int",
-   "label": "Days"
-  },
-  {
-   "fieldname": "fat_min_cow_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "fat_min_buf_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "fat_min_mix_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "fat_max_cow_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "fat_max_mix_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "fat_max_buf_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "fat_interval",
-   "fieldtype": "Heading",
-   "label": "Interval"
-  },
-  {
-   "fieldname": "fat_interval_cow_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "fat_interval_buf_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "fat_interval_mix_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "sb3",
-   "fieldtype": "Section Break",
-   "label": "SNF"
-  },
-  {
-   "fieldname": "head12",
-   "fieldtype": "Heading",
-   "label": "Milk Type"
-  },
-  {
-   "fieldname": "head13",
-   "fieldtype": "Heading",
-   "label": "Min"
-  },
-  {
-   "fieldname": "snf_min_cow_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "snf_min_buf_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "snf_min_mix_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "cb16",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "head14",
-   "fieldtype": "Heading",
-   "label": "Max"
-  },
-  {
-   "fieldname": "snf_max_cow_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "snf_max_buf_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "snf_max_mix_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "cb17",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "head15",
-   "fieldtype": "Heading",
-   "label": "Interval"
-  },
-  {
-   "fieldname": "snf_interval_cow_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "snf_interval_buf_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "fieldname": "snf_interval_mix_milk",
-   "fieldtype": "Float"
-  },
-  {
-   "default": "Cow Milk",
-   "fieldname": "cow_1",
-   "fieldtype": "Data",
-   "read_only": 1
-  },
-  {
-   "default": "Buffalo Milk",
-   "fieldname": "data_52",
-   "fieldtype": "Data",
-   "read_only": 1
-  },
-  {
-   "default": "Mix Milk",
-   "fieldname": "date_53",
-   "fieldtype": "Data",
-   "read_only": 1
-  },
-  {
-   "fieldname": "cb11",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "cow_pro",
-   "fieldtype": "Link",
-   "label": "Good Cow Milk",
-   "options": "Item"
-  },
-  {
-   "fieldname": "buf_pro",
-   "fieldtype": "Link",
-   "label": "Good Buffalo Milk",
-   "options": "Item"
-  },
-  {
-   "fieldname": "cb6",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "mix_pro",
-   "fieldtype": "Link",
-   "label": " Good Mix Milk",
-   "options": "Item"
-  },
-  {
-   "fieldname": "section_break_14",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "section_break_60",
-   "fieldtype": "Section Break"
-  },
-  {
-   "bold": 1,
-   "default": "HH:mm",
-   "fieldname": "morning_locking_time",
-   "fieldtype": "Time",
-   "in_list_view": 1,
-   "label": "Order Locking Time for Morning Shift"
-  },
-  {
-   "bold": 1,
-   "fieldname": "evening_locking_time",
-   "fieldtype": "Time",
-   "in_list_view": 1,
-   "label": "Order Locking Time for Evening Shift"
-  },
-  {
-   "fieldname": "order_locking_time",
-   "fieldtype": "Heading",
-   "label": "Order Locking Time"
-  },
-  {
-   "fieldname": "cb21",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "sb21",
-   "fieldtype": "Section Break",
-   "label": "Sour Milk Item"
-  },
-  {
-   "fieldname": "s_cow_milk",
-   "fieldtype": "Link",
-   "label": "Sour Cow Milk",
-   "options": "Item"
-  },
-  {
-   "fieldname": "cb22",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "s_buf_milk",
-   "fieldtype": "Link",
-   "label": "Sour Buffalo Milk",
-   "options": "Item"
-  },
-  {
-   "fieldname": "cb23",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "s_mix_milk",
-   "fieldtype": "Link",
-   "label": "Sour Mix Milk",
-   "options": "Item"
-  },
-  {
-   "fieldname": "sb22",
-   "fieldtype": "Section Break",
-   "label": "Curd Milk Item"
-  },
-  {
-   "fieldname": "c_cow_milk",
-   "fieldtype": "Link",
-   "label": "Curd Cow Milk",
-   "options": "Item"
-  },
-  {
-   "fieldname": "cb25",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "c_buf_milk",
-   "fieldtype": "Link",
-   "label": "Curd Buffalo Milk",
-   "options": "Item"
-  },
-  {
-   "fieldname": "cb26",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "c_mix_milk",
-   "fieldtype": "Link",
-   "label": "Curd Mix Milk",
-   "options": "Item"
-  },
-  {
-   "fieldname": "section_break_77",
-   "fieldtype": "Section Break",
-   "label": "Invoice Locking Time"
-  },
-  {
-   "default": "0",
-   "fieldname": "auto_print_milk_receipt",
-   "fieldtype": "Check",
-   "label": "Auto Print Milk Receipt"
-  },
-  {
-   "fieldname": "milk_leakage_section",
-   "fieldtype": "Section Break",
-   "label": "Milk Leakage"
-  },
-  {
-   "fieldname": "leakage_percentage",
-   "fieldtype": "Percent",
-   "label": "Leakage Percentage"
-  },
-  {
-   "fieldname": "column_break_81",
-   "fieldtype": "Column Break"
-  },
-  {
-   "description": "Leakage would only be applicable on the item in sales order when the item has leakage applicable and the quantity of the item in the selected UOM is greater than what is defined here.",
-   "fieldname": "leakage_qty",
-   "fieldtype": "Float",
-   "label": "Leakage Threshold Qty"
-  },
-  {
-   "default": "Stock UOM",
-   "fieldname": "applicable_on",
-   "fieldtype": "Select",
-   "label": "Leakage Applicable on",
-   "options": "Stock UOM\nOrder UOM"
-  },
-  {
-   "default": "0",
-   "fieldname": "restrict_multiple_orders_in_single_shift",
-   "fieldtype": "Check",
-   "label": "Restrict Multiple Orders in Single Shift"
-  },
-  {
-   "fieldname": "h3d",
-   "fieldtype": "Heading",
-   "label": " "
-  },
-  {
-   "fieldname": "get_territory",
-   "fieldtype": "Select",
-   "label": "Get Territory",
-   "options": "Customer\nRoute"
-  },
-  {
-   "fieldname": "column_break_82",
-   "fieldtype": "Column Break"
-  },
-  {
-   "description": "Role that is allowed to submit orders that exceed credit limits set.",
-   "fieldname": "order_controller",
-   "fieldtype": "Link",
-   "label": "Order Controller",
-   "options": "Role"
-  },
-  {
-   "fieldname": "crate_section",
-   "fieldtype": "Section Break",
-   "label": "Crate"
-  },
-  {
-   "default": "Delivery Note",
-   "description": "If Crate Reconciliation Based on is empty. Then Delivery Note is consider as a default value",
-   "fieldname": "crate_reconciliation_based_on",
-   "fieldtype": "Select",
-   "label": "Crate Reconciliation Based on",
-   "options": "Delivery Note\nGate Pass\nSales Invoice\nSales Order"
-  },
-  {
-   "fieldname": "column_break_91",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "Customer",
-   "description": "If Crate Loss Billed To is empty. Then Customer is consider as a default value",
-   "fieldname": "crate_loss_billed_to",
-   "fieldtype": "Select",
-   "label": "Crate Loss Billed To",
-   "options": "Customer\nTransporter"
-  },
-  {
-   "default": "Sales Order",
-   "fieldname": "leakage_calculated_on",
-   "fieldtype": "Select",
-   "label": "Leakage Calculated on",
-   "options": "Sales Order\nGate Pass"
-  },
-  {
-   "default": "0",
-   "fieldname": "quality_inspection_required_for_van_collection",
-   "fieldtype": "Check",
-   "label": "Quality Inspection Required for Van Collection"
-  },
-  {
-   "fieldname": "column_break_73",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "previous_sync_date",
-   "fieldtype": "Date",
-   "label": "Previous Sync Date"
-  },
-  {
-   "fieldname": "section_break_jsl50",
-   "fieldtype": "Section Break",
-   "label": "Manufacturing Settings"
-  },
-  {
-   "fieldname": "column_break_ypomu",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "items_to_add_fat",
-   "fieldtype": "Table",
-   "label": "Items to Add Fat",
-   "options": "fatsnf table"
-  },
-  {
-   "fieldname": "items_to_add_snf",
-   "fieldtype": "Table",
-   "label": "Items to Add SNF",
-   "options": "Add Snf Table"
-  },
-  {
-   "fieldname": "item_to_add_snf_fat",
-   "fieldtype": "Link",
-   "label": "Item To Remove Snf/Fat",
-   "options": "Item"
-  },
-  {
-   "fieldname": "threshold_for_fat_separation",
-   "fieldtype": "Float",
-   "label": "Threshold For Fat Separation(Kg Fat)"
-  },
-  {
-   "fieldname": "operation",
-   "fieldtype": "Link",
-   "label": "Operation",
-   "options": "Operation"
-  },
-  {
-   "fieldname": "workstation_type",
-   "fieldtype": "Link",
-   "label": "Workstation Type",
-   "options": "Workstation Type"
-  },
-  {
-   "fieldname": "workstation",
-   "fieldtype": "Link",
-   "label": "Workstation",
-   "options": "Workstation"
-  },
-  {
-   "fieldname": "operation_time",
-   "fieldtype": "Float",
-   "label": "Operation Time"
-  },
-  {
-   "default": "0",
-   "fieldname": "allow_changing",
-   "fieldtype": "Check",
-   "label": "Allow Changing Fat/Snf In RMRD Lines"
-  },
-  {
-   "fieldname": "cream_item",
-   "fieldtype": "Link",
-   "label": "Cream Item",
-   "options": "Item"
-  },
-  {
-   "fieldname": "accounting_section",
-   "fieldtype": "Section Break",
-   "label": "Accounting"
-  },
-  {
-   "fieldname": "file_path_download_csv",
-   "fieldtype": "Data",
-   "label": "File Path Download Csv"
-  },
-  {
-   "fieldname": "section_break_xznf1",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "custom_date",
-   "fieldtype": "Date",
-   "label": "Custom Date"
-  },
-  {
-   "fieldname": "standard_and_variable_deduction_section",
-   "fieldtype": "Section Break",
-   "label": "Standard Deduction"
-  },
-  {
-   "fieldname": "bill_wise_ded_account",
-   "fieldtype": "Link",
-   "label": "Bill Wise Ded Account",
-   "options": "Account"
-  },
-  {
-   "fieldname": "liter_wise_ded_account",
-   "fieldtype": "Link",
-   "label": "Liter Wise Ded Account",
-   "options": "Account"
-  },
-  {
-   "fieldname": "percentage_wise_ded_account",
-   "fieldtype": "Link",
-   "label": "Percentage Wise Ded Account",
-   "options": "Account"
-  },
-  {
-   "fieldname": "column_break_hnekh",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_wbmp7",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_lu4nq",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "invoice_controller",
-   "fieldtype": "Link",
-   "label": "Invoice Controller",
-   "options": "Role"
-  },
-  {
-   "fieldname": "column_break_68fll",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "invoice_evening_shift",
-   "fieldtype": "Time",
-   "label": "Invoice Locking Time for Evening Shift"
-  },
-  {
-   "fieldname": "invoice_morning",
-   "fieldtype": "Time",
-   "label": "Invoice Locking Time for Morning Shift"
-  },
-  {
-   "fieldname": "variable_deduction_section",
-   "fieldtype": "Section Break",
-   "label": "Variable Deduction"
-  },
-  {
-   "fieldname": "variable_deduction_debit_account",
-   "fieldtype": "Link",
-<<<<<<< HEAD
-   "label": "Variable Deduction Dedit Account",
-=======
-   "label": "Variable Deduction Debit Account",
->>>>>>> eaa607b (Update)
-   "options": "Account"
-  },
-  {
-   "fieldname": "column_break_mdeo2",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "variable_deduction_credit_account",
-   "fieldtype": "Link",
-   "label": "Variable Deduction Credit Account",
-   "options": "Account"
-<<<<<<< HEAD
-=======
-  },
-  {
-   "fieldname": "section_break_0cpzy",
-   "fieldtype": "Section Break",
-   "hidden": 1,
-   "label": "Loan Deduction"
-  },
-  {
-   "fieldname": "loan_deduction_debit_account",
-   "fieldtype": "Link",
-   "label": "Loan Deduction Debit Account",
-   "options": "Account"
-  },
-  {
-   "fieldname": "column_break_kai1g",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "loan_deduction_credit_account",
-   "fieldtype": "Link",
-   "label": "Loan Deduction Credit Account",
-   "options": "Account"
->>>>>>> eaa607b (Update)
+   "actions": [],
+   "creation": "2019-10-21 13:33:18.062242",
+   "doctype": "DocType",
+   "editable_grid": 1,
+   "engine": "InnoDB",
+   "field_order": [
+    "dairy_settings",
+    "section_break_2",
+    "def_buf_milk_rate",
+    "def_cow_milk_rate",
+    "def_mix_milk_rate",
+    "column_break_5",
+    "can_volume",
+    "max_allowed",
+    "section_break_8",
+    "cow_pro",
+    "cb21",
+    "buf_pro",
+    "cb6",
+    "mix_pro",
+    "sb21",
+    "s_cow_milk",
+    "cb22",
+    "s_buf_milk",
+    "cb23",
+    "s_mix_milk",
+    "sb22",
+    "c_cow_milk",
+    "cb25",
+    "c_buf_milk",
+    "cb26",
+    "c_mix_milk",
+    "section_break_14",
+    "pricelist_settings",
+    "section_break_11",
+    "data_12",
+    "data_13",
+    "data_14",
+    "data_15",
+    "column_break_16",
+    "min",
+    "fat_min_cow_milk",
+    "fat_min_buf_milk",
+    "fat_min_mix_milk",
+    "column_break_13",
+    "max",
+    "fat_max_cow_milk",
+    "fat_max_buf_milk",
+    "fat_max_mix_milk",
+    "column_break_17",
+    "fat_interval",
+    "fat_interval_cow_milk",
+    "fat_interval_buf_milk",
+    "fat_interval_mix_milk",
+    "sb3",
+    "head12",
+    "cow_1",
+    "data_52",
+    "date_53",
+    "cb11",
+    "head13",
+    "snf_min_cow_milk",
+    "snf_min_buf_milk",
+    "snf_min_mix_milk",
+    "cb16",
+    "head14",
+    "snf_max_cow_milk",
+    "snf_max_buf_milk",
+    "snf_max_mix_milk",
+    "cb17",
+    "head15",
+    "snf_interval_cow_milk",
+    "snf_interval_buf_milk",
+    "snf_interval_mix_milk",
+    "section_break_21",
+    "default_payment",
+    "default_payment_type",
+    "days",
+    "column_break_73",
+    "previous_sync_date",
+    "section_break_xznf1",
+    "custom_date",
+    "section_break_60",
+    "order_locking_time",
+    "morning_locking_time",
+    "evening_locking_time",
+    "h3d",
+    "order_controller",
+    "get_territory",
+    "section_break_77",
+    "invoice_morning",
+    "invoice_controller",
+    "column_break_68fll",
+    "invoice_evening_shift",
+    "section_break_lu4nq",
+    "auto_print_milk_receipt",
+    "quality_inspection_required_for_van_collection",
+    "column_break_82",
+    "restrict_multiple_orders_in_single_shift",
+    "allow_changing",
+    "milk_leakage_section",
+    "applicable_on",
+    "leakage_calculated_on",
+    "column_break_81",
+    "leakage_percentage",
+    "leakage_qty",
+    "crate_section",
+    "crate_reconciliation_based_on",
+    "column_break_91",
+    "crate_loss_billed_to",
+    "section_break_jsl50",
+    "items_to_add_fat",
+    "item_to_add_snf_fat",
+    "cream_item",
+    "column_break_ypomu",
+    "items_to_add_snf",
+    "threshold_for_fat_separation",
+    "operation",
+    "workstation_type",
+    "workstation",
+    "operation_time",
+    "accounting_section",
+    "file_path_download_csv",
+    "standard_and_variable_deduction_section",
+    "bill_wise_ded_account",
+    "column_break_hnekh",
+    "liter_wise_ded_account",
+    "column_break_wbmp7",
+    "percentage_wise_ded_account",
+    "variable_deduction_section",
+    "variable_deduction_debit_account",
+    "column_break_mdeo2",
+    "variable_deduction_credit_account",
+    "section_break_0cpzy",
+    "loan_deduction_debit_account",
+    "column_break_kai1g",
+    "loan_deduction_credit_account"
+   ],
+   "fields": [
+    {
+     "fieldname": "dairy_settings",
+     "fieldtype": "Heading",
+     "label": "Dairy Settings"
+    },
+    {
+     "fieldname": "section_break_2",
+     "fieldtype": "Section Break"
+    },
+    {
+     "fieldname": "def_buf_milk_rate",
+     "fieldtype": "Float",
+     "in_list_view": 1,
+     "label": "Default Buffalo Milk Rate"
+    },
+    {
+     "fieldname": "def_cow_milk_rate",
+     "fieldtype": "Float",
+     "in_list_view": 1,
+     "label": "Default Cow Milk Rate"
+    },
+    {
+     "fieldname": "def_mix_milk_rate",
+     "fieldtype": "Float",
+     "in_list_view": 1,
+     "label": "Default Mix Milk Rate"
+    },
+    {
+     "fieldname": "column_break_5",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "can_volume",
+     "fieldtype": "Data",
+     "label": "Can Volume"
+    },
+    {
+     "fieldname": "max_allowed",
+     "fieldtype": "Data",
+     "label": "Max Allowed Capacity"
+    },
+    {
+     "fieldname": "section_break_8",
+     "fieldtype": "Section Break",
+     "label": "Good Milk Item"
+    },
+    {
+     "fieldname": "pricelist_settings",
+     "fieldtype": "Heading",
+     "label": "PriceList Settings"
+    },
+    {
+     "fieldname": "section_break_11",
+     "fieldtype": "Section Break",
+     "label": "Fat"
+    },
+    {
+     "fieldname": "data_12",
+     "fieldtype": "Heading",
+     "label": "Milk Type"
+    },
+    {
+     "default": "Cow Milk",
+     "fieldname": "data_13",
+     "fieldtype": "Data",
+     "label": " ",
+     "read_only": 1
+    },
+    {
+     "default": "Buffalo Milk",
+     "fieldname": "data_14",
+     "fieldtype": "Data",
+     "label": " ",
+     "read_only": 1
+    },
+    {
+     "default": "Mix Milk",
+     "fieldname": "data_15",
+     "fieldtype": "Data",
+     "read_only": 1
+    },
+    {
+     "fieldname": "column_break_16",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "min",
+     "fieldtype": "Heading",
+     "label": "Min"
+    },
+    {
+     "fieldname": "column_break_13",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "max",
+     "fieldtype": "Heading",
+     "label": "Max"
+    },
+    {
+     "fieldname": "column_break_17",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "section_break_21",
+     "fieldtype": "Section Break"
+    },
+    {
+     "fieldname": "default_payment",
+     "fieldtype": "Heading",
+     "label": "Default Payment"
+    },
+    {
+     "fieldname": "default_payment_type",
+     "fieldtype": "Select",
+     "in_list_view": 1,
+     "label": "Default Payments",
+     "options": "Days"
+    },
+    {
+     "depends_on": "eval:doc.default_payment_type == 'Days'",
+     "fieldname": "days",
+     "fieldtype": "Int",
+     "label": "Days"
+    },
+    {
+     "fieldname": "fat_min_cow_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "fat_min_buf_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "fat_min_mix_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "fat_max_cow_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "fat_max_mix_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "fat_max_buf_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "fat_interval",
+     "fieldtype": "Heading",
+     "label": "Interval"
+    },
+    {
+     "fieldname": "fat_interval_cow_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "fat_interval_buf_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "fat_interval_mix_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "sb3",
+     "fieldtype": "Section Break",
+     "label": "SNF"
+    },
+    {
+     "fieldname": "head12",
+     "fieldtype": "Heading",
+     "label": "Milk Type"
+    },
+    {
+     "fieldname": "head13",
+     "fieldtype": "Heading",
+     "label": "Min"
+    },
+    {
+     "fieldname": "snf_min_cow_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "snf_min_buf_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "snf_min_mix_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "cb16",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "head14",
+     "fieldtype": "Heading",
+     "label": "Max"
+    },
+    {
+     "fieldname": "snf_max_cow_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "snf_max_buf_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "snf_max_mix_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "cb17",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "head15",
+     "fieldtype": "Heading",
+     "label": "Interval"
+    },
+    {
+     "fieldname": "snf_interval_cow_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "snf_interval_buf_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "fieldname": "snf_interval_mix_milk",
+     "fieldtype": "Float"
+    },
+    {
+     "default": "Cow Milk",
+     "fieldname": "cow_1",
+     "fieldtype": "Data",
+     "read_only": 1
+    },
+    {
+     "default": "Buffalo Milk",
+     "fieldname": "data_52",
+     "fieldtype": "Data",
+     "read_only": 1
+    },
+    {
+     "default": "Mix Milk",
+     "fieldname": "date_53",
+     "fieldtype": "Data",
+     "read_only": 1
+    },
+    {
+     "fieldname": "cb11",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "cow_pro",
+     "fieldtype": "Link",
+     "label": "Good Cow Milk",
+     "options": "Item"
+    },
+    {
+     "fieldname": "buf_pro",
+     "fieldtype": "Link",
+     "label": "Good Buffalo Milk",
+     "options": "Item"
+    },
+    {
+     "fieldname": "cb6",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "mix_pro",
+     "fieldtype": "Link",
+     "label": " Good Mix Milk",
+     "options": "Item"
+    },
+    {
+     "fieldname": "section_break_14",
+     "fieldtype": "Section Break"
+    },
+    {
+     "fieldname": "section_break_60",
+     "fieldtype": "Section Break"
+    },
+    {
+     "bold": 1,
+     "default": "HH:mm",
+     "fieldname": "morning_locking_time",
+     "fieldtype": "Time",
+     "in_list_view": 1,
+     "label": "Order Locking Time for Morning Shift"
+    },
+    {
+     "bold": 1,
+     "fieldname": "evening_locking_time",
+     "fieldtype": "Time",
+     "in_list_view": 1,
+     "label": "Order Locking Time for Evening Shift"
+    },
+    {
+     "fieldname": "order_locking_time",
+     "fieldtype": "Heading",
+     "label": "Order Locking Time"
+    },
+    {
+     "fieldname": "cb21",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "sb21",
+     "fieldtype": "Section Break",
+     "label": "Sour Milk Item"
+    },
+    {
+     "fieldname": "s_cow_milk",
+     "fieldtype": "Link",
+     "label": "Sour Cow Milk",
+     "options": "Item"
+    },
+    {
+     "fieldname": "cb22",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "s_buf_milk",
+     "fieldtype": "Link",
+     "label": "Sour Buffalo Milk",
+     "options": "Item"
+    },
+    {
+     "fieldname": "cb23",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "s_mix_milk",
+     "fieldtype": "Link",
+     "label": "Sour Mix Milk",
+     "options": "Item"
+    },
+    {
+     "fieldname": "sb22",
+     "fieldtype": "Section Break",
+     "label": "Curd Milk Item"
+    },
+    {
+     "fieldname": "c_cow_milk",
+     "fieldtype": "Link",
+     "label": "Curd Cow Milk",
+     "options": "Item"
+    },
+    {
+     "fieldname": "cb25",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "c_buf_milk",
+     "fieldtype": "Link",
+     "label": "Curd Buffalo Milk",
+     "options": "Item"
+    },
+    {
+     "fieldname": "cb26",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "c_mix_milk",
+     "fieldtype": "Link",
+     "label": "Curd Mix Milk",
+     "options": "Item"
+    },
+    {
+     "fieldname": "section_break_77",
+     "fieldtype": "Section Break",
+     "label": "Invoice Locking Time"
+    },
+    {
+     "default": "0",
+     "fieldname": "auto_print_milk_receipt",
+     "fieldtype": "Check",
+     "label": "Auto Print Milk Receipt"
+    },
+    {
+     "fieldname": "milk_leakage_section",
+     "fieldtype": "Section Break",
+     "label": "Milk Leakage"
+    },
+    {
+     "fieldname": "leakage_percentage",
+     "fieldtype": "Percent",
+     "label": "Leakage Percentage"
+    },
+    {
+     "fieldname": "column_break_81",
+     "fieldtype": "Column Break"
+    },
+    {
+     "description": "Leakage would only be applicable on the item in sales order when the item has leakage applicable and the quantity of the item in the selected UOM is greater than what is defined here.",
+     "fieldname": "leakage_qty",
+     "fieldtype": "Float",
+     "label": "Leakage Threshold Qty"
+    },
+    {
+     "default": "Stock UOM",
+     "fieldname": "applicable_on",
+     "fieldtype": "Select",
+     "label": "Leakage Applicable on",
+     "options": "Stock UOM\nOrder UOM"
+    },
+    {
+     "default": "0",
+     "fieldname": "restrict_multiple_orders_in_single_shift",
+     "fieldtype": "Check",
+     "label": "Restrict Multiple Orders in Single Shift"
+    },
+    {
+     "fieldname": "h3d",
+     "fieldtype": "Heading",
+     "label": " "
+    },
+    {
+     "fieldname": "get_territory",
+     "fieldtype": "Select",
+     "label": "Get Territory",
+     "options": "Customer\nRoute"
+    },
+    {
+     "fieldname": "column_break_82",
+     "fieldtype": "Column Break"
+    },
+    {
+     "description": "Role that is allowed to submit orders that exceed credit limits set.",
+     "fieldname": "order_controller",
+     "fieldtype": "Link",
+     "label": "Order Controller",
+     "options": "Role"
+    },
+    {
+     "fieldname": "crate_section",
+     "fieldtype": "Section Break",
+     "label": "Crate"
+    },
+    {
+     "default": "Delivery Note",
+     "description": "If Crate Reconciliation Based on is empty. Then Delivery Note is consider as a default value",
+     "fieldname": "crate_reconciliation_based_on",
+     "fieldtype": "Select",
+     "label": "Crate Reconciliation Based on",
+     "options": "Delivery Note\nGate Pass\nSales Invoice\nSales Order"
+    },
+    {
+     "fieldname": "column_break_91",
+     "fieldtype": "Column Break"
+    },
+    {
+     "default": "Customer",
+     "description": "If Crate Loss Billed To is empty. Then Customer is consider as a default value",
+     "fieldname": "crate_loss_billed_to",
+     "fieldtype": "Select",
+     "label": "Crate Loss Billed To",
+     "options": "Customer\nTransporter"
+    },
+    {
+     "default": "Sales Order",
+     "fieldname": "leakage_calculated_on",
+     "fieldtype": "Select",
+     "label": "Leakage Calculated on",
+     "options": "Sales Order\nGate Pass"
+    },
+    {
+     "default": "0",
+     "fieldname": "quality_inspection_required_for_van_collection",
+     "fieldtype": "Check",
+     "label": "Quality Inspection Required for Van Collection"
+    },
+    {
+     "fieldname": "column_break_73",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "previous_sync_date",
+     "fieldtype": "Date",
+     "label": "Previous Sync Date"
+    },
+    {
+     "fieldname": "section_break_jsl50",
+     "fieldtype": "Section Break",
+     "label": "Manufacturing Settings"
+    },
+    {
+     "fieldname": "column_break_ypomu",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "items_to_add_fat",
+     "fieldtype": "Table",
+     "label": "Items to Add Fat",
+     "options": "fatsnf table"
+    },
+    {
+     "fieldname": "items_to_add_snf",
+     "fieldtype": "Table",
+     "label": "Items to Add SNF",
+     "options": "Add Snf Table"
+    },
+    {
+     "fieldname": "item_to_add_snf_fat",
+     "fieldtype": "Link",
+     "label": "Item To Remove Snf/Fat",
+     "options": "Item"
+    },
+    {
+     "fieldname": "threshold_for_fat_separation",
+     "fieldtype": "Float",
+     "label": "Threshold For Fat Separation(Kg Fat)"
+    },
+    {
+     "fieldname": "operation",
+     "fieldtype": "Link",
+     "label": "Operation",
+     "options": "Operation"
+    },
+    {
+     "fieldname": "workstation_type",
+     "fieldtype": "Link",
+     "label": "Workstation Type",
+     "options": "Workstation Type"
+    },
+    {
+     "fieldname": "workstation",
+     "fieldtype": "Link",
+     "label": "Workstation",
+     "options": "Workstation"
+    },
+    {
+     "fieldname": "operation_time",
+     "fieldtype": "Float",
+     "label": "Operation Time"
+    },
+    {
+     "default": "0",
+     "fieldname": "allow_changing",
+     "fieldtype": "Check",
+     "label": "Allow Changing Fat/Snf In RMRD Lines"
+    },
+    {
+     "fieldname": "cream_item",
+     "fieldtype": "Link",
+     "label": "Cream Item",
+     "options": "Item"
+    },
+    {
+     "fieldname": "accounting_section",
+     "fieldtype": "Section Break",
+     "label": "Accounting"
+    },
+    {
+     "fieldname": "file_path_download_csv",
+     "fieldtype": "Data",
+     "label": "File Path Download Csv"
+    },
+    {
+     "fieldname": "section_break_xznf1",
+     "fieldtype": "Section Break"
+    },
+    {
+     "fieldname": "custom_date",
+     "fieldtype": "Date",
+     "label": "Custom Date"
+    },
+    {
+     "fieldname": "standard_and_variable_deduction_section",
+     "fieldtype": "Section Break",
+     "label": "Standard Deduction"
+    },
+    {
+     "fieldname": "bill_wise_ded_account",
+     "fieldtype": "Link",
+     "label": "Bill Wise Ded Account",
+     "options": "Account"
+    },
+    {
+     "fieldname": "liter_wise_ded_account",
+     "fieldtype": "Link",
+     "label": "Liter Wise Ded Account",
+     "options": "Account"
+    },
+    {
+     "fieldname": "percentage_wise_ded_account",
+     "fieldtype": "Link",
+     "label": "Percentage Wise Ded Account",
+     "options": "Account"
+    },
+    {
+     "fieldname": "column_break_hnekh",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "column_break_wbmp7",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "section_break_lu4nq",
+     "fieldtype": "Section Break"
+    },
+    {
+     "fieldname": "invoice_controller",
+     "fieldtype": "Link",
+     "label": "Invoice Controller",
+     "options": "Role"
+    },
+    {
+     "fieldname": "column_break_68fll",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "invoice_evening_shift",
+     "fieldtype": "Time",
+     "label": "Invoice Locking Time for Evening Shift"
+    },
+    {
+     "fieldname": "invoice_morning",
+     "fieldtype": "Time",
+     "label": "Invoice Locking Time for Morning Shift"
+    },
+    {
+     "fieldname": "variable_deduction_section",
+     "fieldtype": "Section Break",
+     "label": "Variable Deduction"
+    },
+    {
+     "fieldname": "variable_deduction_debit_account",
+     "fieldtype": "Link",
+     "label": "Variable Deduction Debit Account",
+     "options": "Account"
+    },
+    {
+     "fieldname": "column_break_mdeo2",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "variable_deduction_credit_account",
+     "fieldtype": "Link",
+     "label": "Variable Deduction Credit Account",
+     "options": "Account"
+    },
+    {
+     "fieldname": "section_break_0cpzy",
+     "fieldtype": "Section Break",
+     "label": "Loan Deduction"
+    },
+    {
+     "fieldname": "loan_deduction_debit_account",
+     "fieldtype": "Link",
+     "label": "Loan Deduction Debit Account",
+     "options": "Account"
+    },
+    {
+     "fieldname": "column_break_kai1g",
+     "fieldtype": "Column Break"
+    },
+    {
+     "fieldname": "loan_deduction_credit_account",
+     "fieldtype": "Link",
+     "label": "Loan Deduction Credit Account",
+     "options": "Account"
+    }
+   ],
+   "index_web_pages_for_search": 1,
+   "issingle": 1,
+   "links": [],
+   "modified": "2024-12-19 07:21:59.608339",
+   "modified_by": "Administrator",
+   "module": "Milk Entry",
+   "name": "Dairy Settings",
+   "owner": "Administrator",
+   "permissions": [
+    {
+     "create": 1,
+     "delete": 1,
+     "read": 1,
+     "role": "Dairy",
+     "write": 1
+    },
+    {
+     "create": 1,
+     "delete": 1,
+     "email": 1,
+     "print": 1,
+     "read": 1,
+     "role": "Administrator",
+     "share": 1,
+     "write": 1
+    }
+   ],
+   "show_name_in_global_search": 1,
+   "sort_field": "modified",
+   "sort_order": "DESC",
+   "states": [],
+   "track_changes": 1
   }
- ],
- "index_web_pages_for_search": 1,
- "issingle": 1,
- "links": [],
-<<<<<<< HEAD
- "modified": "2024-09-11 13:31:48.180322",
-=======
- "modified": "2024-10-30 13:53:02.611784",
->>>>>>> eaa607b (Update)
- "modified_by": "Administrator",
- "module": "Milk Entry",
- "name": "Dairy Settings",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "read": 1,
-   "role": "Dairy",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "print": 1,
-   "read": 1,
-   "role": "Administrator",
-   "share": 1,
-   "write": 1
-  }
- ],
- "show_name_in_global_search": 1,
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": [],
- "track_changes": 1
-}
