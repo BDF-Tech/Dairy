@@ -218,7 +218,7 @@ class DairySettings(Document):
 								"rate": per_wise
 							}
 							pi.append("taxes", tax_row3)
-							pi.allocate_advances_automatically=True
+							# pi.allocate_advances_automatically=True
 							pi.save(ignore_permissions = True)
 							# pi.submit()
 							frappe.msgprint(str(f"Purchase Invoice Generated {pi.name}"))
