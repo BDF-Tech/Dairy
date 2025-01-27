@@ -1,8 +1,6 @@
-<<<<<<< HEAD
-=======
-# # -*- coding: utf-8 -*-
-# # Copyright (c) 2020, Dexciss Technology Pvt Ltd and contributors
-# # For license information, please see license.txt
+# -*- coding: utf-8 -*-
+# Copyright (c) 2020, Dexciss Technology Pvt Ltd and contributors
+# For license information, please see license.txt
 
 # from __future__ import unicode_literals
 # import frappe
@@ -815,8 +813,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020, Dexciss Technology Pvt Ltd and contributors
 # For license information, please see license.txt
-
->>>>>>> eaa607b (Update)
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
@@ -859,10 +855,6 @@ class GatePass(Document):
 				frappe.db.commit()
 
 		self.reload()
-<<<<<<< HEAD
-
-=======
->>>>>>> eaa607b (Update)
 	def before_submit(sales):
 		frappe.db.sql("delete from `tabLeakage Item` where parent = %(name)s",{'name':sales.name})
 		frappe.db.commit()
@@ -1423,10 +1415,7 @@ def make_sales_invoice(source_name, target_doc=None, skip_item_mapping=False):
 			"doctype": "Gate Pass",
 			"validation": {
 				"docstatus": ["=", 1]
-<<<<<<< HEAD
-=======
 				# "material_request_type": ["=", "Purchase"]
->>>>>>> eaa607b (Update)
 			}
 		},
 		"Sales Invoice Item": {
