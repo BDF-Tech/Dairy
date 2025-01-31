@@ -1,12 +1,6 @@
 {
  "custom_fields": [],
-<<<<<<< HEAD
  "custom_perms": [],
-=======
- "custom_perms": [
-  
- ],
->>>>>>> eaa607b (Update)
  "doctype": "Milk Entry",
  "property_setters": [
   

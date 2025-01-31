@@ -481,13 +481,7 @@
    "width": null
   }
  ],
-<<<<<<< HEAD
  "custom_perms": [],
-=======
- "custom_perms": [
-  
- ],
->>>>>>> eaa607b (Update)
  "doctype": "Warehouse",
  "property_setters": [],
  "sync_on_migrate": 1
