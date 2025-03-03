@@ -97,16 +97,18 @@ class DairySettings(Document):
 					FROM `tabPurchase Receipt`
 					WHERE docstatus = 1 AND posting_date BETWEEN %s AND %s
 				""", (p_inv.previous_sync_date, n_days_ago), as_dict=True)
+				frappe.msgprint(str(purchase))
 				for i in purchase:
 					milk_entry_li=[]
 					milk_type=""
-					exists = frappe.get_value("Purchase Invoice", 
-								{'supplier': i.name, 'custom_remark': i.name, 'posting_date': p_inv.custom_date},'name')
+					exists = frappe.get_value("Purchase Invoice", {'supplier': i.name, 'custom_remark': i.name, 'posting_date': p_inv.custom_date},'name')
+					# exists = frappe.get_value("Purchase Invoice", {'supplier': i.name, 'posting_date': p_inv.custom_date},'name')
 					if not exists:
 						me=frappe.db.sql("""select milk_entry , status , supplier
 													from `tabPurchase Receipt` 
 													where docstatus= 1 and supplier = '{0}' and posting_date BETWEEN '{1}' and '{2}' and per_billed<100 and milk_entry is not null
 													""".format(i.name,p_inv.previous_sync_date, getdate(n_days_ago)), as_dict =True)
+						# frappe.msgprint(str(me))
 						if me:
 							pi = frappe.new_doc("Purchase Invoice")
 							for m in me:
@@ -915,15 +917,6 @@ def purchase_invoice():
 							pr =  frappe.db.get_value('Purchase Receipt',{'milk_entry':milk.name,"docstatus":1},['name'])
 							if pr:
 								pri =  frappe.get_doc('Purchase Receipt',pr)
-
-							# if pr:
-								# pur_inv = frappe.db.get_value('Purchase Invoice Item',{'purchase_receipt':pr},["parent"])
-								# print('pur_inv***************************************',pur_inv)
-								# inv = frappe.db.get_value('Purchase Invoice Item',{'purchase_receipt':pr},["pr_detail"])
-								# print('inv^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',inv)
-								# if not inv:
-								
-								# pi = frappe.new_doc("Purchase Invoice")
 								pi.supplier = milk.member if  ware.is_third_party_dcs == 0 else ware.supplier
 								# pi.milk_entry = milk.name
 								for itm in pri.items:
@@ -985,15 +978,6 @@ def purchase_invoice():
 					pr =  frappe.db.get_value('Purchase Receipt',{'milk_entry':milk.name,"docstatus":1},['name'])
 					if pr:
 						pri =  frappe.get_doc('Purchase Receipt',pr)
-
-					# if pr:
-						# pur_inv = frappe.db.get_value('Purchase Invoice Item',{'purchase_receipt':pr},["parent"])
-						# print('pur_inv***************************************',pur_inv)
-						# inv = frappe.db.get_value('Purchase Invoice Item',{'purchase_receipt':pr},["pr_detail"])
-						# print('inv^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',inv)
-						# if not inv:
-						
-						# pi = frappe.new_doc("Purchase Invoice")
 						pi.supplier = milk.member
 						# pi.milk_entry = milk.name
 						for itm in pri.items:
