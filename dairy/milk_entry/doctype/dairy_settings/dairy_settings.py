@@ -104,9 +104,8 @@ class DairySettings(Document):
 					exists = frappe.get_value("Purchase Invoice", {'supplier': i.name, 'custom_remark': i.name, 'posting_date': p_inv.custom_date},'name')
 					# exists = frappe.get_value("Purchase Invoice", {'supplier': i.name, 'posting_date': p_inv.custom_date},'name')
 					if not exists:
-						me=frappe.db.sql("""select milk_entry , status , supplier
-													from `tabPurchase Receipt` 
-													where docstatus= 1 and supplier = '{0}' and posting_date BETWEEN '{1}' and '{2}' and per_billed<100 and milk_entry is not null
+						me=frappe.db.sql("""select milk_entry , status , supplier from `tabPurchase Receipt` 
+								where docstatus= 1 and supplier = '{0}' and posting_date BETWEEN '{1}' and '{2}' and milk_entry is not null
 													""".format(i.name,p_inv.previous_sync_date, getdate(n_days_ago)), as_dict =True)
 						# frappe.msgprint(str(me))
 						if me:
