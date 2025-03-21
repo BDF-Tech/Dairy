@@ -37,8 +37,10 @@ class MilkEntry(Document):
                         select milk_rate.name from `tabMilk Rate` as milk_rate 
                         inner join `tabWarehouse Child` as ware on ware.parent = milk_rate.name 
                         where milk_rate.milk_type = '{0}' and ware.warehouse_id = '{1}' 
-                        and milk_rate.docstatus = 1 and milk_rate.effective_date <= '{2}' order by milk_rate.creation desc limit 1 """.format(self.milk_type,self.dcs_id,self.date))
+                        and milk_rate.docstatus = 1 and milk_rate.effective_date <= '{2}' 
+                        order by milk_rate.creation desc limit 1 """.format(self.milk_type,self.dcs_id,self.date))
         if not pricelist_name:
+            frappe.throw(f"{self.date}, {self.dcs_id}, {self.milk_type} {self.member}")
             frappe.throw(_("Milk Rate not found."))
 
         self.db_set('milk_rate', pricelist_name[0][0])

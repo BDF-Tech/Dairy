@@ -96,66 +96,72 @@ class DairySettings(Document):
 												from `tabPurchase Receipt` 
 												where docstatus =1 and posting_date BETWEEN '{0}' and '{1}'
 												""".format(p_inv.previous_sync_date,getdate(n_days_ago)), as_dict =True)
-				for i in purchase:
-					milk_entry_li=[]
-					milk_type=""
-					me=frappe.db.sql("""select milk_entry , status , supplier
+				purchase = frappe.db.sql("""select distinct(supplier) as name 
 												from `tabPurchase Receipt` 
-												where docstatus= 1 and supplier = '{0}' and posting_date BETWEEN '{1}' and '{2}' and per_billed<100 and milk_entry is not null
-												""".format(i.name,p_inv.previous_sync_date,getdate(n_days_ago)), as_dict =True)
-					if me:
-						pi = frappe.new_doc("Purchase Invoice")
-						for m in me:
-							if m.milk_entry:
-								milk =frappe.get_doc('Milk Entry',m.milk_entry)
-								milk_entry_li.append(str(m.milk_entry))
-								ware =frappe.get_doc('Warehouse',{'name':milk.dcs_id})
-								pr =frappe.db.get_value('Purchase Receipt',{'milk_entry':milk.name,"docstatus":1},['name'])
-								if pr:
-									pri=frappe.get_doc('Purchase Receipt',pr)
-									if(pri.custom_milk_type):
-										milk_type=pri.custom_milk_type
-									pi.supplier = milk.member if  ware.is_third_party_dcs == 0 else ware.supplier
-									pi.set_posting_time = 1
-									pi.posting_date = p_inv.custom_date
-									for itm in pri.items:
-										pi.append(
-											"items",
-											{
-												'item_code': itm.item_code,
-												'item_name': itm.item_name,
-												'description': itm.description,
-												'received_qty': milk.volume,
-												'qty': milk.volume,
-												'uom': itm.stock_uom,
-												'stock_uom': itm.stock_uom,
-												'rate': itm.rate,
-												'warehouse': milk.dcs_id,
-												'purchase_receipt':pr,
-												'pr_detail':itm.name,
-												'fat': itm.fat,
-												'snf': itm.clr,
-												'snf_clr': itm.snf,
-												'fat_per': itm.fat_per_ ,
-												'snf_clr_per':itm.clr_per ,
-												'snf_per':itm.snf_clr_per,
-												'milk_entry':milk.name,
-												'purchase_receipt': pr
-											}
-										)
-						bill_wise=0
-						per_wise=0
-						litre_wise=0
-						milk_item=""
-						today=date.today()
-						if milk_type == 'Cow':
-							item_code = frappe.db.get_single_value("Dairy Settings", "cow_pro")
-						elif milk_type == 'Buffalo':
-							item_code = frappe.db.get_single_value("Dairy Settings", "buf_pro")
-						elif milk_type == 'Mix':
-							item_code = frappe.db.get_single_value("Dairy Settings", "mix_pro")
-						else:
-							frappe.throw("Check Milk Type is set at Purchase Reciept")
+												where docstatus =1 and posting_date BETWEEN '{0}' and '{1}'
+												""".format(p_inv.previous_sync_date,getdate(n_days_ago)), as_dict =True)
+				for i in purchase:
+					exists = frappe.get_value("Purchase Invoice", {'supplier': i.name, 'custom_remark': i.name, 'posting_date': p_inv.custom_date}, 'name')
+					if not exists:
+						milk_entry_li=[]
+						milk_type=""
+						me=frappe.db.sql("""select milk_entry , status , supplier from `tabPurchase Receipt` 
+											where docstatus= 1 and supplier = '{0}' and posting_date BETWEEN '{1}' and '{2}' and per_billed<100 and milk_entry is not null
+											""".format(i.name,p_inv.previous_sync_date,getdate(n_days_ago)), as_dict =True)
+						if me:
+							pi = frappe.new_doc("Purchase Invoice")
+							for m in me:
+								if m.milk_entry:
+									milk =frappe.get_doc('Milk Entry',m.milk_entry)
+									milk_entry_li.append(str(m.milk_entry))
+									ware =frappe.get_doc('Warehouse',{'name':milk.dcs_id})
+									pr =frappe.db.get_value('Purchase Receipt',{'milk_entry':milk.name,"docstatus":1},['name'])
+									if pr:
+										pri=frappe.get_doc('Purchase Receipt',pr)
+										if(pri.custom_milk_type):
+											milk_type=pri.custom_milk_type
+										pi.supplier = milk.member if  ware.is_third_party_dcs == 0 else ware.supplier
+										pi.set_posting_time = 1
+										pi.posting_date = p_inv.custom_date
+										pi.custom_remark = i.name
+										for itm in pri.items:
+											pi.append(
+												"items",
+												{
+													'item_code': itm.item_code,
+													'item_name': itm.item_name,
+													'description': itm.description,
+													'received_qty': milk.volume,
+													'qty': milk.volume,
+													'uom': itm.stock_uom,
+													'stock_uom': itm.stock_uom,
+													'rate': itm.rate,
+													'warehouse': milk.dcs_id,
+													'purchase_receipt':pr,
+													'pr_detail':itm.name,
+													'fat': itm.fat,
+													'snf': itm.clr,
+													'snf_clr': itm.snf,
+													'fat_per': itm.fat_per_ ,
+													'snf_clr_per':itm.clr_per ,
+													'snf_per':itm.snf_clr_per,
+													'milk_entry':milk.name,
+													'purchase_receipt': pr
+												}
+											)
+							bill_wise=0
+							per_wise=0
+							litre_wise=0
+							milk_item=""
+							today=date.today()
+							if milk_type == 'Cow':
+								item_code = frappe.db.get_single_value("Dairy Settings", "cow_pro")
+							elif milk_type == 'Buffalo':
+								item_code = frappe.db.get_single_value("Dairy Settings", "buf_pro")
+							elif milk_type == 'Mix':
+								item_code = frappe.db.get_single_value("Dairy Settings", "mix_pro")
+							else:
+								frappe.throw("Check Milk Type is set at Purchase Reciept")
 
 						item = frappe.get_doc('Item', item_code)
 						milk_item=item.name
