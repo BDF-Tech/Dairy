@@ -21,13 +21,11 @@ def update_translations():
 		dict(OPENING=_("Opening"), TOTAL=_("Total"), CLOSING_TOTAL=_("Closing (Opening + Total)"))
 	)
 
-
-
 def get_columns(filters):
 	columns = [
 			{"label": _("Date"), "fieldname": "date", "fieldtype": "Date", "width": 150},
 			{"label": _("Shift"), "fieldname": "shift", "fieldtype": "Data", "width": 150},
-			{"label": _("Member"), "fieldname": "member", "fieldtype": "Data", "width": 150},
+			{"label": _("Member"), "fieldname": "member", "fieldtype": "Link", "options":"Supplier", "width": 150},
 			# {"label": _("Name"), "fieldname": "name", "fieldtype": "Link","options":"Milk Entry","width": 150},
 			{"label": _("DCS"), "fieldname": "dcs_id", "fieldtype": "Data", "width": 150},
 			{"label": _("Ltr"), "fieldname": "volume", "fieldtype": "Float", "width": 150},
