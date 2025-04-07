@@ -26,7 +26,7 @@ def get_columns(filters):
 			{"label": _("Date"), "fieldname": "date", "fieldtype": "Date", "width": 150},
 			{"label": _("Shift"), "fieldname": "shift", "fieldtype": "Data", "width": 150},
 			{"label": _("Member"), "fieldname": "member", "fieldtype": "Link", "options":"Supplier", "width": 150},
-			# {"label": _("Name"), "fieldname": "name", "fieldtype": "Link","options":"Milk Entry","width": 150},
+			{"label": _("Member Name"), "fieldname": "member_name", "fieldtype": "Data", "width": 150},
 			{"label": _("DCS"), "fieldname": "dcs_id", "fieldtype": "Data", "width": 150},
 			{"label": _("Ltr"), "fieldname": "volume", "fieldtype": "Float", "width": 150},
 			{"label": _("Fat%"), "fieldname": "fat", "fieldtype": "Percent", "width": 150},
@@ -57,13 +57,13 @@ def get_data(filters, columns):
 	to_date = filters.get('to_date')
 	result=[]
 	if not filters.get('group_by'):
-		print('kkkkkkkkkkkkkkkkkkkkkkkkkkkk')
 		result = frappe.db.sql("""select pi.parent,
 									p.status,
 									me.name,
 									me.date,
 									me.shift,
 									me.member,
+        							sp.supplier_name as member_name,
 									me.dcs_id,
 									sum(me.volume) as volume,
 									sum(me.fat) as fat,
@@ -79,6 +79,7 @@ def get_data(filters, columns):
 									sum(me.fat_deduction) as fat_deduction,
 									sum(me.incentive) as incentive
 									from `tabMilk Entry` as me 
+    								join `tabSupplier` as sp on sp.name = me.member
 									join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
 									left outer join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
 									left outer join `tabPurchase Invoice` as p on p.name = pi.parent 
@@ -89,7 +90,6 @@ def get_data(filters, columns):
 		return result
 	
 	if filters.get('group_by'):
-		
 		gb = filters.get('group_by')
 		final_data = []
 		if gb == 'DCS':
@@ -102,6 +102,7 @@ def get_data(filters, columns):
 												me.date,
 												me.shift,
 												me.member,
+            									sp.supplier_name as member_name,
 												me.dcs_id as dcs_w,
 												me.volume as volume,
 												me.fat as fat,
@@ -117,6 +118,7 @@ def get_data(filters, columns):
 												me.fat_deduction as fat_deduction,
 												me.incentive as incentive
 												from `tabMilk Entry` as me 
+												join `tabSupplier` as sp on sp.name = me.member
 												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
 												join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
 												join `tabPurchase Invoice` as p on p.name = pi.parent and me.dcs_id="{0}"
@@ -189,6 +191,7 @@ def get_data(filters, columns):
 												me.date,
 												me.shift,
 												me.member as mem,
+												sp.supplier_name as member_name,
 												me.dcs_id,
 												me.volume as volume,
 												me.fat as fat,
@@ -205,6 +208,7 @@ def get_data(filters, columns):
 												me.incentive as incentive
 												from `tabMilk Entry` as me 
 												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
+												join `tabSupplier` as sp on sp.name = me.member
 												left outer join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
 												join `tabPurchase Invoice` as p on p.name = pi.parent  and me.member="{0}"
 												{conditions} 
@@ -269,6 +273,7 @@ def get_data(filters, columns):
 												me.date,
 												me.shift as sft,
 												me.member,
+												sp.supplier_name as member_name,
 												me.dcs_id,
 												me.volume as volume,
 												me.fat as fat,
@@ -284,6 +289,7 @@ def get_data(filters, columns):
 												me.fat_deduction as fat_deduction,
 												me.incentive as incentive
 												from `tabMilk Entry` as me 
+												join `tabSupplier` as sp on sp.name = me.member
 												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
 												join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
 												join `tabPurchase Invoice` as p on p.name = pi.parent and me.shift = "{0}"
@@ -349,6 +355,7 @@ def get_data(filters, columns):
 												me.date as dt,
 												me.shift,
 												me.member,
+												sp.supplier_name as member_name,
 												me.dcs_id,
 												me.volume as volume,
 												me.fat as fat,
@@ -364,6 +371,7 @@ def get_data(filters, columns):
 												me.fat_deduction as fat_deduction,
 												me.incentive as incentive
 												from `tabMilk Entry` as me 
+												join `tabSupplier` as sp on sp.name = me.member
 												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
 												join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
 												join `tabPurchase Invoice` as p on p.name = pi.parent and me.date = "{0}"

@@ -222,66 +222,32 @@ class DairySettings(Document):
 								"rate": per_wise
 							}
 							pi.append("taxes", tax_row3)
-							pi.save(ignore_permissions = True)
-						# pi.submit()
-							loan_deduction_names = frappe.db.sql("""
-								SELECT name FROM `tabDeduction`
-								WHERE deducted_amount != loan_amount 
-								AND supplier = %s AND docstatus = 1 AND deduction_type IN ("Farmer Loan", "Material")
-							""", (i.name,), as_dict=True)
-		
-							for loan_deduction in loan_deduction_names:
-								loan_deds = frappe.get_doc("Deduction", loan_deduction['name'])
-								for loan_ded in loan_deds.get('deduction_instalment_list'):
-									if loan_ded.instalment_deducted == 0:
-										if pi.outstanding_amount >= loan_ded.instalment_amount:
-											journal_entry = frappe.get_doc({
-												"doctype": "Journal Entry",
-												"voucher_type": "Journal Entry",
-												"posting_date": frappe.utils.today()
-											})
-
-											journal_entry.append("accounts", {
-												"account": pi.credit_to,
-												"party_type": "Supplier",
-												"party": i.name,
-												"debit_in_account_currency": loan_ded.instalment_amount,
-												"reference_type": "Purchase Invoice",
-												"reference_name": pi.name
-											})
-											journal_entry.append("accounts", {
-												"party_type": "Customer" if loan_deds.deduction_type == "Material" else "Supplier",
-												"party": i.name,
-												"account": loan_deds.credit_account,
-												"credit_in_account_currency": loan_ded.instalment_amount,
-												"reference_type": "Sales Invoice" if loan_deds.deduction_type == "Material" else None,
-												"reference_name": loan_deds.sales_invoice if loan_deds.deduction_type == "Material" else None
-											})
-
-											frappe.db.set_value("Deduction", loan_deduction['name'], "deducted_amount", loan_deds.deducted_amount + loan_ded.instalment_amount)
-											frappe.db.set_value("Deduction Instalment List", loan_ded.name, {
-												"instalment_deducted": 1,
-												"instalment_deducted_date": date.today(),
-												"purchase_invoice": pi.name
-											})
-											
-											journal_entry.save(ignore_permissions=True)
-											journal_entry.submit()
-											break
-
-										else:
-											if pi.outstanding_amount > 0:
+							pi_exists = frappe.get_value("Purchase Invoice", {'supplier': i.name, 'custom_remark': i.name, 'posting_date': p_inv.custom_date}, 'name')
+							if not pi_exists:
+								pi.save(ignore_permissions = True)
+						
+								loan_deduction_names = frappe.db.sql("""
+									SELECT name FROM `tabDeduction`
+									WHERE deducted_amount != loan_amount 
+									AND supplier = %s AND docstatus = 1 AND deduction_type IN ("Farmer Loan", "Material")
+								""", (i.name,), as_dict=True)
+			
+								for loan_deduction in loan_deduction_names:
+									loan_deds = frappe.get_doc("Deduction", loan_deduction['name'])
+									for loan_ded in loan_deds.get('deduction_instalment_list'):
+										if loan_ded.instalment_deducted == 0:
+											if pi.outstanding_amount >= loan_ded.instalment_amount:
 												journal_entry = frappe.get_doc({
 													"doctype": "Journal Entry",
 													"voucher_type": "Journal Entry",
 													"posting_date": frappe.utils.today()
 												})
-												
+
 												journal_entry.append("accounts", {
 													"account": pi.credit_to,
 													"party_type": "Supplier",
 													"party": i.name,
-													"debit_in_account_currency": pi.outstanding_amount,
+													"debit_in_account_currency": loan_ded.instalment_amount,
 													"reference_type": "Purchase Invoice",
 													"reference_name": pi.name
 												})
@@ -289,86 +255,122 @@ class DairySettings(Document):
 													"party_type": "Customer" if loan_deds.deduction_type == "Material" else "Supplier",
 													"party": i.name,
 													"account": loan_deds.credit_account,
-													"credit_in_account_currency": pi.outstanding_amount,
+													"credit_in_account_currency": loan_ded.instalment_amount,
 													"reference_type": "Sales Invoice" if loan_deds.deduction_type == "Material" else None,
 													"reference_name": loan_deds.sales_invoice if loan_deds.deduction_type == "Material" else None
 												})
 
-												frappe.db.set_value("Deduction", loan_deduction['name'], "deducted_amount", loan_deds.deducted_amount + pi.outstanding_amount)
+												frappe.db.set_value("Deduction", loan_deduction['name'], "deducted_amount", loan_deds.deducted_amount + loan_ded.instalment_amount)
 												frappe.db.set_value("Deduction Instalment List", loan_ded.name, {
-													"instalment_amount": pi.outstanding_amount,
 													"instalment_deducted": 1,
 													"instalment_deducted_date": date.today(),
 													"purchase_invoice": pi.name
 												})
-												deduction_list = {
-													"doctype": "Deduction Instalment List",
-													"instalment_amount": loan_ded.instalment_amount - pi.outstanding_amount,
-													"instalment_deducted": 0,
-													"purchase_invoice": pi.name
-												}
 												
-												deduction_list = frappe.get_doc({
-													"idx": len(loan_deds.get('deduction_instalment_list')),
-													"doctype": "Deduction Instalment List",
-													"instalment_amount": loan_ded.instalment_amount - pi.outstanding_amount,
-													"instalment_deducted": 0,
-													"parent": loan_deduction['name'],
-													"parenttype": "Deduction",
-													"parentfield": "deduction_instalment_list"
-												})
-												deduction_list.insert(ignore_permissions=True)
-
 												journal_entry.save(ignore_permissions=True)
 												journal_entry.submit()
 												break
-												
 
-		
-		
-							variable_deduction_names = frappe.db.sql("""SELECT name FROM `tabVariable Deduction`
-													WHERE is_deducted = 0 AND date BETWEEN %s AND %s AND farmer_code = %s
-													""",(p_inv.previous_sync_date,getdate(n_days_ago), i.name), as_dict =True)
-							variable_deduction = frappe.db.sql("""SELECT SUM(deduction_amount) FROM `tabVariable Deduction`
-													WHERE is_deducted = 0 AND date BETWEEN %s AND %s AND farmer_code = %s
-													""",(p_inv.previous_sync_date,getdate(n_days_ago), i.name), as_dict =True)
+											else:
+												if pi.outstanding_amount > 0:
+													journal_entry = frappe.get_doc({
+														"doctype": "Journal Entry",
+														"voucher_type": "Journal Entry",
+														"posting_date": frappe.utils.today()
+													})
+													
+													journal_entry.append("accounts", {
+														"account": pi.credit_to,
+														"party_type": "Supplier",
+														"party": i.name,
+														"debit_in_account_currency": pi.outstanding_amount,
+														"reference_type": "Purchase Invoice",
+														"reference_name": pi.name
+													})
+													journal_entry.append("accounts", {
+														"party_type": "Customer" if loan_deds.deduction_type == "Material" else "Supplier",
+														"party": i.name,
+														"account": loan_deds.credit_account,
+														"credit_in_account_currency": pi.outstanding_amount,
+														"reference_type": "Sales Invoice" if loan_deds.deduction_type == "Material" else None,
+														"reference_name": loan_deds.sales_invoice if loan_deds.deduction_type == "Material" else None
+													})
 
-							if variable_deduction and variable_deduction[0]['SUM(deduction_amount)']:
-								jounral_entry = frappe.get_doc({"doctype": "Journal Entry","voucher_type": "Journal Entry","posting_date": frappe.utils.today()})
-								if p_inv.variable_deduction_debit_account:
-									jounral_entry.append("accounts",{
-									"account": p_inv.variable_deduction_debit_account,
-									"party_type": "Supplier",
-									"party": i.name,
-									"debit_in_account_currency": round(variable_deduction[0]['SUM(deduction_amount)']),
-									"reference_type": "Purchase Invoice",
-									"reference_name": pi.name
-									})
-								else:
-									frappe.throw("Set the Debit Account On Dairy Seeting For Variable Deduction")
+													frappe.db.set_value("Deduction", loan_deduction['name'], "deducted_amount", loan_deds.deducted_amount + pi.outstanding_amount)
+													frappe.db.set_value("Deduction Instalment List", loan_ded.name, {
+														"instalment_amount": pi.outstanding_amount,
+														"instalment_deducted": 1,
+														"instalment_deducted_date": date.today(),
+														"purchase_invoice": pi.name
+													})
+													deduction_list = {
+														"doctype": "Deduction Instalment List",
+														"instalment_amount": loan_ded.instalment_amount - pi.outstanding_amount,
+														"instalment_deducted": 0,
+														"purchase_invoice": pi.name
+													}
+													
+													deduction_list = frappe.get_doc({
+														"idx": len(loan_deds.get('deduction_instalment_list')),
+														"doctype": "Deduction Instalment List",
+														"instalment_amount": loan_ded.instalment_amount - pi.outstanding_amount,
+														"instalment_deducted": 0,
+														"parent": loan_deduction['name'],
+														"parenttype": "Deduction",
+														"parentfield": "deduction_instalment_list"
+													})
+													deduction_list.insert(ignore_permissions=True)
+
+													journal_entry.save(ignore_permissions=True)
+													journal_entry.submit()
+													break
+													
+
 			
-								if p_inv.variable_deduction_credit_account:
-									jounral_entry.append("accounts",{
-									"account": p_inv.variable_deduction_credit_account,
-									"credit_in_account_currency": round(variable_deduction[0]['SUM(deduction_amount)'])})
-								else:
-									frappe.throw("Set the Debit Account On Dairy Seeting For Variable Deduction")
-								jounral_entry.save()
-								jounral_entry.submit()
-							for variable_deduction_name in variable_deduction_names:
-								var_doc = frappe.get_doc("Variable Deduction",variable_deduction_name['name'])
-								var_doc.is_deducted = 1
-								var_doc.save()
+			
+								variable_deduction_names = frappe.db.sql("""SELECT name FROM `tabVariable Deduction`
+														WHERE is_deducted = 0 AND date BETWEEN %s AND %s AND farmer_code = %s
+														""",(p_inv.previous_sync_date,getdate(n_days_ago), i.name), as_dict =True)
+								variable_deduction = frappe.db.sql("""SELECT SUM(deduction_amount) FROM `tabVariable Deduction`
+														WHERE is_deducted = 0 AND date BETWEEN %s AND %s AND farmer_code = %s
+														""",(p_inv.previous_sync_date,getdate(n_days_ago), i.name), as_dict =True)
+
+								if variable_deduction and variable_deduction[0]['SUM(deduction_amount)']:
+									jounral_entry = frappe.get_doc({"doctype": "Journal Entry","voucher_type": "Journal Entry","posting_date": frappe.utils.today()})
+									if p_inv.variable_deduction_debit_account:
+										jounral_entry.append("accounts",{
+										"account": p_inv.variable_deduction_debit_account,
+										"party_type": "Supplier",
+										"party": i.name,
+										"debit_in_account_currency": round(variable_deduction[0]['SUM(deduction_amount)']),
+										"reference_type": "Purchase Invoice",
+										"reference_name": pi.name
+										})
+									else:
+										frappe.throw("Set the Debit Account On Dairy Seeting For Variable Deduction")
+				
+									if p_inv.variable_deduction_credit_account:
+										jounral_entry.append("accounts",{
+										"account": p_inv.variable_deduction_credit_account,
+										"credit_in_account_currency": round(variable_deduction[0]['SUM(deduction_amount)'])})
+									else:
+										frappe.throw("Set the Debit Account On Dairy Seeting For Variable Deduction")
+									jounral_entry.save()
+									jounral_entry.submit()
+								for variable_deduction_name in variable_deduction_names:
+									var_doc = frappe.get_doc("Variable Deduction",variable_deduction_name['name'])
+									var_doc.is_deducted = 1
+									var_doc.save()
 
 
-							# pi.submit()
-							frappe.msgprint(str(f"Purchase Invoice Generated {pi.name}"))
-							if (pi.docstatus == 1):
-								if(len(milk_entry_li)>=1):
-									for i in milk_entry_li:
-										milk =frappe.get_doc('Milk Entry',str(i))
-										milk.db_set('status','Billed')
-							frappe.db.commit()
+								# pi.submit()
+								frappe.msgprint(str(f"Purchase Invoice Generated {pi.name}"))
+								if (pi.docstatus == 1):
+									if(len(milk_entry_li)>=1):
+										for i in milk_entry_li:
+											milk =frappe.get_doc('Milk Entry',str(i))
+											milk.db_set('status','Billed')
+								frappe.db.commit()
 				p_inv.previous_sync_date=getdate(n_days_ago)
 				p_inv.save()
 			# if p_inv.default_payment_type == 'Days':
