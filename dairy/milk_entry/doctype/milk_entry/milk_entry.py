@@ -2,13 +2,14 @@
 # Copyright (c) 2019, Dexciss Technology Pvt Ltd and contributors
 # For license information, please see license.
 
+from __future__ import unicode_literals
+# import frappe
+from frappe.model.document import Document
 import frappe
 from frappe import _
 from datetime import datetime
-from frappe.utils.data import flt
-from __future__ import unicode_literals
-from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
+from frappe.utils.data import flt
 # from dairy.milk_entry.custom_purchase_receipt import change_milk_entry_status
 # from dairy.milk_entry.custom_purchase_receipt import change_milk_status
 
