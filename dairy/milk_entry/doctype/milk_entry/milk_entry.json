@@ -14,7 +14,6 @@
   "sb1",
   "date",
   "time",
-  "column_break_n1z3g",
   "sb2",
   "member",
   "milk_type",
@@ -234,6 +233,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "default": "Draft",
    "fetch_if_empty": 1,
    "fieldname": "status",
@@ -435,16 +435,13 @@
   {
    "fieldname": "column_break_cytfx",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_n1z3g",
-   "fieldtype": "Column Break"
   }
  ],
+ "grid_page_length": 50,
  "is_submittable": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2024-07-01 11:01:51.940597",
+ "modified": "2025-04-18 12:29:52.584349",
  "modified_by": "Administrator",
  "module": "Milk Entry",
  "name": "Milk Entry",
