@@ -46,7 +46,8 @@ class MilkEntry(Document):
         milk = frappe.get_doc('Milk Rate',milk_rate)
         if milk.simplified_milk_rate:
             if milk_rate:  
-                new_rate = ((flt(milk.fat_rate_in_kg) * flt(self.fat)) + (flt(milk.snf_rate_in_kg) * flt(self.snf)))/100 - flt(self.snf_deduction_per)- flt(self.fat_deduction_per)
+                new_rate = ((flt(milk.fat_rate_in_kg) * flt(self.fat)) + (flt(milk.snf_rate_in_kg) * flt(self.snf)))/100
+                # new_rate = ((flt(milk.fat_rate_in_kg) * flt(self.fat)) + (flt(milk.snf_rate_in_kg) * flt(self.snf)))/100 - flt(self.snf_deduction_per)- flt(self.fat_deduction_per)
                 if new_rate:
                     self.db_set('unit_price', new_rate)
                     self.db_set('unit_price_with_incentive',flt(new_rate))
