@@ -99,7 +99,7 @@ frappe.ui.form.on('Gate Pass', {
 									],
 									get_query_filters: {
 										docstatus: 1,
-										status: ["=", ["To Bill"]],
+										// status: ["=", ["To Bill"]],
 										gate_pass: 0,
 										posting_date: frm.doc.date,
 									},
