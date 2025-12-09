@@ -1424,7 +1424,7 @@
    "name": "Sales Invoice-einvoice_status",
    "no_copy": 1,
    "non_negative": 0,
-   "options": "\nPending\nGenerated\nCancelled\nFailed",
+   "options": "\nPending\nGenerated\nCancelled\nFailed\nNot Applicable",
    "owner": "Administrator",
    "permlevel": 0,
    "precision": "",
