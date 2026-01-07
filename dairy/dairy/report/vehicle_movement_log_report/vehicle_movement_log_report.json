@@ -1,0 +1,55 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2026-01-07 18:10:22.581117",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": null,
+ "modified": "2026-01-07 18:10:22.581117",
+ "modified_by": "Administrator",
+ "module": "dairy",
+ "name": "Vehicle Movement Log Report",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Vehicle Movement Log",
+ "report_name": "Vehicle Movement Log Report",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "HR User"
+  },
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "HR Manager"
+  },
+  {
+   "role": "BDF HR Executive"
+  },
+  {
+   "role": "BDF Sales Manager"
+  },
+  {
+   "role": "BDF Auditor"
+  },
+  {
+   "role": "Employee Self Service"
+  },
+  {
+   "role": "BDF Operations Audit"
+  },
+  {
+   "role": "BDF HR"
+  },
+  {
+   "role": "BDF HR View"
+  }
+ ],
+ "timeout": 0
+}
