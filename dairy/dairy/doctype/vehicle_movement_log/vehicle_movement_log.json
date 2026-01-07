@@ -1,0 +1,168 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "TRIP-.YYYY.-.#####",
+ "creation": "2026-01-07 10:57:51.099791",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "identity_section",
+  "date_and_time",
+  "vehicle",
+  "status",
+  "column_break_foxt",
+  "route",
+  "purpose",
+  "crew_assignment_section",
+  "driver",
+  "driver_name",
+  "datetime_xacd",
+  "column_break_wfbe",
+  "helper",
+  "vehicle_in_time",
+  "remark_section",
+  "remark",
+  "section_break_sc40",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "identity_section",
+   "fieldtype": "Section Break",
+   "label": "Identity"
+  },
+  {
+   "default": "Today",
+   "fieldname": "date_and_time",
+   "fieldtype": "Datetime",
+   "label": "Date and TIme"
+  },
+  {
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Vehicle",
+   "options": "Vehicle"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Vehicle Current Status",
+   "options": "Draft\nOut\nIn"
+  },
+  {
+   "fieldname": "column_break_foxt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Route",
+   "options": "Route Master"
+  },
+  {
+   "fetch_from": "route.route_type",
+   "fieldname": "purpose",
+   "fieldtype": "Data",
+   "label": "Purpose"
+  },
+  {
+   "fieldname": "crew_assignment_section",
+   "fieldtype": "Section Break",
+   "label": "Crew Assignment"
+  },
+  {
+   "fieldname": "driver",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Driver",
+   "options": "Driver"
+  },
+  {
+   "fieldname": "datetime_xacd",
+   "fieldtype": "Datetime",
+   "label": "Vehicle Out Time"
+  },
+  {
+   "fieldname": "column_break_wfbe",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "helper",
+   "fieldtype": "Data",
+   "label": "Helper"
+  },
+  {
+   "fieldname": "vehicle_in_time",
+   "fieldtype": "Datetime",
+   "label": "Vehicle In Time"
+  },
+  {
+   "fieldname": "remark_section",
+   "fieldtype": "Section Break",
+   "label": "Remark"
+  },
+  {
+   "fieldname": "remark",
+   "fieldtype": "Data",
+   "label": "Remark"
+  },
+  {
+   "fieldname": "section_break_sc40",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Vehicle Movement Log",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "driver.full_name",
+   "fieldname": "driver_name",
+   "fieldtype": "Data",
+   "label": "Driver Name"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-07 17:35:28.341636",
+ "modified_by": "Administrator",
+ "module": "dairy",
+ "name": "Vehicle Movement Log",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
+}
