@@ -5,7 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "dairy"
 version = "0.0.1"
-description = "Custom Dairy app for Frappe"
+description = "Dairy Management System"
+authors = [
+    { name = "Sanskar Shukla", email = "sanskar19shukla@gmail.com" }
+]
 requires-python = ">=3.10"
 
 dependencies = [
