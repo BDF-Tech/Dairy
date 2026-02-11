@@ -9,10 +9,12 @@
   "assets_code",
   "asset_name",
   "asset_category",
+  "aseet_sn",
   "column_break_xlno",
   "location",
-  "location_name",
   "purchase_date",
+  "custodian",
+  "custodian_name",
   "section_break_agsb",
   "amended_from"
  ],
@@ -38,6 +40,7 @@
    "options": "Item"
   },
   {
+   "fetch_from": "assets_code.item_name",
    "fieldname": "asset_name",
    "fieldtype": "Data",
    "label": "Asset Name"
@@ -57,12 +60,6 @@
    "fieldtype": "Section Break"
   },
   {
-   "fetch_from": "location.location_name",
-   "fieldname": "location_name",
-   "fieldtype": "Data",
-   "label": "Location Name"
-  },
-  {
    "fieldname": "asset_category",
    "fieldtype": "Link",
    "label": "Asset Category",
@@ -72,13 +69,30 @@
    "fieldname": "purchase_date",
    "fieldtype": "Date",
    "label": "Purchase Date"
+  },
+  {
+   "fieldname": "custodian",
+   "fieldtype": "Link",
+   "label": "Custodian",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "custodian.employee_name",
+   "fieldname": "custodian_name",
+   "fieldtype": "Data",
+   "label": "Custodian Name"
+  },
+  {
+   "fieldname": "aseet_sn",
+   "fieldtype": "Data",
+   "label": "Aseet SN"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-02-10 17:31:28.125175",
+ "modified": "2026-02-11 16:29:23.997679",
  "modified_by": "Administrator",
  "module": "dairy",
  "name": "Assets Location",
