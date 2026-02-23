@@ -1,0 +1,49 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-20 14:04:07.928445",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sales_invoice_id",
+  "customer_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "sales_invoice_id",
+   "fieldtype": "Data",
+   "label": "Sales invoice ID"
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer name "
+  },
+  {
+   "fieldname": "crates_count",
+   "fieldtype": "Int",
+   "label": "No of Crates"
+  },
+   {
+    "fieldname": "cans_count",
+    "fieldtype": "Int",
+    "label": "No of Cans"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-02-20 14:06:17.864014",
+ "modified_by": "Administrator",
+ "module": "dairy",
+ "name": "Route wise Sales invoice",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

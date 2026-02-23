@@ -13,6 +13,7 @@
   "column_break_xlno",
   "location",
   "purchase_date",
+  "net_price",
   "custodian",
   "custodian_name",
   "section_break_agsb",
@@ -86,13 +87,18 @@
    "fieldname": "aseet_sn",
    "fieldtype": "Data",
    "label": "Aseet SN"
+  },
+  {
+   "fieldname": "net_price",
+   "fieldtype": "Int",
+   "label": "Net Price"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-02-11 16:29:23.997679",
+ "modified": "2026-02-18 09:38:49.655035",
  "modified_by": "Administrator",
  "module": "dairy",
  "name": "Assets Location",
