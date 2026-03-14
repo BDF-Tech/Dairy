@@ -12,10 +12,20 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.utils.data import flt
 # from dairy.milk_entry.custom_purchase_receipt import change_milk_entry_status
 # from dairy.milk_entry.custom_purchase_receipt import change_milk_status
+MPP_BYPASS_CODES = ["6001", "6002", "6003", "6004", "6005", "600"]
 
 class MilkEntry(Document):
+    def is_mpp_bypass(self):
+        if not self.mpp_code:
+            return False
+        code = str(self.mpp_code).split(" ")[0]
+        return code in MPP_BYPASS_CODES
     @frappe.whitelist()
     def before_save(self):
+        if self.is_mpp_bypass():
+            self.total = (self.unit_price_with_incentive or 0) * (self.volume or 0)
+            return
+
         count=0
         get_farmer=frappe.db.sql("""select custom_fixed_rate,custom_apply_fixed_rate from `tabSupplier` where name='{0}'""".format(self.member),as_dict=1)
         for i in get_farmer:
@@ -30,6 +40,8 @@ class MilkEntry(Document):
             
     @frappe.whitelist()
     def get_pricelist(self):
+        if self.is_mpp_bypass():
+            return
         pricelist_name = frappe.db.sql("""
                         select milk_rate.name from `tabMilk Rate` as milk_rate 
                         inner join `tabWarehouse Child` as ware on ware.parent = milk_rate.name 
@@ -435,6 +447,9 @@ class MilkEntry(Document):
 
     @frappe.whitelist()
     def before_submit(self):
+        if self.is_mpp_bypass():
+            self.create_purchase_receipt()
+            return        
         count=0
         get_farmer=frappe.db.sql("""select custom_fixed_rate,custom_apply_fixed_rate from `tabSupplier`
                                 where name='{0}'
