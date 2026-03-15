@@ -15,6 +15,15 @@ from frappe.utils.data import flt
 MPP_BYPASS_CODES = ["6001", "6002", "6003", "6004", "6005", "600"]
 
 class MilkEntry(Document):
+
+    def calculate_milk_kg(self):
+
+        volume_kg = (self.volume or 0) * 1.03
+
+        self.fat_kg = (volume_kg * (self.fat or 0)) / 100
+        self.snf_kg = (volume_kg * (self.snf or 0)) / 100
+        self.clr_kg = (volume_kg * (self.clr or 0)) / 100
+        self.litre = volume_kg
     def is_mpp_bypass(self):
         if not self.mpp_code:
             return False
@@ -23,6 +32,7 @@ class MilkEntry(Document):
     @frappe.whitelist()
     def before_save(self):
         if self.is_mpp_bypass():
+            self.calculate_milk_kg()
             self.total = (self.unit_price_with_incentive or 0) * (self.volume or 0)
             return
 
