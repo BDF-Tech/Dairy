@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from erpnext.accounts.party import get_dashboard_info
+#from erpnext.accounts.party import get_dashboard_info
 import frappe
 import json
 import frappe.utils
@@ -25,11 +25,11 @@ def apply_leakage_scheme(sales, method):
         }):
             frappe.throw("Multiple Orders In Single Shift Not Allowed")
 
-    dairy = frappe.get_single("Dairy Settings")
+    '''dairy = frappe.get_single("Dairy Settings")
     leakage_calc_on = dairy.leakage_calculated_on
     leakage_perc = dairy.leakage_percentage
     leakage_qty = dairy.leakage_qty
-    applicable_on = dairy.applicable_on
+    applicable_on = dairy.applicable_on'''
 
     item_codes = [d.item_code for d in sales.items]
     price_list = frappe.get_all("Item Price",
@@ -43,10 +43,10 @@ def apply_leakage_scheme(sales, method):
 
  #   items= item_codes 
 
-    uom_names = list({d.uom for d in sales.items} | {d.stock_uom for d in sales.items})
-    uom_whole_flags = {u.name: u.must_be_whole_number for u in frappe.get_all("UOM",
-        filters={"name": ["in", uom_names]},
-        fields=["name", "must_be_whole_number"])}
+    #uom_names = list({d.uom for d in sales.items} | {d.stock_uom for d in sales.items})
+    #uom_whole_flags = {u.name: u.must_be_whole_number for u in frappe.get_all("UOM",
+     #   filters={"name": ["in", uom_names]},
+      #  fields=["name", "must_be_whole_number"])}
 
     for row in sales.items:
         item_doc = items.get(row.item_code)
@@ -57,39 +57,39 @@ def apply_leakage_scheme(sales, method):
         if abs(flt(row.rate) - flt(expected_rate)) > 0.001:
             frappe.throw(f"Row {row.idx}: Rate mismatch. Expected {expected_rate}, Found {row.rate}")
 
-    if leakage_calc_on == "Sales Order" and leakage_perc and leakage_qty:
-        leakage_rows = []
-        for line in sales.items:
-            item_doc = items.get(line.item_code)
-            if not item_doc or not item_doc.leakage_applicable:
-                continue
-            qty = 0
-            if applicable_on == "Stock UOM" and line.stock_qty > leakage_qty:
-                qty = (line.stock_qty * leakage_perc) / 100
-                if uom_whole_flags.get(line.stock_uom): qty = round(qty)
-            elif applicable_on == "Order UOM" and line.qty > leakage_qty:
-                qty = (line.qty * leakage_perc) / 100
-                if uom_whole_flags.get(line.stock_uom) or uom_whole_flags.get(line.uom): qty = round(qty)
+# # if leakage_calc_on == "Sales Order" and leakage_perc and leakage_qty:
+42     #     leakage_rows = []
+43     #     for line in sales.items:
+44     #         item_doc = items.get(line.item_code)
+45     #         if not item_doc or not item_doc.leakage_applicable:
+46     #             continue
+47     #         qty = 0
+48     #         if applicable_on == "Stock UOM" and line.stock_qty > leakage_qty:
+49     #             qty = (line.stock_qty * leakage_perc) / 100
+50     #             if uom_whole_flags.get(line.stock_uom): qty = round(qty)
+51     #         elif applicable_on == "Order UOM" and line.qty > leakage_qty:
+52     #             qty = (line.qty * leakage_perc) / 100
+53     #             if uom_whole_flags.get(line.stock_uom) or uom_whole_flags.get(line.uom): qty = round(qty)
 
-            if qty > 0:
-                leakage_rows.append({
-                    "item_code": line.item_code,
-                    "item_name": line.item_name,
-                    "delivery_date": line.delivery_date,
-                    "description": f"{line.description} (Leakage Scheme applied)",
-                    "qty": max(1, qty),
-                    "uom": line.uom if applicable_on == "Order UOM" else line.stock_uom,
-                    "stock_uom": line.stock_uom,
-                    "rate": 0.0,
-                    "warehouse": line.warehouse,
-                    "is_free_item": 1,
-                    "price_list_rate": 0,
-                    "weight_uom": item_doc.weight_uom,
-                    "weight_per_unit": item_doc.weight_per_unit,
-                    "total_weight": qty * item_doc.weight_per_unit,
-                })
-        if leakage_rows:
-            sales.extend("items", leakage_rows)
+54     #         if qty > 0:
+55     #             leakage_rows.append({
+56     #                 "item_code": line.item_code,
+57     #                 "item_name": line.item_name,
+58     #                 "delivery_date": line.delivery_date,
+59     #                 "description": f"{line.description} (Leakage Scheme applied)",
+60     #                 "qty": max(1, qty),
+61     #                 "uom": line.uom if applicable_on == "Order UOM" else line.stock_uom,
+62     #                 "stock_uom": line.stock_uom,
+63     #                 "rate": 0.0,
+64     #                 "warehouse": line.warehouse,
+65     #                 "is_free_item": 1,
+66     #                 "price_list_rate": 0,
+67     #                 "weight_uom": item_doc.weight_uom,
+68     #                 "weight_per_unit": item_doc.weight_per_unit,
+69     #                 "total_weight": qty * item_doc.weight_per_unit,
+70     #             })
+71     #     if leakage_rows:
+72     #         sales.extend("items", leakage_rows)
 
 
 @frappe.whitelist()
@@ -196,10 +196,10 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
     return target_doc
 
 
-@frappe.whitelist()
+'''@frappe.whitelist()
 def defsellinguom(doc_name=None):
     try:
-        doc = frappe.get_cached("Item", doc_name)
+        doc = frappe.get_cached_doc("Item", doc_name)
         if doc.sales_uom:
             res = frappe.db.sql(
                 """select uom, conversion_factor from `tabUOM Conversion Detail` 
@@ -210,8 +210,8 @@ def defsellinguom(doc_name=None):
             return res
         else:
             return 1
-    except Exception:
-        frappe.throw("Select Item")
+    except Exception as e:
+        frappe.throw(f"Error: {str(e)}")'''
 
 
 @frappe.whitelist()

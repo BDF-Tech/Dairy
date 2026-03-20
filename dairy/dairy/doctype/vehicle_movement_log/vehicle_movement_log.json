@@ -9,6 +9,7 @@
   "identity_section",
   "date_and_time",
   "vehicle",
+  "status",
   "column_break_foxt",
   "route",
   "purpose",
@@ -19,15 +20,10 @@
   "column_break_wfbe",
   "helper",
   "vehicle_in_time",
-  "section_break_uabq",
-  "route_wise_sales_invoice",
-  "section_break_rbtm",
-  "no_of_loose_crate",
   "remark_section",
   "remark",
   "section_break_sc40",
-  "amended_from",
-  "connections_tab"
+  "amended_from"
  ],
  "fields": [
   {
@@ -48,6 +44,14 @@
    "in_standard_filter": 1,
    "label": "Vehicle",
    "options": "Vehicle"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Vehicle Current Status",
+   "options": "Draft\nOut\nIn"
   },
   {
    "fieldname": "column_break_foxt",
@@ -128,37 +132,12 @@
    "fieldname": "driver_name",
    "fieldtype": "Data",
    "label": "Driver Name"
-  },
-  {
-   "fieldname": "section_break_uabq",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "route_wise_sales_invoice",
-   "fieldtype": "Table",
-   "label": "Route wise Sales invoice",
-   "options": "Route wise Sales invoice"
-  },
-  {
-   "fieldname": "section_break_rbtm",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "no_of_loose_crate",
-   "fieldtype": "Table",
-   "label": "No of Loose Crate",
-   "options": "Loose crate Entry"
-  },
-  {
-   "fieldname": "connections_tab",
-   "fieldtype": "Tab Break",
-   "label": "Connections"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-22 18:39:04.381485",
+ "modified": "2026-01-07 17:35:28.341636",
  "modified_by": "Administrator",
  "module": "dairy",
  "name": "Vehicle Movement Log",
@@ -183,5 +162,7 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
 }

@@ -203,26 +203,3 @@ frappe.ui.form.on("Sales Order", {
     },
 
 });
-
-frappe.ui.form.on("Sales Order Item", {
-	item_code: function(frm,cdt,cdn) {
-		var row = locals[cdt][cdn];
-		frm.call({
-            method:"dairy.milk_entry.custom_sales_order.defsellinguom",
-            args: {
-                    doc_name: row.item_code
-                  },
-            callback: function(r)
-                {
-                   if(r.message)
-                   {
-                    var array = r.message
-                    if (array != 1){
-                    row.uom = array["uom"];
-                    row.conversion_factor = array["conversion_factor"];
-                    }
-                   }
-                }
-        });
-	}
-});
