@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-#from erpnext.accounts.party import get_dashboard_info
+from erpnext.accounts.party import get_dashboard_info
 import frappe
 import json
 import frappe.utils
