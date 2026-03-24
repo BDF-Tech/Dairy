@@ -353,7 +353,7 @@
   "description": null,
   "docstatus": 0,
   "doctype": "Custom Field",
-  "dt": "Work Order Ite",
+  "dt": "Work Order Item",
   "fetch_from": null,
   "fetch_if_empty": 0,
   "fieldname": "fat_per_in_kg",
