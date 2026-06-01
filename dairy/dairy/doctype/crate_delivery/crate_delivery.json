@@ -1,0 +1,190 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-05-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "vehicle_movement_log",
+  "date",
+  "column_break_1",
+  "driver",
+  "vehicle",
+  "route",
+  "section_break_invoice",
+  "sales_invoice",
+  "stock_entry",
+  "customer",
+  "actual_customer",
+  "column_break_2",
+  "invoice_crate_qty",
+  "customer_current_balance",
+  "section_break_delivery",
+  "crates_delivered",
+  "crates_returned",
+  "customer_confirmed",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CD-.YYYY.-.####"
+  },
+  {
+   "fieldname": "vehicle_movement_log",
+   "fieldtype": "Link",
+   "label": "Vehicle Movement Log",
+   "options": "Vehicle Movement Log",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "driver",
+   "fieldtype": "Link",
+   "label": "Driver",
+   "options": "Driver",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "label": "Vehicle",
+   "options": "Vehicle"
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "label": "Route",
+   "options": "Route Master"
+  },
+  {
+   "fieldname": "section_break_invoice",
+   "fieldtype": "Section Break",
+   "label": "Invoice Details"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "options": "Stock Entry"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "actual_customer",
+   "fieldtype": "Link",
+   "label": "Actual Customer",
+   "options": "Customer",
+   "description": "Change only if redirecting delivery to a different customer. Defaults to the invoice customer."
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "invoice_crate_qty",
+   "fieldtype": "Float",
+   "label": "Invoice Crate Qty",
+   "read_only": 1,
+   "description": "Total crate items (UOM = Crate) on the Sales Invoice"
+  },
+  {
+   "fieldname": "customer_current_balance",
+   "fieldtype": "Float",
+   "label": "Customer Current Balance",
+   "read_only": 1,
+   "description": "Live crate balance of the Actual Customer before this delivery"
+  },
+  {
+   "fieldname": "section_break_delivery",
+   "fieldtype": "Section Break",
+   "label": "Delivery"
+  },
+  {
+   "fieldname": "crates_delivered",
+   "fieldtype": "Float",
+   "label": "Crates Delivered",
+   "reqd": 1,
+   "description": "Must be ≥ Invoice Crate Qty"
+  },
+  {
+   "default": "0",
+   "fieldname": "crates_returned",
+   "fieldtype": "Float",
+   "label": "Crates Returned",
+   "description": "Empty crates the customer gave back to the driver on the spot"
+  },
+  {
+   "fieldname": "customer_confirmed",
+   "fieldtype": "Check",
+   "label": "Customer Confirmed (OTP)",
+   "read_only": 1,
+   "description": "Set by OTP confirmation on the app"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Crate Delivery",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-05-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "dairy",
+ "name": "Crate Delivery",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

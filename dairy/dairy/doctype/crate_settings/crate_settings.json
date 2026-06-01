@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "creation": "2026-05-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "transit_warehouse",
+  "auto_stock_entry_on_gate_check",
+  "overdue_days"
+ ],
+ "fields": [
+  {
+   "fieldname": "transit_warehouse",
+   "fieldtype": "Link",
+   "label": "Transit Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_stock_entry_on_gate_check",
+   "fieldtype": "Check",
+   "label": "Auto Create Stock Entry on Gate Check"
+  },
+  {
+   "default": "7",
+   "fieldname": "overdue_days",
+   "fieldtype": "Int",
+   "label": "Overdue Days"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-05-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "dairy",
+ "name": "Crate Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "System Manager",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

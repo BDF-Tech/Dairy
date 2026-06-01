@@ -20,6 +20,13 @@
   "column_break_wfbe",
   "helper",
   "vehicle_in_time",
+  "crate_detail_by_invoice_section",
+  "crate_summary",
+  "total_invoice_crates",
+  "item_detail_for_crate_section",
+  "crate_item_details",
+  "section_break_uoqi",
+  "loose_crate_detail",
   "remark_section",
   "remark",
   "section_break_sc40",
@@ -132,12 +139,62 @@
    "fieldname": "driver_name",
    "fieldtype": "Data",
    "label": "Driver Name"
+  },
+  {
+   "fieldname": "crate_detail_by_invoice_section",
+   "fieldtype": "Section Break",
+   "label": "Crate Detail By Invoice "
+  },
+  {
+   "fieldname": "crate_summary",
+   "fieldtype": "Table",
+   "label": "Crate Summary",
+   "options": "Vehicle Invoice Crate Detail"
+  },
+  {
+   "fieldname": "item_detail_for_crate_section",
+   "fieldtype": "Section Break",
+   "label": "Item Detail For Crate"
+  },
+  {
+   "fieldname": "crate_item_details",
+   "fieldtype": "Table",
+   "label": "Crate Item Details",
+   "options": "Vehicle Invoice Item Crate Detail"
+  },
+  {
+   "fieldname": "total_invoice_crates",
+   "fieldtype": "Float",
+   "label": "Total Invoice Crated"
+  },
+  {
+   "fieldname": "section_break_uoqi",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "loose_crate_detail",
+   "fieldtype": "Table",
+   "label": "Loose Crate Details",
+   "options": "Loose Crate Detail"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-01-07 17:35:28.341636",
+ "links": [
+  {
+   "link_doctype": "Sales Invoice",
+   "link_fieldname": "custom_vehicle_movement_log"
+  },
+  {
+   "link_doctype": "Stock Entry",
+   "link_fieldname": "van_collection_item"
+  },
+  {
+   "link_doctype": "Crate Delivery",
+   "link_fieldname": "vehicle_movement_log"
+  }
+ ],
+ "modified": "2026-05-14 18:24:13.206085",
  "modified_by": "Administrator",
  "module": "dairy",
  "name": "Vehicle Movement Log",
@@ -162,7 +219,5 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "track_seen": 1,
- "track_views": 1
+ "track_changes": 1
 }

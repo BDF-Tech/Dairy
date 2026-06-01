@@ -1,133 +1,1553 @@
 import frappe
+import json
+
 from frappe.model.document import Document
-from frappe.utils import getdate, nowdate
-from frappe import _
+from frappe.utils import getdate, nowdate, flt
+
 
 class VehicleMovementLog(Document):
+
+    # =========================================================
+    # VALIDATION
+    # =========================================================
+
     def validate(self):
-        # 1. Existing Compliance Logic
+
+        self.check_vehicle_not_on_active_trip()
+
         self.check_vehicle_documents()
 
-    def on_update(self):
-        """
-        Triggered every time the document is saved.
-        Handles the movement of loose crates when status changes to 'Gate Check'.
-        """
-        # Logic: Move stock ONLY when status is Gate Check AND movement hasn't happened yet
-        if self.status == "Gate Check" and not self.custom_stock_entry:
-            self.create_stock_entry_for_loose_items()
+        self.update_crate_summary_balance()
 
-    def check_vehicle_documents(self):
+        self.update_loose_crate_balance()
+
+        self.update_total_invoice_crates()
+
+        self.sync_crate_item_details()
+
+    # =========================================================
+    # UPDATE CRATE SUMMARY BALANCE
+    # =========================================================
+
+    def update_crate_summary_balance(self):
+
+        for row in self.crate_summary:
+
+            total_out = row.total_crate_out or 0
+
+            total_in = row.total_crate_in or 0
+
+            row.balance_crate = (
+                total_out - total_in
+            )
+
+            if total_in > 0:
+
+                row.return_verified = 1
+
+            else:
+
+                row.return_verified = 0
+
+    # =========================================================
+    # UPDATE LOOSE CRATE BALANCE
+    # =========================================================
+
+    def update_loose_crate_balance(self):
+
+        for row in self.loose_crate_detail:
+
+            total_out = row.crates_out or 0
+
+            total_in = row.crates_in or 0
+
+            row.balance = (
+                total_out - total_in
+            )
+
+            if total_in > 0:
+
+                row.return_verified = 1
+
+            else:
+
+                row.return_verified = 0
+
+    # =========================================================
+    # UPDATE TOTAL INVOICE CRATES
+    # =========================================================
+
+    def update_total_invoice_crates(self):
+
+        self.total_invoice_crates = sum(
+            row.total_crate_out or 0
+            for row in self.crate_summary
+        )
+
+    # =========================================================
+    # SYNC CRATE ITEM DETAILS
+    # =========================================================
+
+    def sync_crate_item_details(self):
+        """
+        Removes rows from crate_item_details whose sales_invoice or
+        stock_entry no longer exists in crate_summary.
+        Called on every save so deletions from the summary table
+        are immediately reflected in the item detail table.
+        """
+
+        valid_invoices = {
+            row.sales_invoice
+            for row in self.crate_summary
+            if row.sales_invoice
+        }
+
+        valid_stock_entries = {
+            row.stock_entry
+            for row in self.crate_summary
+            if row.stock_entry
+        }
+
+        filtered = []
+
+        for row in self.crate_item_details:
+
+            keep = False
+
+            if row.sales_invoice and row.sales_invoice in valid_invoices:
+                keep = True
+
+            if row.stock_entry and row.stock_entry in valid_stock_entries:
+                keep = True
+
+            if keep:
+                filtered.append(row)
+
+        self.crate_item_details = filtered
+
+    # =========================================================
+    # MAIN UPDATE LOGIC
+    # =========================================================
+
+    def on_update(self):
+
+        if self.workflow_state == "Gate Check":
+
+            self.link_sales_invoices()
+
+            self.create_driver_crate_ledger_for_invoices()
+
+            self.create_driver_crate_ledger_for_stock_entries()
+
+            self.create_loose_crate_out_ledger()
+
+        if self.workflow_state == "Vehicle Returned":
+
+            self.process_customer_crate_return()
+
+            self.close_driver_invoice_crates_on_vml_return()
+
+            self.close_driver_stock_entry_crates_on_vml_return()
+
+            self.create_loose_crate_in_ledger()
+
+        if self.workflow_state == "Cancelled":
+
+            self._cleanup_crate_entries()
+
+    # =========================================================
+    # ON TRASH
+    # =========================================================
+
+    def on_trash(self):
+
+        self._cleanup_crate_entries()
+
+    # =========================================================
+    # CLEANUP ON CANCEL / TRASH
+    # =========================================================
+
+    def _cleanup_crate_entries(self):
+        """
+        Called when workflow_state → Cancelled or document is deleted.
+
+        1. Delinks all Sales Invoices linked to this VML.
+        2. Reverses Driver custom_invoice_crate_balance.
+        3. Reverses Customer custom_current_crate_balance.
+        4. Deletes all Customer Crate Ledger entries for this VML.
+        """
+
+        # ----------------------------------------------------------
+        # Step 1: Delink Sales Invoices and Stock Entries
+        # ----------------------------------------------------------
+
+        linked_invoices = frappe.db.get_all(
+            "Sales Invoice",
+            filters={"custom_vehicle_movement_log": self.name},
+            pluck="name"
+        )
+
+        for inv in linked_invoices:
+            frappe.db.set_value(
+                "Sales Invoice",
+                inv,
+                "custom_vehicle_movement_log",
+                None
+            )
+
+        linked_stock_entries = frappe.db.get_all(
+            "Stock Entry",
+            filters={"van_collection_item": self.name},
+            pluck="name"
+        )
+
+        for se in linked_stock_entries:
+            frappe.db.set_value(
+                "Stock Entry",
+                se,
+                "van_collection_item",
+                None
+            )
+
+        # ----------------------------------------------------------
+        # Step 2: Collect all ledger entries for this VML
+        # ----------------------------------------------------------
+
+        entries = frappe.db.get_all(
+            "Customer Crate Ledger",
+            filters={"vehicle_movement_log": self.name},
+            fields=[
+                "name",
+                "ledger_type",
+                "entry_type",
+                "crates_out",
+                "crates_in",
+                "driver",
+                "customer"
+            ]
+        )
+
+        if not entries and not linked_invoices and not linked_stock_entries:
+            return
+
+        # ----------------------------------------------------------
+        # Step 3: Calculate reversals
+        #
+        # Original logic:
+        #   Driver OUT  → driver balance += crates_out
+        #   Driver IN   → driver balance -= crates_in
+        #   Customer IN → customer balance -= crates_in
+        #
+        # Reverse (undo):
+        #   Driver OUT  → driver balance -= crates_out  (change = -crates_out)
+        #   Driver IN   → driver balance += crates_in   (change = +crates_in)
+        #   Customer IN → customer balance += crates_in (change = +crates_in)
+        # ----------------------------------------------------------
+
+        # Initialised here so message block can reference them
+        # even when entries list is empty (e.g. cancelled pre-Gate Check)
+        driver_changes = {}
+        customer_changes = {}
+
+        for e in entries:
+
+            if e.ledger_type == "Driver" and e.driver:
+
+                change = (e.crates_in or 0) - (e.crates_out or 0)
+
+                driver_changes[e.driver] = (
+                    driver_changes.get(e.driver, 0) + change
+                )
+
+            elif e.ledger_type == "Customer" and e.customer:
+
+                change = (e.crates_in or 0) - (e.crates_out or 0)
+
+                customer_changes[e.customer] = (
+                    customer_changes.get(e.customer, 0) + change
+                )
+
+        # ----------------------------------------------------------
+        # Step 4: Delete all ledger entries for this VML
+        # ----------------------------------------------------------
+
+        frappe.db.delete(
+            "Customer Crate Ledger",
+            {"vehicle_movement_log": self.name}
+        )
+
+        # ----------------------------------------------------------
+        # Step 5: Apply reversals to Driver
+        # ----------------------------------------------------------
+
+        for driver, change in driver_changes.items():
+
+            current = flt(
+                frappe.db.get_value(
+                    "Driver",
+                    driver,
+                    "custom_invoice_crate_balance"
+                )
+            )
+
+            frappe.db.set_value(
+                "Driver",
+                driver,
+                "custom_invoice_crate_balance",
+                max(0, current + change)
+            )
+
+        # ----------------------------------------------------------
+        # Step 6: Apply reversals to Customer
+        # ----------------------------------------------------------
+
+        for customer, change in customer_changes.items():
+
+            current = flt(
+                frappe.db.get_value(
+                    "Customer",
+                    customer,
+                    "custom_current_crate_balance"
+                )
+            )
+
+            frappe.db.set_value(
+                "Customer",
+                customer,
+                "custom_current_crate_balance",
+                max(0, current + change)
+            )
+
+        # ----------------------------------------------------------
+        # Final: Detailed cancellation message
+        # ----------------------------------------------------------
+
+        msg = "<b>VML Cancelled — Cleanup Complete</b>"
+
+        if linked_invoices:
+            msg += (
+                f"<br><br><b>Invoices Delinked "
+                f"({len(linked_invoices)}):</b>"
+            )
+            for inv in linked_invoices:
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• {inv}"
+
+        if linked_stock_entries:
+            msg += (
+                f"<br><br><b>Stock Entries Delinked "
+                f"({len(linked_stock_entries)}):</b>"
+            )
+            for se in linked_stock_entries:
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• {se}"
+
+        if entries:
+            driver_out = sum(
+                1 for e in entries
+                if e.ledger_type == "Driver" and e.entry_type == "OUT"
+            )
+            driver_in = sum(
+                1 for e in entries
+                if e.ledger_type == "Driver" and e.entry_type == "IN"
+            )
+            customer_in = sum(
+                1 for e in entries
+                if e.ledger_type == "Customer" and e.entry_type == "IN"
+            )
+
+            msg += (
+                f"<br><br><b>Ledger Entries Deleted "
+                f"({len(entries)}):</b>"
+            )
+
+            if driver_out:
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• Driver OUT: {driver_out}"
+
+            if driver_in:
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• Driver IN: {driver_in}"
+
+            if customer_in:
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• Customer IN: {customer_in}"
+
+        if driver_changes or customer_changes:
+            msg += "<br><br><b>Balances Reversed:</b>"
+            for drv, chg in driver_changes.items():
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• Driver {drv}: {'+' if chg >= 0 else ''}{chg} crates"
+            for cust, chg in customer_changes.items():
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• Customer {cust}: {'+' if chg >= 0 else ''}{chg} crates"
+
+        frappe.msgprint(msg, title="VML Cancelled", indicator="orange")
+
+    # =========================================================
+    # LINK SALES INVOICES
+    # =========================================================
+
+    def link_sales_invoices(self):
+
+        linked_invoices = []
+
+        for row in self.crate_summary:
+
+            if not row.sales_invoice:
+                continue
+
+            existing_trip = frappe.db.get_value(
+                "Sales Invoice",
+                row.sales_invoice,
+                "custom_vehicle_movement_log"
+            )
+
+            if (
+                existing_trip
+                and existing_trip != self.name
+            ):
+
+                frappe.throw(
+                    f"Sales Invoice "
+                    f"{row.sales_invoice} "
+                    f"is already linked with "
+                    f"Vehicle Movement "
+                    f"{existing_trip}"
+                )
+
+            if not existing_trip:
+
+                frappe.db.set_value(
+                    "Sales Invoice",
+                    row.sales_invoice,
+                    "custom_vehicle_movement_log",
+                    self.name
+                )
+
+            linked_invoices.append(
+                row.sales_invoice
+            )
+
+        for row in self.crate_summary:
+
+            if not row.stock_entry:
+                continue
+
+            existing_trip = frappe.db.get_value(
+                "Stock Entry",
+                row.stock_entry,
+                "van_collection_item"
+            )
+
+            if (
+                existing_trip
+                and existing_trip != self.name
+            ):
+
+                frappe.throw(
+                    f"Stock Entry "
+                    f"{row.stock_entry} "
+                    f"is already linked with "
+                    f"Vehicle Movement "
+                    f"{existing_trip}"
+                )
+
+            if not existing_trip:
+
+                frappe.db.set_value(
+                    "Stock Entry",
+                    row.stock_entry,
+                    "van_collection_item",
+                    self.name
+                )
+
+        # ----------------------------------------------------------
+        # Comprehensive Gate Check message
+        # ----------------------------------------------------------
+
+        # Collect SI → crate count from crate_summary
+        si_crates = {}
+        se_crates = {}
+
+        for row in self.crate_summary:
+            if row.sales_invoice:
+                si_crates[row.sales_invoice] = row.total_crate_out or 0
+            if row.stock_entry:
+                se_crates[row.stock_entry] = row.total_crate_out or 0
+
+        # Item totals from crate_item_details
+        item_totals = {}
+
+        for row in self.crate_item_details:
+            key = row.item_name or row.item_code or "Unknown"
+            item_totals[key] = item_totals.get(key, 0) + (row.qty or 0)
+
+        total_crates = (
+            sum(si_crates.values()) + sum(se_crates.values())
+        )
+
+        msg = "<b>Gate Check — Dispatch Complete</b>"
+
+        if si_crates:
+            msg += (
+                f"<br><br><b>Sales Invoices Linked "
+                f"({len(si_crates)}):</b>"
+            )
+            for inv, crates in si_crates.items():
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• {inv} — <b>{crates}</b> crates"
+
+        if se_crates:
+            msg += (
+                f"<br><br><b>Stock Entries Linked "
+                f"({len(se_crates)}):</b>"
+            )
+            for se, crates in se_crates.items():
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• {se} — <b>{crates}</b> crates"
+
+        msg += f"<br><br><b>Total Crates Out: {total_crates}</b>"
+
+        if item_totals:
+            msg += "<br><br><b>Item Breakdown:</b>"
+            for item, qty in sorted(
+                item_totals.items(), key=lambda x: -x[1]
+            ):
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• {item}: <b>{qty}</b>"
+
+        frappe.msgprint(msg, title="Gate Check Complete", indicator="green")
+
+    # =========================================================
+    # DRIVER CRATE LEDGER OUT ENTRY (INVOICE CRATES)
+    # =========================================================
+
+    def create_driver_crate_ledger_for_invoices(self):
+
+        new_crates = 0
+
+        for row in self.crate_summary:
+
+            if not row.sales_invoice:
+                continue
+
+            if not row.total_crate_out:
+                continue
+
+            existing_ledger = frappe.db.exists(
+                "Customer Crate Ledger",
+                {
+                    "sales_invoice": row.sales_invoice,
+                    "entry_type": "OUT",
+                    "ledger_type": "Driver",
+                    "vehicle_movement_log": self.name
+                }
+            )
+
+            if existing_ledger:
+                continue
+
+            customer = frappe.db.get_value(
+                "Sales Invoice",
+                row.sales_invoice,
+                "customer"
+            )
+
+            ledger = frappe.new_doc(
+                "Customer Crate Ledger"
+            )
+
+            ledger.posting_date = self.date_and_time
+
+            ledger.ledger_type = "Driver"
+
+            ledger.driver = self.driver
+
+            ledger.vehicle = self.vehicle
+
+            ledger.customer = customer
+
+            ledger.sales_invoice = row.sales_invoice
+
+            ledger.vehicle_movement_log = self.name
+
+            ledger.crates_out = row.total_crate_out
+
+            ledger.crates_in = 0
+
+            ledger.balance_crates = row.total_crate_out
+
+            ledger.entry_type = "OUT"
+
+            ledger.insert(
+                ignore_permissions=True
+            )
+
+            new_crates += row.total_crate_out
+
+        if new_crates and self.driver:
+
+            current = flt(
+                frappe.db.get_value(
+                    "Driver",
+                    self.driver,
+                    "custom_invoice_crate_balance"
+                )
+            )
+
+            frappe.db.set_value(
+                "Driver",
+                self.driver,
+                "custom_invoice_crate_balance",
+                current + new_crates
+            )
+
+    # =========================================================
+    # CUSTOMER CRATE RETURN PROCESS (FALLBACK — no Crate Delivery)
+    # =========================================================
+
+    def process_customer_crate_return(self):
+        """
+        Fallback: runs at VML Submitted when no Crate Delivery was created.
+        Handles crates that customers returned directly to the driver
+        (tracked via total_crate_in on the VML crate_summary row).
+
+        Fixes applied:
+          Flaw 1 — Guard now includes vehicle_movement_log for proper idempotency.
+          Flaw 3 — Skips invoices already handled by a submitted Crate Delivery.
+          Flaw 6 — balance_crates uses actual running Customer balance, not trip row balance.
+          Flaw 7 — frappe.get_doc replaced with frappe.db.get_value (one field, one SQL).
+        """
+
+        processed_invoices = []
+
+        for row in self.crate_summary:
+
+            if not row.sales_invoice:
+                continue
+
+            if not row.total_crate_in:
+                continue
+
+            # Flaw 3: Crate Delivery already handled this invoice — skip
+            if frappe.db.exists(
+                "Crate Delivery",
+                {
+                    "sales_invoice": row.sales_invoice,
+                    "docstatus": 1
+                }
+            ):
+                continue
+
+            # Flaw 1: idempotency guard scoped to this VML
+            existing_ledger = frappe.db.exists(
+                "Customer Crate Ledger",
+                {
+                    "sales_invoice": row.sales_invoice,
+                    "entry_type": "IN",
+                    "ledger_type": "Customer",
+                    "vehicle_movement_log": self.name
+                }
+            )
+
+            if existing_ledger:
+                continue
+
+            # Flaw 7: single-field fetch, no full doc load
+            customer = frappe.db.get_value(
+                "Sales Invoice",
+                row.sales_invoice,
+                "customer"
+            )
+
+            # Flaw 6: running balance from DB, not trip-level row.balance_crate
+            current_balance = flt(
+                frappe.db.get_value(
+                    "Customer",
+                    customer,
+                    "custom_current_crate_balance"
+                )
+            )
+
+            new_balance = current_balance - row.total_crate_in
+
+            ledger = frappe.new_doc(
+                "Customer Crate Ledger"
+            )
+
+            ledger.posting_date = self.date_and_time
+
+            ledger.ledger_type = "Customer"
+
+            ledger.customer = customer
+
+            ledger.sales_invoice = row.sales_invoice
+
+            ledger.vehicle_movement_log = self.name
+
+            ledger.crates_out = 0
+
+            ledger.crates_in = row.total_crate_in
+
+            ledger.balance_crates = new_balance
+
+            ledger.entry_type = "IN"
+
+            ledger.insert(
+                ignore_permissions=True
+            )
+
+            frappe.db.set_value(
+                "Customer",
+                customer,
+                "custom_current_crate_balance",
+                new_balance
+            )
+
+            processed_invoices.append(
+                row.sales_invoice
+            )
+
+        if processed_invoices:
+
+            frappe.msgprint(
+                "<b>Successfully processed returned crates:</b><br><br>"
+                + "<br>".join(processed_invoices),
+
+                title="Vehicle Return Processed",
+
+                indicator="green"
+            )
+
+    # =========================================================
+    # CLOSE DRIVER INVOICE CRATES ON VML RETURN (FLAW 2 FIX)
+    # =========================================================
+
+    def close_driver_invoice_crates_on_vml_return(self):
+        """
+        At Vehicle Returned: settle driver's invoice crate balance.
+
+        Rule 1 — CD rows: fetch crates_returned from submitted Crate Delivery.
+                  That's how many crates driver physically brings back to plant.
+        Rule 2 — Non-CD rows: use min(total_crate_in, total_crate_out).
+                  Cannot return more than loaded; remainder stays on driver.
+        """
+
+        if not self.driver:
+            return
+
+        total_to_clear = 0
+
+        for row in self.crate_summary:
+
+            if not row.sales_invoice:
+                continue
+
+            if not row.total_crate_out:
+                continue
+
+            # Idempotency: Driver ledger IN already created for this VML + invoice
+            already_cleared = frappe.db.exists(
+                "Customer Crate Ledger",
+                {
+                    "vehicle_movement_log": self.name,
+                    "sales_invoice": row.sales_invoice,
+                    "entry_type": "IN",
+                    "ledger_type": "Driver"
+                }
+            )
+
+            if already_cleared:
+                continue
+
+            customer = frappe.db.get_value(
+                "Sales Invoice",
+                row.sales_invoice,
+                "customer"
+            )
+
+            # Rule 1: submitted CD exists — use its locked crates_returned value
+            cd_returned = frappe.db.get_value(
+                "Crate Delivery",
+                {"sales_invoice": row.sales_invoice, "docstatus": 1},
+                "crates_returned"
+            )
+
+            if cd_returned is not None:
+                crates_in = flt(cd_returned)
+            else:
+                # Rule 2: no Crate Delivery — cap user-entered value at crates_out
+                crates_in = min(
+                    flt(row.total_crate_in),
+                    flt(row.total_crate_out)
+                )
+
+            if not crates_in:
+                continue
+
+            ledger = frappe.new_doc(
+                "Customer Crate Ledger"
+            )
+
+            ledger.posting_date = self.date_and_time
+
+            ledger.ledger_type = "Driver"
+
+            ledger.driver = self.driver
+
+            ledger.vehicle = self.vehicle
+
+            ledger.customer = customer
+
+            ledger.sales_invoice = row.sales_invoice
+
+            ledger.vehicle_movement_log = self.name
+
+            ledger.crates_out = 0
+
+            ledger.crates_in = crates_in
+
+            ledger.entry_type = "IN"
+
+            ledger.insert(
+                ignore_permissions=True
+            )
+
+            total_to_clear += crates_in
+
+        if total_to_clear:
+
+            current = flt(
+                frappe.db.get_value(
+                    "Driver",
+                    self.driver,
+                    "custom_invoice_crate_balance"
+                )
+            )
+
+            frappe.db.set_value(
+                "Driver",
+                self.driver,
+                "custom_invoice_crate_balance",
+                max(0, current - total_to_clear)
+            )
+
+    # =========================================================
+    # DRIVER STOCK ENTRY CRATE LEDGER — OUT (Gate Check)
+    # =========================================================
+
+    def create_driver_crate_ledger_for_stock_entries(self):
+        """
+        At Gate Check: create a Driver OUT ledger entry for every
+        crate_summary row that is linked to a Stock Entry (van-load
+        crates that are NOT tied to a specific Sales Invoice).
+        """
+
+        new_crates = 0
+
+        for row in self.crate_summary:
+
+            if not row.stock_entry:
+                continue
+
+            if not row.total_crate_out:
+                continue
+
+            existing_ledger = frappe.db.exists(
+                "Customer Crate Ledger",
+                {
+                    "stock_entry": row.stock_entry,
+                    "entry_type": "OUT",
+                    "ledger_type": "Driver",
+                    "vehicle_movement_log": self.name
+                }
+            )
+
+            if existing_ledger:
+                continue
+
+            ledger = frappe.new_doc("Customer Crate Ledger")
+
+            ledger.posting_date = self.date_and_time
+
+            ledger.ledger_type = "Driver"
+
+            ledger.driver = self.driver
+
+            ledger.stock_entry = row.stock_entry
+
+            ledger.vehicle_movement_log = self.name
+
+            ledger.crates_out = row.total_crate_out
+
+            ledger.crates_in = 0
+
+            ledger.balance_crates = row.total_crate_out
+
+            ledger.entry_type = "OUT"
+
+            ledger.insert(ignore_permissions=True)
+
+            new_crates += row.total_crate_out
+
+        if new_crates and self.driver:
+
+            current = flt(
+                frappe.db.get_value(
+                    "Driver",
+                    self.driver,
+                    "custom_invoice_crate_balance"
+                )
+            )
+
+            frappe.db.set_value(
+                "Driver",
+                self.driver,
+                "custom_invoice_crate_balance",
+                current + new_crates
+            )
+
+    # =========================================================
+    # DRIVER STOCK ENTRY CRATE LEDGER — IN (Vehicle Returned)
+    # =========================================================
+
+    def close_driver_stock_entry_crates_on_vml_return(self):
+        """
+        At Vehicle Returned: create a Driver IN ledger entry for
+        every crate_summary row tied to a Stock Entry, using
+        total_crate_in (how many the driver physically brought back).
+        """
+
+        if not self.driver:
+            return
+
+        total_to_clear = 0
+
+        for row in self.crate_summary:
+
+            if not row.stock_entry:
+                continue
+
+            if not row.total_crate_in:
+                continue
+
+            already_cleared = frappe.db.exists(
+                "Customer Crate Ledger",
+                {
+                    "vehicle_movement_log": self.name,
+                    "stock_entry": row.stock_entry,
+                    "entry_type": "IN",
+                    "ledger_type": "Driver"
+                }
+            )
+
+            if already_cleared:
+                continue
+
+            ledger = frappe.new_doc("Customer Crate Ledger")
+
+            ledger.posting_date = self.date_and_time
+
+            ledger.ledger_type = "Driver"
+
+            ledger.driver = self.driver
+
+            ledger.stock_entry = row.stock_entry
+
+            ledger.vehicle_movement_log = self.name
+
+            ledger.crates_out = 0
+
+            ledger.crates_in = row.total_crate_in
+
+            ledger.entry_type = "IN"
+
+            ledger.insert(ignore_permissions=True)
+
+            total_to_clear += row.total_crate_in
+
+        if total_to_clear:
+
+            current = flt(
+                frappe.db.get_value(
+                    "Driver",
+                    self.driver,
+                    "custom_invoice_crate_balance"
+                )
+            )
+
+            frappe.db.set_value(
+                "Driver",
+                self.driver,
+                "custom_invoice_crate_balance",
+                max(0, current - total_to_clear)
+            )
+
+    # =========================================================
+    # LOOSE CRATE OUT LEDGER
+    # =========================================================
+
+    def create_loose_crate_out_ledger(self):
+
+        new_changes = {}
+
+        for row in self.loose_crate_detail:
+
+            if not row.crate_item:
+                continue
+
+            if not row.crates_out:
+                continue
+
+            existing_ledger = frappe.db.exists(
+                "Customer Crate Ledger",
+                {
+                    "vehicle_movement_log": self.name,
+                    "crate_item": row.crate_item,
+                    "entry_type": "OUT",
+                    "ledger_type": "Driver"
+                }
+            )
+
+            if existing_ledger:
+                continue
+
+            ledger = frappe.new_doc(
+                "Customer Crate Ledger"
+            )
+
+            ledger.posting_date = self.date_and_time
+
+            ledger.ledger_type = "Driver"
+
+            ledger.driver = self.driver
+
+            ledger.vehicle = self.vehicle
+
+            ledger.vehicle_movement_log = self.name
+
+            ledger.crate_item = row.crate_item
+
+            ledger.crates_out = row.crates_out
+
+            ledger.crates_in = 0
+
+            ledger.balance_crates = row.balance
+
+            ledger.entry_type = "OUT"
+
+            ledger.insert(
+                ignore_permissions=True
+            )
+
+            new_changes[row.crate_item] = (
+                new_changes.get(row.crate_item, 0)
+                + row.crates_out
+            )
+
+        self._update_driver_loose_crate_balances(new_changes)
+
+    # =========================================================
+    # LOOSE CRATE IN LEDGER
+    # =========================================================
+
+    def create_loose_crate_in_ledger(self):
+        """
+        Loose crates are always 1:1 — whatever went out must come back.
+        Ignores user-entered crates_in; auto-uses crates_out instead.
+        """
+
+        new_changes = {}
+
+        for row in self.loose_crate_detail:
+
+            if not row.crate_item:
+                continue
+
+            if not row.crates_out:
+                continue
+
+            existing_ledger = frappe.db.exists(
+                "Customer Crate Ledger",
+                {
+                    "vehicle_movement_log": self.name,
+                    "crate_item": row.crate_item,
+                    "entry_type": "IN",
+                    "ledger_type": "Driver"
+                }
+            )
+
+            if existing_ledger:
+                continue
+
+            ledger = frappe.new_doc(
+                "Customer Crate Ledger"
+            )
+
+            ledger.posting_date = self.date_and_time
+
+            ledger.ledger_type = "Driver"
+
+            ledger.driver = self.driver
+
+            ledger.vehicle = self.vehicle
+
+            ledger.vehicle_movement_log = self.name
+
+            ledger.crate_item = row.crate_item
+
+            ledger.crates_out = 0
+
+            ledger.crates_in = row.crates_out
+
+            ledger.balance_crates = 0
+
+            ledger.entry_type = "IN"
+
+            ledger.insert(
+                ignore_permissions=True
+            )
+
+            new_changes[row.crate_item] = (
+                new_changes.get(row.crate_item, 0)
+                - row.crates_out
+            )
+
+        self._update_driver_loose_crate_balances(new_changes)
+
+    # =========================================================
+    # DRIVER LOOSE CRATE TYPE BALANCE UPDATE
+    # =========================================================
+
+    def _update_driver_loose_crate_balances(self, changes):
+        if not self.driver or not changes:
+            return
+
+        driver_doc = frappe.get_doc("Driver", self.driver)
+
+        # Guard: if custom_crate_type_balances field hasn't been added
+        # to the Driver doctype via Customize Form yet, skip silently.
+        if not driver_doc.meta.get_field("custom_crate_type_balances"):
+            return
+
+        existing_rows = driver_doc.get("custom_crate_type_balances") or []
+
+        for crate_type, qty in changes.items():
+
+            found = False
+
+            for row in existing_rows:
+
+                if row.crate_type == crate_type:
+                    row.balance = (row.balance or 0) + qty
+                    found = True
+                    break
+
+            if not found:
+
+                driver_doc.append(
+                    "custom_crate_type_balances",
+                    {
+                        "crate_type": crate_type,
+                        "balance": qty
+                    }
+                )
+
+        driver_doc.save(ignore_permissions=True)
+
+    # =========================================================
+    # STOCK ENTRY FOR LOOSE CRATES (Phase 2 — pending)
+    # =========================================================
+
+    def create_stock_entry_for_loose_items(self):
+        pass
+
+    # =========================================================
+    # VEHICLE DOUBLE-BOOKING CHECK
+    # =========================================================
+
+    def check_vehicle_not_on_active_trip(self):
+
         if not self.vehicle:
             return
 
-        vehicle = frappe.get_doc("Vehicle", self.vehicle)
+        filters = {
+            "vehicle": self.vehicle,
+            "status": "Out",
+        }
+
+        if self.name:
+            filters["name"] = ["!=", self.name]
+
+        active_trip = frappe.db.get_value(
+            "Vehicle Movement Log",
+            filters,
+            "name"
+        )
+
+        if active_trip:
+
+            frappe.throw(
+                title="Vehicle Already On Trip",
+                msg=(
+                    f"<b>{self.vehicle}</b> is currently assigned "
+                    f"to an active trip "
+                    f"<b>{active_trip}</b> (Status: Out).<br><br>"
+                    f"A vehicle cannot be on two trips simultaneously."
+                )
+            )
+
+    # =========================================================
+    # VEHICLE COMPLIANCE CHECK
+    # =========================================================
+
+    def check_vehicle_documents(self):
+
+        if not self.vehicle:
+            return
+
+        vehicle = frappe.db.get_value(
+            "Vehicle",
+            self.vehicle,
+            [
+                "insurance_company", "policy_no",
+                "custom_rc_no", "custom_pollution",
+                "custom_pollution_validity", "custom_fitness",
+                "custom_fitness_validity", "start_date", "end_date"
+            ],
+            as_dict=True
+        )
+
         required_fields = {
-            "insurance_company": "Insurance Company",
-            "policy_no": "Policy No",
-            "custom_rc_no": "RC Number",
-            "custom_pollution": "Pollution Certificate No",
-            "custom_pollution_validity": "Pollution Validity Date",
-            "custom_fitness": "Fitness Certificate No",
-            "custom_fitness_validity": "Fitness Validity Date",
-            "start_date": "Insurance Start Date",
-            "end_date": "Insurance End Date"
+
+            "insurance_company":
+                "Insurance Company",
+
+            "policy_no":
+                "Policy No",
+
+            "custom_rc_no":
+                "RC Number",
+
+            "custom_pollution":
+                "Pollution Certificate No",
+
+            "custom_pollution_validity":
+                "Pollution Validity Date",
+
+            "custom_fitness":
+                "Fitness Certificate No",
+
+            "custom_fitness_validity":
+                "Fitness Validity Date",
+
+            "start_date":
+                "Insurance Start Date",
+
+            "end_date":
+                "Insurance End Date"
         }
 
         errors = []
+
         today = getdate(nowdate())
 
         for field, label in required_fields.items():
+
             if not vehicle.get(field):
-                errors.append(f"• <b>{label}</b> is missing.")
 
-        if vehicle.get("end_date") and getdate(vehicle.end_date) < today:
-            errors.append(f"• <b>Insurance</b> expired on {vehicle.end_date}.")
+                errors.append(
+                    f"• <b>{label}</b> is missing."
+                )
 
-        if vehicle.get("custom_fitness_validity") and getdate(vehicle.custom_fitness_validity) < today:
-            errors.append(f"• <b>Fitness Certificate</b> expired on {vehicle.custom_fitness_validity}.")
-            
-        if vehicle.get("custom_pollution_validity") and getdate(vehicle.custom_pollution_validity) < today:
-            errors.append(f"• <b>Pollution Certificate</b> expired on {vehicle.custom_pollution_validity}.")
+        if (
+            vehicle.get("end_date")
+            and getdate(vehicle.end_date) < today
+        ):
+
+            errors.append(
+                f"• <b>Insurance</b> expired on "
+                f"{vehicle.end_date}."
+            )
+
+        if (
+            vehicle.get("custom_fitness_validity")
+            and getdate(
+                vehicle.custom_fitness_validity
+            ) < today
+        ):
+
+            errors.append(
+                f"• <b>Fitness Certificate</b> "
+                f"expired on "
+                f"{vehicle.custom_fitness_validity}."
+            )
+
+        if (
+            vehicle.get("custom_pollution_validity")
+            and getdate(
+                vehicle.custom_pollution_validity
+            ) < today
+        ):
+
+            errors.append(
+                f"• <b>Pollution Certificate</b> "
+                f"expired on "
+                f"{vehicle.custom_pollution_validity}."
+            )
 
         if errors:
+
             frappe.throw(
                 title="Vehicle Compliance Alert",
-                msg=f"Cannot save Trip. <b>{self.vehicle}</b> has missing or expired documents:<br><br>" + "<br>".join(errors) + "<br><br>Please update the Vehicle Master."
+
+                msg=
+                f"Cannot save Trip. "
+                f"<b>{self.vehicle}</b> "
+                f"has missing or expired "
+                f"documents:<br><br>"
+
+                + "<br>".join(errors)
+
+                + "<br><br>Please update "
+                f"the Vehicle Master."
             )
 
-    @frappe.whitelist()
-    def get_invoices(self):
-        """
-        Fetches Route-wise Invoices and calculates Crate/Can counts
-        """
-        if not self.date_and_time or not self.route:
-            frappe.throw(_("Please select both Date and Route before fetching invoices."))
 
-        target_date = getdate(self.date_and_time)
-        self.set("route_wise_sales_invoice", [])
+# =============================================================
+# FETCH INVOICE + STOCK ENTRY DETAILS
+# =============================================================
 
-        invoices = frappe.get_all("Sales Invoice",
-            filters={"posting_date": target_date, "route": self.route, "docstatus": 1},
-            fields=["name", "customer_name"]
+def _as_list(value):
+
+    if not value:
+        return []
+
+    if isinstance(value, str):
+        return json.loads(value)
+
+    return value
+
+
+def _get_stock_entry_crate_details(
+    stock_entries=None,
+    posting_date=None,
+    t_warehouse=None
+):
+
+    t_warehouse = (
+        t_warehouse
+        or frappe.db.get_single_value(
+            "Crate Settings", "transit_warehouse"
+        )
+    )
+
+    conditions = [
+        "se.docstatus = 1",
+        "sed.uom = %(uom)s",
+        "sed.t_warehouse = %(t_warehouse)s"
+    ]
+
+    values = {
+        "uom": "Crate",
+        "t_warehouse": t_warehouse
+    }
+
+    if posting_date:
+
+        conditions.append(
+            "se.posting_date = %(posting_date)s"
         )
 
-        if not invoices:
-            frappe.msgprint(_("No matching Invoices found."))
-            return
+        values["posting_date"] = posting_date
 
-        for inv in invoices:
-            item_data = frappe.get_all("Sales Invoice Item",
-                filters={"parent": inv.name, "packaging_item": ["in", ["CRT007", "CAN004"]]},
-                fields=["packaging_item", "qty"]
-            )
+    stock_entries = _as_list(stock_entries)
 
-            crates, cans = 0, 0
-            for item in item_data:
-                if item.packaging_item == "CRT007":
-                    crates += item.qty
-                elif item.packaging_item == "CAN004":
-                    cans += item.qty
+    if stock_entries:
 
-            self.append("route_wise_sales_invoice", {
-                "sales_invoice_id": inv.name,
-                "customer_name": inv.customer_name,
-                "crates_count": crates,
-                "cans_count": cans
-            })
-        
-        self.save()
-        return True
+        conditions.append(
+            "se.name in %(stock_entries)s"
+        )
 
-    def create_stock_entry_for_loose_items(self):
-        """
-        Creates a Material Transfer for items entered in the 'loose_crate' table.
-        """
-        if not self.loose_crate:
-            return
+        values["stock_entries"] = tuple(stock_entries)
 
-        se = frappe.new_doc("Stock Entry")
-        se.stock_entry_type = "Material Transfer"
-        se.from_warehouse = "Dispatch Cold Room - BDF"
-        se.to_warehouse = "crate in transit - BDF"
-        se.remarks = f"Loose Packaging for Vehicle Log: {self.name}"
-        
-        item_added = False
-        for row in self.loose_crate:
-            if row.qty > 0:
-                se.append("items", {
-                    "item_code": row.item_code,
-                    "qty": row.qty,
-                    "s_warehouse": "Dispatch Cold Room - BDF",
-                    "t_warehouse": "crate in transit - BDF",
-                    "uom": frappe.db.get_value("Item", row.item_code, "stock_uom"),
-                    "conversion_factor": 1
+    rows = frappe.db.sql(
+        f"""
+            select
+                se.name,
+                sed.item_code,
+                sed.item_name,
+                sed.qty,
+                sed.uom
+            from `tabStock Entry` se
+            inner join `tabStock Entry Detail` sed
+                on sed.parent = se.name
+            where {" and ".join(conditions)}
+            order by se.name, sed.idx
+        """,
+        values,
+        as_dict=True
+    )
+
+    stock_entry_map = {}
+
+    for row in rows:
+
+        if row.name not in stock_entry_map:
+
+            stock_entry_map[row.name] = {
+                "name": row.name,
+                "total_crates": 0,
+                "items": []
+            }
+
+        stock_entry_map[row.name][
+            "total_crates"
+        ] += row.qty or 0
+
+        stock_entry_map[row.name][
+            "items"
+        ].append({
+            "item_code": row.item_code,
+            "item_name": row.item_name,
+            "qty": row.qty,
+            "uom": row.uom,
+            "crates": row.qty
+        })
+
+    return list(
+        stock_entry_map.values()
+    )
+
+
+@frappe.whitelist()
+def get_invoice_details(invoices, posting_date):
+
+    invoices = _as_list(invoices)
+
+    result = {
+
+        "invoices": [],
+
+        "stock_entries": []
+    }
+
+    # =========================================================
+    # SALES INVOICE DATA
+    # =========================================================
+
+    for invoice in invoices:
+
+        doc = frappe.get_doc(
+            "Sales Invoice",
+            invoice
+        )
+
+        total_crates = 0
+
+        item_rows = []
+
+        for item in doc.items:
+
+            if item.uom == "Crate":
+
+                total_crates += item.qty
+
+                item_rows.append({
+
+                    "item_code":
+                        item.item_code,
+
+                    "item_name":
+                        item.item_name,
+
+                    "qty":
+                        item.qty,
+
+                    "uom":
+                        item.uom,
+
+                    "crates":
+                        item.qty
                 })
-                item_added = True
 
-        if item_added:
-            se.insert()
-            se.submit()
-            # Update the reference so it doesn't run again
-            self.db_set("custom_stock_entry", se.name)
-            frappe.msgprint(_("Stock Entry {0} created for Loose Items").format(se.name))
+        result["invoices"].append({
+
+            "name":
+                doc.name,
+
+            "customer":
+                doc.customer,
+
+            "total_crates":
+                total_crates,
+
+            "items":
+                item_rows
+        })
+
+    return result
+
+
+@frappe.whitelist()
+def get_stock_entry_details(
+    stock_entries,
+    posting_date=None,
+    t_warehouse=None
+):
+
+    return _get_stock_entry_crate_details(
+        stock_entries=stock_entries,
+        posting_date=posting_date,
+        t_warehouse=t_warehouse
+    )
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_stock_entry_query(
+    doctype,
+    txt,
+    searchfield,
+    start,
+    page_len,
+    filters,
+    as_dict=False,
+    reference_doctype=None,
+    ignore_user_permissions=False
+):
+
+    filters = filters or {}
+
+    if isinstance(filters, str):
+
+        filters = json.loads(filters)
+
+    return frappe.db.sql(
+        """
+            select
+                se.name,
+                se.posting_date,
+                se.stock_entry_type
+            from `tabStock Entry` se
+            where
+                se.docstatus = 1
+                and se.posting_date = %(posting_date)s
+                and se.name like %(txt)s
+                and exists (
+                    select 1
+                    from `tabStock Entry Detail` sed
+                    where
+                        sed.parent = se.name
+                        and sed.uom = %(uom)s
+                        and sed.t_warehouse = %(t_warehouse)s
+                )
+            order by se.posting_date desc, se.name desc
+            limit %(start)s, %(page_len)s
+        """,
+        {
+            "posting_date": filters.get("posting_date"),
+            "t_warehouse": (
+                filters.get("t_warehouse")
+                or frappe.db.get_single_value(
+                    "Crate Settings", "transit_warehouse"
+                )
+            ),
+            "uom": "Crate",
+            "txt": f"%{txt or ''}%",
+            "start": start,
+            "page_len": page_len
+        },
+        as_dict=as_dict
+    )

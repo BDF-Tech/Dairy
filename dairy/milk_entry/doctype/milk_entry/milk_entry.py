@@ -246,7 +246,7 @@ class MilkEntry(Document):
                 clr = (self.snf - (state_factor) - ((state_climatic_factor)*self.fat)) * 4
                 self.db_set('clr', clr)
             
-            volume_kg = self.volume * 1.03
+            volume_kg = self.volume
             self.db_set('fat_kg', (volume_kg * self.fat) / 100)
             self.db_set('snf_kg', ((volume_kg * self.snf) / 100))
             self.db_set('clr_kg', ((volume_kg * self.clr) / 100))
@@ -332,7 +332,7 @@ class MilkEntry(Document):
             'description': item_code.description,
             'received_qty': self.volume,
             'qty': self.volume,
-            'uom': item_code.stock_uom,
+            'uom': item_code.purchase_uom or item_code.stock_uom,
             'stock_uom': item_code.stock_uom,
             'rate': round(float(self.unit_price_with_incentive),2),
             'warehouse': self.dcs_id,
@@ -582,7 +582,7 @@ def pricelist(self):
     milk_type_to_item = {"Cow": doc.cow_pro,"Buffalo": doc.buf_pro,"Mix": doc.mix_pro}
     item_weight = frappe.db.get_value('Item', {"name": milk_type_to_item.get(self.get("milk_type"))}, 'weight_per_unit')
     
-    volume_kg = self.volume * 1.03
+    volume_kg = self.volume
     self.db_set('fat_kg', (volume_kg * self.fat) / 100)
     self.db_set('snf_kg', ((volume_kg * self.snf) / 100))
     self.db_set('clr_kg', ((volume_kg * self.clr) / 100))

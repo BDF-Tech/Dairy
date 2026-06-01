@@ -1,0 +1,78 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-13 11:56:54.444266",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sales_invoice",
+  "stock_entry",
+  "total_crate_out",
+  "total_crate_in",
+  "balance_crate",
+  "return_verified"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sales invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "columns": 2,
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Stock Entry",
+   "options": "Stock Entry"
+  },
+  {
+   "columns": 2,
+   "fieldname": "total_crate_out",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Crate Out"
+  },
+  {
+   "columns": 2,
+   "fieldname": "total_crate_in",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Crate In"
+  },
+  {
+   "columns": 2,
+   "fieldname": "balance_crate",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Balance Crate"
+  },
+  {
+   "columns": 2,
+   "default": "0",
+   "fieldname": "return_verified",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Return Verified"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-13 12:04:06.251445",
+ "modified_by": "Administrator",
+ "module": "dairy",
+ "name": "Vehicle Invoice Crate Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
