@@ -1,0 +1,48 @@
+[
+ {
+  "doctype": "Number Card",
+  "name": "VMls Today",
+  "label": "VMls Today",
+  "document_type": "Vehicle Movement Log",
+  "function": "Count",
+  "filters_json": "[{\"fieldname\": \"date_and_time\", \"filter_type\": \"Datetime\", \"value\": \"Today\", \"operator\": \"Timespan\"}]",
+  "is_public": 1,
+  "module": "dairy",
+  "color": "#5e64ff"
+ },
+ {
+  "doctype": "Number Card",
+  "name": "Crates Out Today",
+  "label": "Crates Out Today",
+  "document_type": "Customer Crate Ledger",
+  "function": "Sum",
+  "aggregate_function_based_on": "crates_out",
+  "filters_json": "[{\"fieldname\": \"posting_date\", \"filter_type\": \"Date\", \"value\": \"Today\", \"operator\": \"Timespan\"}, {\"fieldname\": \"entry_type\", \"filter_type\": \"Select\", \"value\": \"OUT\", \"operator\": \"=\"}]",
+  "is_public": 1,
+  "module": "dairy",
+  "color": "#e74c3c"
+ },
+ {
+  "doctype": "Number Card",
+  "name": "Crates In Today",
+  "label": "Crates In Today",
+  "document_type": "Customer Crate Ledger",
+  "function": "Sum",
+  "aggregate_function_based_on": "crates_in",
+  "filters_json": "[{\"fieldname\": \"posting_date\", \"filter_type\": \"Date\", \"value\": \"Today\", \"operator\": \"Timespan\"}, {\"fieldname\": \"entry_type\", \"filter_type\": \"Select\", \"value\": \"IN\", \"operator\": \"=\"}]",
+  "is_public": 1,
+  "module": "dairy",
+  "color": "#27ae60"
+ },
+ {
+  "doctype": "Number Card",
+  "name": "Active Trips",
+  "label": "Active Trips",
+  "document_type": "Vehicle Movement Log",
+  "function": "Count",
+  "filters_json": "[{\"fieldname\": \"workflow_state\", \"filter_type\": \"Select\", \"value\": \"Gate Check\", \"operator\": \"=\"}]",
+  "is_public": 1,
+  "module": "dairy",
+  "color": "#f39c12"
+ }
+]

@@ -141,13 +141,11 @@ class VehicleMovementLog(Document):
 
             self.create_loose_crate_out_ledger()
 
-        if self.workflow_state == "Vehicle Returned":
+        if self.workflow_state in ("Vehicle Returned", "Submitted"):
 
             self.process_customer_crate_return()
 
-            self.close_driver_invoice_crates_on_vml_return()
-
-            self.close_driver_stock_entry_crates_on_vml_return()
+            self.settle_driver_crates_on_return()
 
             self.create_loose_crate_in_ledger()
 
@@ -384,6 +382,7 @@ class VehicleMovementLog(Document):
     def link_sales_invoices(self):
 
         linked_invoices = []
+        new_invoice_links = 0
 
         for row in self.crate_summary:
 
@@ -418,9 +417,13 @@ class VehicleMovementLog(Document):
                     self.name
                 )
 
+                new_invoice_links += 1
+
             linked_invoices.append(
                 row.sales_invoice
             )
+
+        new_se_links = 0
 
         for row in self.crate_summary:
 
@@ -455,11 +458,16 @@ class VehicleMovementLog(Document):
                     self.name
                 )
 
+                new_se_links += 1
+
+        # Only show message when new links were actually created
+        if not new_invoice_links and not new_se_links:
+            return
+
         # ----------------------------------------------------------
         # Comprehensive Gate Check message
         # ----------------------------------------------------------
 
-        # Collect SI → crate count from crate_summary
         si_crates = {}
         se_crates = {}
 
@@ -469,7 +477,6 @@ class VehicleMovementLog(Document):
             if row.stock_entry:
                 se_crates[row.stock_entry] = row.total_crate_out or 0
 
-        # Item totals from crate_item_details
         item_totals = {}
 
         for row in self.crate_item_details:
@@ -561,6 +568,8 @@ class VehicleMovementLog(Document):
             ledger.sales_invoice = row.sales_invoice
 
             ledger.vehicle_movement_log = self.name
+
+            ledger.crate_category = "Sales Invoice"
 
             ledger.crates_out = row.total_crate_out
 
@@ -714,114 +723,66 @@ class VehicleMovementLog(Document):
     # CLOSE DRIVER INVOICE CRATES ON VML RETURN (FLAW 2 FIX)
     # =========================================================
 
-    def close_driver_invoice_crates_on_vml_return(self):
+    def settle_driver_crates_on_return(self):
         """
-        At Vehicle Returned: settle driver's invoice crate balance.
+        At Vehicle Returned: security physically counts all invoice + stock
+        entry crates coming off the vehicle and enters one total in
+        security_total_crates_in.
 
-        Rule 1 — CD rows: fetch crates_returned from submitted Crate Delivery.
-                  That's how many crates driver physically brings back to plant.
-        Rule 2 — Non-CD rows: use min(total_crate_in, total_crate_out).
-                  Cannot return more than loaded; remainder stays on driver.
+        Creates ONE Driver IN ledger entry for that amount.
+        Any shortfall (expected > actual) stays on driver balance automatically.
         """
 
         if not self.driver:
             return
 
-        total_to_clear = 0
+        total_in = flt(self.security_total_crates_in)
 
-        for row in self.crate_summary:
+        if not total_in:
+            return
 
-            if not row.sales_invoice:
-                continue
+        # Idempotency: settlement entry has no sales_invoice, stock_entry, or crate_item
+        already_settled = frappe.db.get_value(
+            "Customer Crate Ledger",
+            {
+                "vehicle_movement_log": self.name,
+                "ledger_type": "Driver",
+                "entry_type": "IN",
+                "sales_invoice": ["is", "not set"],
+                "crate_type": ["is", "not set"]
+            },
+            "name"
+        )
 
-            if not row.total_crate_out:
-                continue
+        if already_settled:
+            return
 
-            # Idempotency: Driver ledger IN already created for this VML + invoice
-            already_cleared = frappe.db.exists(
-                "Customer Crate Ledger",
-                {
-                    "vehicle_movement_log": self.name,
-                    "sales_invoice": row.sales_invoice,
-                    "entry_type": "IN",
-                    "ledger_type": "Driver"
-                }
-            )
-
-            if already_cleared:
-                continue
-
-            customer = frappe.db.get_value(
-                "Sales Invoice",
-                row.sales_invoice,
-                "customer"
-            )
-
-            # Rule 1: submitted CD exists — use its locked crates_returned value
-            cd_returned = frappe.db.get_value(
-                "Crate Delivery",
-                {"sales_invoice": row.sales_invoice, "docstatus": 1},
-                "crates_returned"
-            )
-
-            if cd_returned is not None:
-                crates_in = flt(cd_returned)
-            else:
-                # Rule 2: no Crate Delivery — cap user-entered value at crates_out
-                crates_in = min(
-                    flt(row.total_crate_in),
-                    flt(row.total_crate_out)
-                )
-
-            if not crates_in:
-                continue
-
-            ledger = frappe.new_doc(
-                "Customer Crate Ledger"
-            )
-
-            ledger.posting_date = self.date_and_time
-
-            ledger.ledger_type = "Driver"
-
-            ledger.driver = self.driver
-
-            ledger.vehicle = self.vehicle
-
-            ledger.customer = customer
-
-            ledger.sales_invoice = row.sales_invoice
-
-            ledger.vehicle_movement_log = self.name
-
-            ledger.crates_out = 0
-
-            ledger.crates_in = crates_in
-
-            ledger.entry_type = "IN"
-
-            ledger.insert(
-                ignore_permissions=True
-            )
-
-            total_to_clear += crates_in
-
-        if total_to_clear:
-
-            current = flt(
-                frappe.db.get_value(
-                    "Driver",
-                    self.driver,
-                    "custom_invoice_crate_balance"
-                )
-            )
-
-            frappe.db.set_value(
+        current = flt(
+            frappe.db.get_value(
                 "Driver",
                 self.driver,
-                "custom_invoice_crate_balance",
-                max(0, current - total_to_clear)
+                "custom_invoice_crate_balance"
             )
+        )
+
+        ledger = frappe.new_doc("Customer Crate Ledger")
+        ledger.posting_date = self.date_and_time
+        ledger.ledger_type = "Driver"
+        ledger.driver = self.driver
+        ledger.vehicle = self.vehicle
+        ledger.vehicle_movement_log = self.name
+        ledger.crates_out = 0
+        ledger.crates_in = total_in
+        ledger.balance_crates = max(0, current - total_in)
+        ledger.entry_type = "IN"
+        ledger.insert(ignore_permissions=True)
+
+        frappe.db.set_value(
+            "Driver",
+            self.driver,
+            "custom_invoice_crate_balance",
+            max(0, current - total_in)
+        )
 
     # =========================================================
     # DRIVER STOCK ENTRY CRATE LEDGER — OUT (Gate Check)
@@ -869,6 +830,8 @@ class VehicleMovementLog(Document):
 
             ledger.vehicle_movement_log = self.name
 
+            ledger.crate_category = "Stock Entry"
+
             ledger.crates_out = row.total_crate_out
 
             ledger.crates_in = 0
@@ -898,81 +861,6 @@ class VehicleMovementLog(Document):
                 current + new_crates
             )
 
-    # =========================================================
-    # DRIVER STOCK ENTRY CRATE LEDGER — IN (Vehicle Returned)
-    # =========================================================
-
-    def close_driver_stock_entry_crates_on_vml_return(self):
-        """
-        At Vehicle Returned: create a Driver IN ledger entry for
-        every crate_summary row tied to a Stock Entry, using
-        total_crate_in (how many the driver physically brought back).
-        """
-
-        if not self.driver:
-            return
-
-        total_to_clear = 0
-
-        for row in self.crate_summary:
-
-            if not row.stock_entry:
-                continue
-
-            if not row.total_crate_in:
-                continue
-
-            already_cleared = frappe.db.exists(
-                "Customer Crate Ledger",
-                {
-                    "vehicle_movement_log": self.name,
-                    "stock_entry": row.stock_entry,
-                    "entry_type": "IN",
-                    "ledger_type": "Driver"
-                }
-            )
-
-            if already_cleared:
-                continue
-
-            ledger = frappe.new_doc("Customer Crate Ledger")
-
-            ledger.posting_date = self.date_and_time
-
-            ledger.ledger_type = "Driver"
-
-            ledger.driver = self.driver
-
-            ledger.stock_entry = row.stock_entry
-
-            ledger.vehicle_movement_log = self.name
-
-            ledger.crates_out = 0
-
-            ledger.crates_in = row.total_crate_in
-
-            ledger.entry_type = "IN"
-
-            ledger.insert(ignore_permissions=True)
-
-            total_to_clear += row.total_crate_in
-
-        if total_to_clear:
-
-            current = flt(
-                frappe.db.get_value(
-                    "Driver",
-                    self.driver,
-                    "custom_invoice_crate_balance"
-                )
-            )
-
-            frappe.db.set_value(
-                "Driver",
-                self.driver,
-                "custom_invoice_crate_balance",
-                max(0, current - total_to_clear)
-            )
 
     # =========================================================
     # LOOSE CRATE OUT LEDGER
@@ -994,7 +882,7 @@ class VehicleMovementLog(Document):
                 "Customer Crate Ledger",
                 {
                     "vehicle_movement_log": self.name,
-                    "crate_item": row.crate_item,
+                    "crate_type": row.crate_item,
                     "entry_type": "OUT",
                     "ledger_type": "Driver"
                 }
@@ -1017,7 +905,9 @@ class VehicleMovementLog(Document):
 
             ledger.vehicle_movement_log = self.name
 
-            ledger.crate_item = row.crate_item
+            ledger.crate_type = row.crate_item
+
+            ledger.crate_category = "Loose Crate"
 
             ledger.crates_out = row.crates_out
 
@@ -1044,25 +934,26 @@ class VehicleMovementLog(Document):
 
     def create_loose_crate_in_ledger(self):
         """
-        Loose crates are always 1:1 — whatever went out must come back.
-        Ignores user-entered crates_in; auto-uses crates_out instead.
+        At Vehicle Returned: security fills security_loose_crate_entries with
+        each crate type and physical qty counted. Creates one Driver IN ledger
+        entry per type. Shortfall vs what went out stays on driver balance.
         """
 
         new_changes = {}
 
-        for row in self.loose_crate_detail:
+        for row in self.security_loose_crate_entries:
 
-            if not row.crate_item:
+            if not row.crate_type:
                 continue
 
-            if not row.crates_out:
+            if not row.crates_in:
                 continue
 
             existing_ledger = frappe.db.exists(
                 "Customer Crate Ledger",
                 {
                     "vehicle_movement_log": self.name,
-                    "crate_item": row.crate_item,
+                    "crate_type": row.crate_type,
                     "entry_type": "IN",
                     "ledger_type": "Driver"
                 }
@@ -1071,37 +962,30 @@ class VehicleMovementLog(Document):
             if existing_ledger:
                 continue
 
-            ledger = frappe.new_doc(
-                "Customer Crate Ledger"
-            )
+            # Find how many went out for this crate type (for balance_crates)
+            crates_out = 0
+            for lc in self.loose_crate_detail:
+                if lc.crate_item == row.crate_type:
+                    crates_out = flt(lc.crates_out)
+                    break
 
+            ledger = frappe.new_doc("Customer Crate Ledger")
             ledger.posting_date = self.date_and_time
-
             ledger.ledger_type = "Driver"
-
             ledger.driver = self.driver
-
             ledger.vehicle = self.vehicle
-
             ledger.vehicle_movement_log = self.name
-
-            ledger.crate_item = row.crate_item
-
+            ledger.crate_type = row.crate_type
+            ledger.crate_category = "Loose Crate"
             ledger.crates_out = 0
-
-            ledger.crates_in = row.crates_out
-
-            ledger.balance_crates = 0
-
+            ledger.crates_in = row.crates_in
+            ledger.balance_crates = max(0, crates_out - flt(row.crates_in))
             ledger.entry_type = "IN"
+            ledger.insert(ignore_permissions=True)
 
-            ledger.insert(
-                ignore_permissions=True
-            )
-
-            new_changes[row.crate_item] = (
-                new_changes.get(row.crate_item, 0)
-                - row.crates_out
+            new_changes[row.crate_type] = (
+                new_changes.get(row.crate_type, 0)
+                - row.crates_in
             )
 
         self._update_driver_loose_crate_balances(new_changes)

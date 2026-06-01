@@ -1,0 +1,42 @@
+[
+ {
+  "doctype": "Dashboard",
+  "name": "Crate Tracking Dashboard",
+  "dashboard_name": "Crate Tracking Dashboard",
+  "module": "dairy",
+  "is_default": 0,
+  "is_standard": 1,
+  "charts": [
+   {
+    "chart": "Crates Dispatched Daily",
+    "width": "Half"
+   },
+   {
+    "chart": "Crates Returned Daily",
+    "width": "Half"
+   },
+   {
+    "chart": "VML Status Distribution",
+    "width": "Half"
+   },
+   {
+    "chart": "Crate Category Breakdown",
+    "width": "Half"
+   }
+  ],
+  "cards": [
+   {
+    "card": "VMls Today"
+   },
+   {
+    "card": "Crates Out Today"
+   },
+   {
+    "card": "Crates In Today"
+   },
+   {
+    "card": "Active Trips"
+   }
+  ]
+ }
+]

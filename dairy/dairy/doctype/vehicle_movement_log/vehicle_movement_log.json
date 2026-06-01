@@ -9,7 +9,6 @@
   "identity_section",
   "date_and_time",
   "vehicle",
-  "status",
   "column_break_foxt",
   "route",
   "purpose",
@@ -30,7 +29,11 @@
   "remark_section",
   "remark",
   "section_break_sc40",
-  "amended_from"
+  "amended_from",
+  "security_return_entry_tab",
+  "security_total_crates_in",
+  "section_break_security_return",
+  "security_loose_crate_entries"
  ],
  "fields": [
   {
@@ -42,7 +45,8 @@
    "default": "Today",
    "fieldname": "date_and_time",
    "fieldtype": "Datetime",
-   "label": "Date and TIme"
+   "label": "Date and TIme",
+   "read_only_depends_on": "eval:doc.workflow_state !== 'Route Planning'"
   },
   {
    "fieldname": "vehicle",
@@ -50,15 +54,8 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Vehicle",
-   "options": "Vehicle"
-  },
-  {
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Vehicle Current Status",
-   "options": "Draft\nOut\nIn"
+   "options": "Vehicle",
+   "read_only_depends_on": "eval:doc.workflow_state !== 'Route Planning'"
   },
   {
    "fieldname": "column_break_foxt",
@@ -70,13 +67,15 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Route",
-   "options": "Route Master"
+   "options": "Route Master",
+   "read_only_depends_on": "eval:doc.workflow_state !== 'Route Planning'"
   },
   {
    "fetch_from": "route.route_type",
    "fieldname": "purpose",
    "fieldtype": "Data",
-   "label": "Purpose"
+   "label": "Purpose",
+   "read_only": 1
   },
   {
    "fieldname": "crew_assignment_section",
@@ -89,12 +88,21 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Driver",
-   "options": "Driver"
+   "options": "Driver",
+   "read_only_depends_on": "eval:doc.workflow_state !== 'Route Planning'"
+  },
+  {
+   "fetch_from": "driver.full_name",
+   "fieldname": "driver_name",
+   "fieldtype": "Data",
+   "label": "Driver Name",
+   "read_only": 1
   },
   {
    "fieldname": "datetime_xacd",
    "fieldtype": "Datetime",
-   "label": "Vehicle Out Time"
+   "label": "Vehicle Out Time",
+   "read_only_depends_on": "eval:doc.workflow_state !== 'Gate Check'"
   },
   {
    "fieldname": "column_break_wfbe",
@@ -103,12 +111,56 @@
   {
    "fieldname": "helper",
    "fieldtype": "Data",
-   "label": "Helper"
+   "label": "Helper",
+   "read_only_depends_on": "eval:doc.workflow_state !== 'Route Planning'"
   },
   {
    "fieldname": "vehicle_in_time",
    "fieldtype": "Datetime",
-   "label": "Vehicle In Time"
+   "label": "Vehicle In Time",
+   "read_only_depends_on": "eval:['Route Planning', 'Dispatch Loading', 'Gate Check', 'Vehicle Returned'].includes(doc.workflow_state)"
+  },
+  {
+   "fieldname": "crate_detail_by_invoice_section",
+   "fieldtype": "Section Break",
+   "label": "Crate Detail By Invoice"
+  },
+  {
+   "fieldname": "crate_summary",
+   "fieldtype": "Table",
+   "label": "Crate Summary",
+   "options": "Vehicle Invoice Crate Detail",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_invoice_crates",
+   "fieldtype": "Float",
+   "label": "Total Invoice Crated",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_detail_for_crate_section",
+   "fieldtype": "Section Break",
+   "label": "Item Detail For Crate"
+  },
+  {
+   "fieldname": "crate_item_details",
+   "fieldtype": "Table",
+   "label": "Crate Item Details",
+   "options": "Vehicle Invoice Item Crate Detail",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_uoqi",
+   "fieldtype": "Section Break",
+   "label": "Loose Crates"
+  },
+  {
+   "fieldname": "loose_crate_detail",
+   "fieldtype": "Table",
+   "label": "Loose Crate Details",
+   "options": "Loose Crate Detail",
+   "read_only_depends_on": "eval:doc.workflow_state !== 'Dispatch Loading'"
   },
   {
    "fieldname": "remark_section",
@@ -118,7 +170,8 @@
   {
    "fieldname": "remark",
    "fieldtype": "Data",
-   "label": "Remark"
+   "label": "Remark",
+   "read_only_depends_on": "eval:['Gate Check', 'Vehicle Returned'].includes(doc.workflow_state)"
   },
   {
    "fieldname": "section_break_sc40",
@@ -135,47 +188,30 @@
    "search_index": 1
   },
   {
-   "fetch_from": "driver.full_name",
-   "fieldname": "driver_name",
-   "fieldtype": "Data",
-   "label": "Driver Name"
+   "fieldname": "security_return_entry_tab",
+   "fieldtype": "Tab Break",
+   "label": "Security Return Entry"
   },
   {
-   "fieldname": "crate_detail_by_invoice_section",
-   "fieldtype": "Section Break",
-   "label": "Crate Detail By Invoice "
-  },
-  {
-   "fieldname": "crate_summary",
-   "fieldtype": "Table",
-   "label": "Crate Summary",
-   "options": "Vehicle Invoice Crate Detail"
-  },
-  {
-   "fieldname": "item_detail_for_crate_section",
-   "fieldtype": "Section Break",
-   "label": "Item Detail For Crate"
-  },
-  {
-   "fieldname": "crate_item_details",
-   "fieldtype": "Table",
-   "label": "Crate Item Details",
-   "options": "Vehicle Invoice Item Crate Detail"
-  },
-  {
-   "fieldname": "total_invoice_crates",
+   "description": "Count all standard crates (from invoices + stock entries) coming off the vehicle. Shortfall stays on driver balance.",
+   "fieldname": "security_total_crates_in",
    "fieldtype": "Float",
-   "label": "Total Invoice Crated"
+   "label": "Total Invoice + Stock Entry Crates (Physical Count)",
+   "read_only_depends_on": "eval:doc.workflow_state !== 'Vehicle Returned'"
   },
   {
-   "fieldname": "section_break_uoqi",
-   "fieldtype": "Section Break"
+   "description": "Filled by security when vehicle returns to plant. Enter physical counts coming off the vehicle.",
+   "fieldname": "section_break_security_return",
+   "fieldtype": "Section Break",
+   "label": "Security Return Entry"
   },
   {
-   "fieldname": "loose_crate_detail",
+   "description": "Add one row per loose crate type with the physically counted qty coming off the vehicle.",
+   "fieldname": "security_loose_crate_entries",
    "fieldtype": "Table",
-   "label": "Loose Crate Details",
-   "options": "Loose Crate Detail"
+   "label": "Loose Crate Return (Physical Count)",
+   "options": "Security Crate Return Entry",
+   "read_only_depends_on": "eval:doc.workflow_state !== 'Vehicle Returned'"
   }
  ],
  "grid_page_length": 50,
@@ -194,7 +230,7 @@
    "link_fieldname": "vehicle_movement_log"
   }
  ],
- "modified": "2026-05-14 18:24:13.206085",
+ "modified": "2026-06-01 15:52:44.651618",
  "modified_by": "Administrator",
  "module": "dairy",
  "name": "Vehicle Movement Log",

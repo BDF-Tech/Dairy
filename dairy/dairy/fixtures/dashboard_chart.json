@@ -1,0 +1,63 @@
+[
+ {
+  "doctype": "Dashboard Chart",
+  "name": "Crates Dispatched Daily",
+  "chart_name": "Crates Dispatched Daily",
+  "chart_type": "Sum",
+  "document_type": "Customer Crate Ledger",
+  "based_on": "posting_date",
+  "value_based_on": "crates_out",
+  "filters_json": "[]",
+  "type": "Line",
+  "timespan": "Last Month",
+  "time_interval": "Daily",
+  "is_public": 1,
+  "module": "dairy"
+ },
+ {
+  "doctype": "Dashboard Chart",
+  "name": "Crates Returned Daily",
+  "chart_name": "Crates Returned Daily",
+  "chart_type": "Sum",
+  "document_type": "Customer Crate Ledger",
+  "based_on": "posting_date",
+  "value_based_on": "crates_in",
+  "filters_json": "[]",
+  "type": "Line",
+  "timespan": "Last Month",
+  "time_interval": "Daily",
+  "is_public": 1,
+  "module": "dairy"
+ },
+ {
+  "doctype": "Dashboard Chart",
+  "name": "VML Status Distribution",
+  "chart_name": "VML Status Distribution",
+  "chart_type": "Group By",
+  "document_type": "Vehicle Movement Log",
+  "group_by_based_on": "workflow_state",
+  "group_by_type": "Count",
+  "filters_json": "[]",
+  "type": "Donut",
+  "timespan": "Last Month",
+  "time_interval": "Daily",
+  "is_public": 1,
+  "module": "dairy"
+ },
+ {
+  "doctype": "Dashboard Chart",
+  "name": "Crate Category Breakdown",
+  "chart_name": "Crate Category Breakdown",
+  "chart_type": "Group By",
+  "document_type": "Customer Crate Ledger",
+  "group_by_based_on": "crate_category",
+  "group_by_type": "Sum",
+  "aggregate_function_based_on": "crates_out",
+  "filters_json": "[{\"fieldname\": \"entry_type\", \"filter_type\": \"Select\", \"value\": \"OUT\", \"operator\": \"=\"}]",
+  "type": "Bar",
+  "timespan": "Last Month",
+  "time_interval": "Daily",
+  "is_public": 1,
+  "module": "dairy"
+ }
+]

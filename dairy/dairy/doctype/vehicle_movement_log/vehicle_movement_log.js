@@ -2,6 +2,17 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
     refresh(frm) {
 
+        const isVehicleReturned =
+            frm.doc.workflow_state === "Vehicle Returned";
+
+        frm.set_df_property(
+            "security_loose_crate_entries",
+            "read_only",
+            !isVehicleReturned
+        );
+
+        frm.refresh_field("security_loose_crate_entries");
+
         const transit_warehouse =
             "Goods and Transit - BDF";
 
@@ -132,6 +143,8 @@ frappe.ui.form.on("Vehicle Movement Log", {
             );
 
         };
+
+        if (frm.doc.workflow_state === "Dispatch Loading") {
 
         frm.add_custom_button("Get Invoices", () => {
 
@@ -392,6 +405,8 @@ frappe.ui.form.on("Vehicle Movement Log", {
                 });
 
         });
+
+        } // end if Dispatch Loading
 
     }
 

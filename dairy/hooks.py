@@ -65,7 +65,22 @@ fixtures = fixtures = [
             "Sales Invoice-update_party_balance",
             "Item Tax Template-tax_rate",
             "Address-fssai_lic_no"
-        )]]}
+        )]]},
+    {"dt": "Dashboard Chart", "filters": [["name", "in", [
+        "Crates Dispatched Daily",
+        "Crates Returned Daily",
+        "VML Status Distribution",
+        "Crate Category Breakdown"
+    ]]]},
+    {"dt": "Number Card", "filters": [["name", "in", [
+        "VMls Today",
+        "Crates Out Today",
+        "Crates In Today",
+        "Active Trips"
+    ]]]},
+    {"dt": "Dashboard", "filters": [["name", "in", [
+        "Crate Tracking Dashboard"
+    ]]]}
 ]
 
 # include js, css files in header of web template
