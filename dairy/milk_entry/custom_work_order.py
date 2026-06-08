@@ -419,7 +419,7 @@ class CustomWorkOrder(WorkOrder):
         self.calculate_operating_cost()
         self.validate_qty()
         self.validate_transfer_against()
-        self.validate_operation_time()
+        
         self.status = self.get_status()
         self.validate_workstation_type()
 

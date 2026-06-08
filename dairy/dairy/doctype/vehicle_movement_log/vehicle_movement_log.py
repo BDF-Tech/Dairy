@@ -19,6 +19,8 @@ class VehicleMovementLog(Document):
 
         self.update_crate_summary_balance()
 
+        self.populate_crate_summary_customer_names()
+
         self.update_loose_crate_balance()
 
         self.update_total_invoice_crates()
@@ -48,6 +50,18 @@ class VehicleMovementLog(Document):
             else:
 
                 row.return_verified = 0
+
+    # =========================================================
+    # POPULATE CUSTOMER NAMES IN CRATE SUMMARY
+    # =========================================================
+
+    def populate_crate_summary_customer_names(self):
+        """Fill customer_name on each crate_summary row from the linked Sales Invoice."""
+        for row in self.crate_summary:
+            if row.sales_invoice and not row.customer_name:
+                row.customer_name = frappe.db.get_value(
+                    "Sales Invoice", row.sales_invoice, "customer_name"
+                )
 
     # =========================================================
     # UPDATE LOOSE CRATE BALANCE

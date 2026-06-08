@@ -15,26 +15,72 @@ frappe.ui.form.on('Crate Delivery', {
             };
         });
 
-        // Show "Mark Customer Confirmed" button after submit if OTP not yet done
+        // Filter stock_entry to only show entries linked to this VML
+        frm.set_query('stock_entry', function() {
+            return {
+                filters: {
+                    van_collection_item: frm.doc.vehicle_movement_log || ''
+                }
+            };
+        });
+
+        // OTP flow — only on submitted, unconfirmed docs
         if (frm.doc.docstatus === 1 && !frm.doc.customer_confirmed) {
 
-            frm.add_custom_button(__('Mark Customer Confirmed'), function() {
+            // "Send OTP" button — generates and dispatches the OTP
+            frm.add_custom_button(__('Send OTP'), function() {
 
-                frappe.confirm(
-                    __('Has the customer confirmed delivery via OTP?'),
-                    function() {
-                        frappe.db
-                            .set_value(
-                                'Crate Delivery',
-                                frm.doc.name,
-                                'customer_confirmed',
-                                1
-                            )
-                            .then(() => frm.reload_doc());
+                frappe.show_alert({ message: __('Sending OTP…'), indicator: 'blue' });
+
+                frappe.call({
+                    method: 'dairy.dairy.doctype.crate_delivery.crate_delivery.send_delivery_otp',
+                    args: { crate_delivery_name: frm.doc.name },
+                    callback: function(r) {
+                        if (r.message) {
+                            frappe.show_alert({
+                                message: __('OTP sent via {0} to {1}', [r.message.channel, r.message.sent_to]),
+                                indicator: 'green'
+                            });
+                            frm.reload_doc();
+                        }
                     }
-                );
+                });
 
-            }).addClass('btn-primary');
+            }).addClass('btn-warning');
+
+            // "Verify OTP" button — only show if an OTP has been sent
+            if (frm.doc.otp_sent_to) {
+
+                frm.add_custom_button(__('Verify OTP'), function() {
+
+                    frappe.prompt(
+                        {
+                            label: __('Enter OTP sent to {0}', [frm.doc.otp_sent_to]),
+                            fieldname: 'otp',
+                            fieldtype: 'Data',
+                            reqd: 1
+                        },
+                        function(values) {
+                            frappe.call({
+                                method: 'dairy.dairy.doctype.crate_delivery.crate_delivery.verify_delivery_otp',
+                                args: {
+                                    crate_delivery_name: frm.doc.name,
+                                    otp: values.otp
+                                },
+                                callback: function(r) {
+                                    if (r.message && r.message.confirmed) {
+                                        frappe.show_alert({ message: __('Customer confirmed!'), indicator: 'green' });
+                                        frm.reload_doc();
+                                    }
+                                }
+                            });
+                        },
+                        __('Verify Customer OTP'),
+                        __('Verify')
+                    );
+
+                }).addClass('btn-primary');
+            }
         }
     },
 
@@ -53,11 +99,19 @@ frappe.ui.form.on('Crate Delivery', {
 
         if (!frm.doc.vehicle_movement_log) return;
 
-        // Re-apply the filter so the dropdown immediately reflects the new VML
+        // Re-apply filters so dropdowns immediately reflect the new VML
         frm.set_query('sales_invoice', function() {
             return {
                 filters: {
                     custom_vehicle_movement_log: frm.doc.vehicle_movement_log
+                }
+            };
+        });
+
+        frm.set_query('stock_entry', function() {
+            return {
+                filters: {
+                    van_collection_item: frm.doc.vehicle_movement_log
                 }
             };
         });

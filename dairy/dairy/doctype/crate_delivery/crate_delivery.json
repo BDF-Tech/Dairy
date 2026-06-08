@@ -24,6 +24,12 @@
   "crates_delivered",
   "crates_returned",
   "customer_confirmed",
+  "section_break_otp",
+  "customer_phone",
+  "otp_sent_to",
+  "column_break_otp",
+  "otp",
+  "otp_expiry",
   "amended_from"
  ],
  "fields": [
@@ -148,6 +154,45 @@
    "label": "Customer Confirmed (OTP)",
    "read_only": 1,
    "description": "Set by OTP confirmation on the app"
+  },
+  {
+   "fieldname": "section_break_otp",
+   "fieldtype": "Section Break",
+   "label": "OTP Confirmation"
+  },
+  {
+   "fieldname": "customer_phone",
+   "fieldtype": "Data",
+   "label": "Customer Phone",
+   "read_only": 1,
+   "description": "Mobile number fetched from the Actual Customer"
+  },
+  {
+   "fieldname": "otp_sent_to",
+   "fieldtype": "Data",
+   "label": "OTP Sent To",
+   "read_only": 1,
+   "description": "Number the OTP was last sent to"
+  },
+  {
+   "fieldname": "column_break_otp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "otp",
+   "fieldtype": "Data",
+   "label": "OTP",
+   "hidden": 1,
+   "no_copy": 1,
+   "description": "Internal — do not display to user"
+  },
+  {
+   "fieldname": "otp_expiry",
+   "fieldtype": "Datetime",
+   "label": "OTP Expiry",
+   "hidden": 1,
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "amended_from",

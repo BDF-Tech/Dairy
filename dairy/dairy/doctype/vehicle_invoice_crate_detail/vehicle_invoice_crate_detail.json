@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "sales_invoice",
+  "customer_name",
   "stock_entry",
   "total_crate_out",
   "total_crate_in",
@@ -21,6 +22,15 @@
    "in_list_view": 1,
    "label": "Sales invoice",
    "options": "Sales Invoice"
+  },
+  {
+   "columns": 2,
+   "fetch_from": "sales_invoice.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "read_only": 1
   },
   {
    "columns": 2,
