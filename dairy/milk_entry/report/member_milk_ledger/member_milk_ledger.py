@@ -78,11 +78,11 @@ def get_data(filters, columns):
 									sum(me.snf_deduction) as snf_deduction,
 									sum(me.fat_deduction) as fat_deduction,
 									sum(me.incentive) as incentive
-									from `tabMilk Entry` as me 
+									from `tabMilk Entry` as me
     								join `tabSupplier` as sp on sp.name = me.member
-									join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
-									left outer join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
-									left outer join `tabPurchase Invoice` as p on p.name = pi.parent 
+									join `tabPurchase Receipt` as pr on pr.milk_entry = me.name
+									left outer join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name and pi.docstatus = 1
+									left outer join `tabPurchase Invoice` as p on p.name = pi.parent and p.docstatus = 1
 									{conditions} group by me.date , me.member ,me.shift
 									order by me.date asc 
 									""".format(conditions=conditions), as_dict=True)
@@ -117,11 +117,11 @@ def get_data(filters, columns):
 												me.snf_deduction as snf_deduction,
 												me.fat_deduction as fat_deduction,
 												me.incentive as incentive
-												from `tabMilk Entry` as me 
+												from `tabMilk Entry` as me
 												join `tabSupplier` as sp on sp.name = me.member
-												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
-												join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
-												join `tabPurchase Invoice` as p on p.name = pi.parent and me.dcs_id="{0}"
+												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name
+												join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name and pi.docstatus = 1
+												join `tabPurchase Invoice` as p on p.name = pi.parent and p.docstatus = 1 and me.dcs_id="{0}"
 												{conditions} group by me.name
 												order by me.date asc 
 												""".format(d.get("dcs_id"),conditions=conditions), as_dict=True)
@@ -206,11 +206,11 @@ def get_data(filters, columns):
 												me.snf_deduction as snf_deduction,
 												me.fat_deduction as fat_deduction,
 												me.incentive as incentive
-												from `tabMilk Entry` as me 
-												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
+												from `tabMilk Entry` as me
+												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name
 												join `tabSupplier` as sp on sp.name = me.member
-												left outer join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
-												join `tabPurchase Invoice` as p on p.name = pi.parent  and me.member="{0}"
+												left outer join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name and pi.docstatus = 1
+												join `tabPurchase Invoice` as p on p.name = pi.parent and p.docstatus = 1 and me.member="{0}"
 												{conditions} 
 												order by me.date asc 
 												""".format(m.get("member"),conditions=conditions), as_dict=True)
@@ -288,11 +288,11 @@ def get_data(filters, columns):
 												me.snf_deduction as snf_deduction,
 												me.fat_deduction as fat_deduction,
 												me.incentive as incentive
-												from `tabMilk Entry` as me 
+												from `tabMilk Entry` as me
 												join `tabSupplier` as sp on sp.name = me.member
-												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
-												join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
-												join `tabPurchase Invoice` as p on p.name = pi.parent and me.shift = "{0}"
+												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name
+												join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name and pi.docstatus = 1
+												join `tabPurchase Invoice` as p on p.name = pi.parent and p.docstatus = 1 and me.shift = "{0}"
 												{conditions} group by me.name
 												# order by me.date asc 
 												""".format(s.get("shift"),conditions=conditions), as_dict=True)
@@ -370,11 +370,11 @@ def get_data(filters, columns):
 												me.snf_deduction as snf_deduction,
 												me.fat_deduction as fat_deduction,
 												me.incentive as incentive
-												from `tabMilk Entry` as me 
+												from `tabMilk Entry` as me
 												join `tabSupplier` as sp on sp.name = me.member
-												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name 
-												join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name
-												join `tabPurchase Invoice` as p on p.name = pi.parent and me.date = "{0}"
+												join `tabPurchase Receipt` as pr on pr.milk_entry = me.name
+												join `tabPurchase Invoice Item` as pi on pi.purchase_receipt = pr.name and pi.docstatus = 1
+												join `tabPurchase Invoice` as p on p.name = pi.parent and p.docstatus = 1 and me.date = "{0}"
 												{conditions} group by me.name
 												order by me.date asc 
 												""".format(da.get("de"),conditions=conditions), as_dict=True)
