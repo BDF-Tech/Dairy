@@ -4,17 +4,111 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "transit_warehouse",
+  "warehouse_section",
+  "dispatch_warehouses",
+  "transit_warehouses",
+  "depot_warehouses",
+  "crate_section",
+  "crate_uom",
+  "otp_section",
+  "otp_expiry_minutes",
+  "otp_length",
+  "whatsapp_section",
+  "kit19_api_key",
+  "kit19_username",
+  "sms_section",
+  "sms_api_key",
+  "sms_username",
+  "sms_sender_name",
+  "column_break_sms",
+  "sms_pe_id",
+  "sms_template_id",
+  "misc_section",
   "auto_stock_entry_on_gate_check",
   "overdue_days"
  ],
  "fields": [
   {
-   "fieldname": "transit_warehouse",
-   "fieldtype": "Link",
-   "label": "Transit Warehouse",
-   "options": "Warehouse",
-   "reqd": 1
+   "fieldname": "warehouse_section",
+   "fieldtype": "Section Break",
+   "label": "Warehouses"
+  },
+  {
+   "fieldname": "dispatch_warehouses",
+   "fieldtype": "Table MultiSelect",
+   "label": "Dispatch Warehouses",
+   "options": "Warehouse Child",
+   "description": "Plant warehouses from which VML delivery invoices are dispatched"
+  },
+  {
+   "fieldname": "transit_warehouses",
+   "fieldtype": "Table MultiSelect",
+   "label": "Transit Warehouses",
+   "options": "Warehouse Child",
+   "description": "Goods-in-transit warehouses used for stock entry crate tracking"
+  },
+  {
+   "fieldname": "depot_warehouses",
+   "fieldtype": "Table MultiSelect",
+   "label": "Depot Warehouses",
+   "options": "Warehouse Child",
+   "description": "Customer-facing pickup/depot warehouses"
+  },
+  {
+   "fieldname": "crate_section",
+   "fieldtype": "Section Break",
+   "label": "Crate Settings"
+  },
+  {
+   "default": "Crate",
+   "fieldname": "crate_uom",
+   "fieldtype": "Data",
+   "label": "Crate UOM",
+   "reqd": 1,
+   "description": "Unit of measure name used to identify crate items on invoices"
+  },
+  {
+   "fieldname": "otp_section",
+   "fieldtype": "Section Break",
+   "label": "OTP Settings"
+  },
+  {
+   "default": "10",
+   "fieldname": "otp_expiry_minutes",
+   "fieldtype": "Int",
+   "label": "OTP Expiry (Minutes)",
+   "reqd": 1,
+   "description": "How long a delivery OTP stays valid"
+  },
+  {
+   "default": "4",
+   "fieldname": "otp_length",
+   "fieldtype": "Int",
+   "label": "OTP Length (Digits)",
+   "reqd": 1,
+   "description": "Number of digits in the delivery OTP"
+  },
+  {
+   "fieldname": "whatsapp_section",
+   "fieldtype": "Section Break",
+   "label": "WhatsApp Notifications (Kit19)"
+  },
+  {
+   "fieldname": "kit19_api_key",
+   "fieldtype": "Password",
+   "label": "Kit19 API Key",
+   "description": "API key from Kit19 dashboard"
+  },
+  {
+   "fieldname": "kit19_username",
+   "fieldtype": "Data",
+   "label": "Kit19 Username",
+   "description": "Kit19 account username"
+  },
+  {
+   "fieldname": "misc_section",
+   "fieldtype": "Section Break",
+   "label": "Miscellaneous"
   },
   {
    "default": "1",
@@ -27,6 +121,44 @@
    "fieldname": "overdue_days",
    "fieldtype": "Int",
    "label": "Overdue Days"
+  },
+  {
+   "fieldname": "sms_section",
+   "fieldtype": "Section Break",
+   "label": "SMS Notifications (MessageIndia)"
+  },
+  {
+   "fieldname": "sms_api_key",
+   "fieldtype": "Password",
+   "label": "SMS API Key"
+  },
+  {
+   "fieldname": "sms_username",
+   "fieldtype": "Data",
+   "label": "SMS Username",
+   "default": "Basterdairy"
+  },
+  {
+   "fieldname": "sms_sender_name",
+   "fieldtype": "Data",
+   "label": "SMS Sender Name",
+   "default": "BSTERD"
+  },
+  {
+   "fieldname": "column_break_sms",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sms_pe_id",
+   "fieldtype": "Data",
+   "label": "SMS PE ID",
+   "default": "1701178177129241247"
+  },
+  {
+   "fieldname": "sms_template_id",
+   "fieldtype": "Data",
+   "label": "SMS Template ID",
+   "default": "1707178186280934400"
   }
  ],
  "index_web_pages_for_search": 0,

@@ -20,6 +20,7 @@ You must recreate them on prod before running `bench migrate`.
 | 4 | Customer | `custom_current_crate_balance` | Float | — | Customize Form | Read Only. Running crate balance owed by customer to the plant. |
 | 5 | Sales Invoice | `custom_vehicle_movement_log` | Link | Vehicle Movement Log | Customize Form | Links invoice to its dispatch trip. Set at Gate Check via db.set_value. |
 | 6 | Stock Entry | `van_collection_item` | Link | Vehicle Movement Log | Customize Form | Links stock entry to its dispatch trip. Set at Gate Check via db.set_value. |
+| 7 | Sales Invoice | `custom_pickup_log` | Link | Pickup Log | Customize Form | Links invoice to its pickup entry. Set at submit via db.set_value. Read Only, No Copy. |
 
 > **How to recreate on prod:** Go to Customize Form → select the Doctype → add field → Save → bench migrate.
 > Fields added via bench console (row 3) must be recreated the same way on prod.
@@ -86,7 +87,7 @@ After assigning `Dairy Driver` role to a user, you must also link that user to t
   Driver master               custom_invoice_crate_balance + custom_crate_type_balances child table
   Route Master                route_type → purpose
   Crate Type master           Blue Crate, Red Crate, etc.
-  Crate Settings (single)     transit_warehouse, auto_stock_entry_on_gate_check, overdue_days
+  Crate Settings (single)     transit_warehouse, dispatch_warehouse, crate_uom, otp_expiry_minutes, otp_length, auto_stock_entry_on_gate_check, overdue_days
 
 [WORKFLOW STATES — as confirmed in DB]
   Route Planning → Dispatch Loading → Gate Check → Submitted → Vehicle Returned → Submitted(final)
@@ -137,11 +138,15 @@ After assigning `Dairy Driver` role to a user, you must also link that user to t
   VML workflow state = "Submitted" (after final Submit action)
     - Final archive state — no code runs here
 
-[STEP 7: STANDALONE PICKUP]     ❌ NOT BUILT — Phase 3
-  Crate Pickup Entry doctype
-    - Driver collects empty crates from customers on a standalone trip
-    - Customer Crate Ledger IN per customer + crate type
-    - Customer balance decremented
+[STEP 7: PICKUP LOG]            ✅ COMPLETE — Phase 3B
+  Pickup Log doctype
+    - Customer walks into warehouse and buys product (Sales Invoice)
+    - Invoice fetched via Get Invoices button filtered by warehouse (set_warehouse)
+    - VML invoices: set_warehouse = Dispatch Warehouse (from Crate Settings)
+    - Pickup invoices: set_warehouse = Pickup Log.warehouse (depot/branch)
+    - On submit: Customer Crate Ledger OUT per invoice (crates going home with customer)
+    - On submit: Customer Crate Ledger IN per invoice if customer returns crates on the spot
+    - Customer.custom_current_crate_balance updated immediately on both
 
 [STEP 8: VISIBILITY]            ❌ NOT BUILT — Phase 4
   Customer Crate Balance Report
@@ -195,11 +200,15 @@ On new unsaved docs, omitting the filter avoids `["!=", None]` ORM bug.
 
 | Fieldname | Type | Default | Notes |
 |---|---|---|---|
-| `transit_warehouse` | Link → Warehouse | `Goods and Transit - BDF` | Target warehouse for loose crate Stock Entry |
-| `auto_stock_entry_on_gate_check` | Check | `1` | If unchecked, skip Stock Entry creation |
-| `overdue_days` | Int | `7` | Reserved for v2 overdue alerts |
+| `transit_warehouse` | Link → Warehouse | — | Target warehouse for loose crate Stock Entry. VML Python reads this; JS no longer hardcodes it. |
+| `dispatch_warehouse` | Link → Warehouse | — | Plant dispatch warehouse. VML "Get Invoices" filters `set_warehouse = this`. |
+| `crate_uom` | Data | `Crate` | UOM name used to identify crate items on invoices. All SQL queries read this. |
+| `otp_expiry_minutes` | Int | `10` | How long a delivery OTP stays valid. |
+| `otp_length` | Int | `4` | Number of digits in the delivery OTP. |
+| `auto_stock_entry_on_gate_check` | Check | `1` | If unchecked, skip Stock Entry creation. |
+| `overdue_days` | Int | `7` | Reserved for v2 overdue alerts. |
 
-Access pattern: `frappe.db.get_single_value("Crate Settings", "transit_warehouse")` — one SQL call, no document overhead.
+Access pattern: `frappe.db.get_single_value("Crate Settings", "<field>")` — one SQL call, no document overhead.
 
 ### Test Results
 
@@ -442,35 +451,61 @@ Return ledger (if crates_returned > 0):
 #### On Cancel
 Reverse all ledger entries and restore all balances.
 
-### 3B — Crate Pickup Entry (standalone return trip)
+### 3B — Pickup Log (warehouse counter sale)
 
-**Purpose:** Driver makes a dedicated trip ONLY to collect empty crates — no product delivery.
+**Status:** ✅ COMPLETE
+**Path:** `dairy/dairy/doctype/pickup_log/`
 
-#### Parent: `Crate Pickup Entry`
+**Purpose:** Customer walks into a warehouse/depot and buys products. If the invoice has crate items, the crate balance is tracked the same way as VML deliveries. Customer can also return empty crates on the spot.
 
-| Fieldname | Type | Notes |
-|---|---|---|
-| `date` | Date | Default today |
-| `vehicle` | Link → Vehicle | |
-| `driver` | Link → Driver | |
-| `route` | Link → Route Master | |
-| `remark` | Small Text | |
-| `pickup_details` | Table → Crate Pickup Detail | |
-| `total_crates_collected` | Float | Read-only, sum of child rows |
-| `amended_from` | Link → Crate Pickup Entry | |
+**Key distinction from VML:** No driver or vehicle involved. Invoice filtering uses the pickup warehouse's `set_warehouse` field instead of route. Dispatch Warehouse (plant) goes to VML; any other warehouse goes to Pickup Log.
 
-#### Child: `Crate Pickup Detail`
+#### Parent: `Pickup Log`
 
 | Fieldname | Type | Notes |
 |---|---|---|
-| `customer` | Link → Customer | |
-| `crate_type` | Link → Crate Type | |
-| `outstanding_balance` | Float | Fetched from Customer.custom_current_crate_balance, read-only |
-| `crates_collected` | Float | Must not exceed outstanding_balance |
+| `date` | Date | Default today, required |
+| `warehouse` | Link → Warehouse | Required. Filters which invoices appear (`set_warehouse` filter) |
+| `total_invoice_crates` | Float | Read-only, auto sum of crate_summary |
+| `crate_summary` | Table → Vehicle Invoice Crate Detail | Reuses same child table as VML |
+| `amended_from` | Link → Pickup Log | Standard |
+
+#### Invoice Fetching
+
+"Get Invoices" button filters Sales Invoices:
+- `docstatus = 1`
+- `is_return = 0`
+- `posting_date = frm.doc.date`
+- `set_warehouse = frm.doc.warehouse` ← distinguishes from VML invoices
+- `custom_pickup_log = ""` ← not already assigned to another Pickup Log
 
 #### On Submit
-- Customer Crate Ledger IN per row
-- Customer `custom_current_crate_balance` decremented per row
+```
+For each row in crate_summary:
+  Fetch customer from Sales Invoice
+  If total_crate_out > 0:
+    Customer Crate Ledger OUT  (ledger_type=Customer, crate_category=Pickup)
+    Customer.custom_current_crate_balance += total_crate_out
+  If total_crate_in > 0 (customer returns crates on spot):
+    Customer Crate Ledger IN   (ledger_type=Customer, crate_category=Pickup)
+    Customer.custom_current_crate_balance -= total_crate_in
+  Set Sales Invoice.custom_pickup_log = self.name
+```
+
+#### On Cancel
+- Calculates net balance change per customer from all ledger entries
+- Deletes all Customer Crate Ledger entries for this Pickup Log
+- Reverses Customer.custom_current_crate_balance per customer
+- Removes custom_pickup_log link from all invoices
+
+#### Crate Settings integration
+- `dispatch_warehouse` → VML "Get Invoices" filters by this warehouse. Set to `Dispatch Cold Room - BDF`.
+- `crate_uom` → Used in all SQL queries to count crate items on invoices.
+- VML JS no longer hardcodes `"Goods and Transit - BDF"` — Python reads `transit_warehouse` from Crate Settings.
+
+#### Customer Crate Ledger changes
+- Added `pickup_log` Link field
+- Added `"Pickup"` to `crate_category` options (alongside Sales Invoice, Stock Entry, Loose Crate)
 
 ---
 
@@ -672,14 +707,18 @@ Driver Balance 3-Rule Fix (2026-05-29)                              ✅ COMPLETE
              Rule 2  ✅  CD rows — use crates_returned from submitted Crate Delivery
              Rule 3  ✅  Non-CD rows — min(total_crate_in, total_crate_out)
 
-Phase 3  →  Crate Delivery + Crate Pickup Entry
+Phase 3  →  Crate Delivery + Pickup Log
              3A  Crate Delivery doctype (Driver → Customer)          ✅ COMPLETE
                  - on_submit: delivery ledger + return ledger
                  - on_cancel: reverse all + restore balances
                  - validate: crates_delivered ≥ invoice_crate_qty
                  - validate: crates_returned warning (not block)
                  - JS: SI filter (VML-linked only), live balance
-             3B  Crate Pickup Entry                                  ❌ NOT STARTED
+             3B  Pickup Log (Customer walks into warehouse)           ✅ COMPLETE
+                 - Get Invoices filtered by set_warehouse
+                 - on_submit: Customer OUT + IN ledger per invoice row
+                 - on_cancel: reverse all + delink invoices
+                 - Customer Crate Ledger: pickup_log field + Pickup category
              3C  Crate Reconciliation (opening balances)             ❌ NOT STARTED
 
 Phase 4  →  Customer Crate Balance Report                           ❌ NOT STARTED

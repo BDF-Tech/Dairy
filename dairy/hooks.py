@@ -262,6 +262,9 @@ scheduler_events = {
 	# "daily": [
 	# 	"dairy.milk_entry.doctype.milk_entry.milk_entry.sub"
 	# ],
+	"hourly": [
+		"dairy.dairy.doctype.crate_delivery.crate_delivery.clear_expired_otps",
+	],
 	"daily_long": [
 		"dairy.milk_entry.doctype.dairy_settings.dairy_settings.purchase_invoice",
 	],

@@ -27,24 +27,48 @@ frappe.ui.form.on('Crate Delivery', {
         // OTP flow — only on submitted, unconfirmed docs
         if (frm.doc.docstatus === 1 && !frm.doc.customer_confirmed) {
 
-            // "Send OTP" button — generates and dispatches the OTP
+            // "Send OTP" button — shows channel picker before sending
             frm.add_custom_button(__('Send OTP'), function() {
 
-                frappe.show_alert({ message: __('Sending OTP…'), indicator: 'blue' });
-
-                frappe.call({
-                    method: 'dairy.dairy.doctype.crate_delivery.crate_delivery.send_delivery_otp',
-                    args: { crate_delivery_name: frm.doc.name },
-                    callback: function(r) {
-                        if (r.message) {
-                            frappe.show_alert({
-                                message: __('OTP sent via {0} to {1}', [r.message.channel, r.message.sent_to]),
-                                indicator: 'green'
-                            });
-                            frm.reload_doc();
+                let d = new frappe.ui.Dialog({
+                    title: __('Send OTP'),
+                    fields: [
+                        {
+                            fieldname: 'channel',
+                            fieldtype: 'Select',
+                            label: __('Send Via'),
+                            options: 'SMS\nWhatsApp',
+                            default: 'SMS',
+                            reqd: 1
                         }
+                    ],
+                    primary_action_label: __('Send'),
+                    primary_action: function(values) {
+                        d.hide();
+
+                        const method = values.channel === 'WhatsApp'
+                            ? 'dairy.dairy.doctype.crate_delivery.crate_delivery.send_delivery_otp'
+                            : 'dairy.dairy.doctype.crate_delivery.crate_delivery.send_delivery_sms';
+
+                        frappe.show_alert({ message: __('Sending OTP via {0}…', [values.channel]), indicator: 'blue' });
+
+                        frappe.call({
+                            method: method,
+                            args: { crate_delivery_name: frm.doc.name },
+                            callback: function(r) {
+                                if (r.message) {
+                                    frappe.show_alert({
+                                        message: __('OTP sent via {0} to {1}', [r.message.channel, r.message.sent_to]),
+                                        indicator: 'green'
+                                    });
+                                    frm.reload_doc();
+                                }
+                            }
+                        });
                     }
                 });
+
+                d.show();
 
             }).addClass('btn-warning');
 

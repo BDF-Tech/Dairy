@@ -101,14 +101,19 @@ class CrateDelivery(Document):
         if not self.actual_customer:
             self.actual_customer = customer
 
+        crate_uom = (
+            frappe.db.get_single_value("Crate Settings", "crate_uom")
+            or "Crate"
+        )
+
         result = frappe.db.sql(
             """
                 SELECT COALESCE(SUM(qty), 0)
                 FROM `tabSales Invoice Item`
                 WHERE parent = %s
-                  AND uom = 'Crate'
+                  AND uom = %s
             """,
-            self.sales_invoice
+            (self.sales_invoice, crate_uom)
         )
 
         self.invoice_crate_qty = flt(
@@ -450,16 +455,21 @@ class CrateDelivery(Document):
 
 @frappe.whitelist()
 def get_invoice_crate_qty(sales_invoice):
-    """Return total crate qty (UOM = Crate) from a Sales Invoice."""
+    """Return total crate qty from a Sales Invoice (uses Crate Settings UOM)."""
+
+    crate_uom = (
+        frappe.db.get_single_value("Crate Settings", "crate_uom")
+        or "Crate"
+    )
 
     result = frappe.db.sql(
         """
             SELECT COALESCE(SUM(qty), 0)
             FROM `tabSales Invoice Item`
             WHERE parent = %s
-              AND uom = 'Crate'
+              AND uom = %s
         """,
-        sales_invoice
+        (sales_invoice, crate_uom)
     )
 
     return flt(result[0][0]) if result else 0
@@ -482,6 +492,10 @@ def send_delivery_otp(crate_delivery_name):
 
     doc = frappe.get_doc("Crate Delivery", crate_delivery_name)
 
+    # Fix 4 — guard: already confirmed, nothing to do
+    if doc.customer_confirmed:
+        frappe.throw("Delivery already confirmed by customer. No OTP needed.")
+
     phone = doc.customer_phone
     if not phone:
         phone = _get_customer_phone(doc.actual_customer)
@@ -489,40 +503,24 @@ def send_delivery_otp(crate_delivery_name):
     if not phone:
         frappe.throw("No mobile number linked to this customer. Please add a phone number in the customer's Contact.")
 
-    otp = str(random.randint(1000, 9999))
-    expiry = add_to_date(now_datetime(), minutes=10)
-
-    # Build the message
-    driver_name = frappe.db.get_value("Driver", doc.driver, "full_name") or doc.driver
-    balance_after = flt(doc.customer_current_balance) + flt(doc.crates_delivered) - flt(doc.crates_returned)
-    message = (
-        f"Dear Customer,\n"
-        f"Bastar Dairy Farm Delivery Confirmation.\n"
-        f"Driver: {driver_name}\n"
-        f"Crates Delivered: {int(flt(doc.crates_delivered))}\n"
-        f"Crates Returned: {int(flt(doc.crates_returned))}\n"
-        f"Your Crate Balance: {int(balance_after)}\n"
-        f"OTP: {otp}\n"
-        f"Share this OTP with the driver to confirm. Valid for 10 minutes."
+    otp_length = int(
+        frappe.db.get_single_value("Crate Settings", "otp_length") or 4
+    )
+    otp_expiry_minutes = int(
+        frappe.db.get_single_value("Crate Settings", "otp_expiry_minutes") or 10
     )
 
-    channel = "WhatsApp"
-    test_otp = None  # populated only when no channel is configured
-    try:
-        _send_whatsapp(phone, message)
-    except Exception:
-        try:
-            _send_sms(phone, otp)
-            channel = "SMS"
-        except Exception:
-            # Neither WhatsApp nor SMS is configured yet.
-            # Save the OTP and return it in the response so the driver
-            # can still complete the flow during testing.
-            # Once SMS Settings has a valid otp_id, this branch will never run.
-            channel = "manual"
-            test_otp = otp
+    customer_name = (
+        frappe.db.get_value("Customer", doc.actual_customer, "customer_name")
+        or doc.actual_customer
+    )
 
-    # Persist OTP
+    otp = str(random.randint(10 ** (otp_length - 1), 10 ** otp_length - 1))
+    expiry = add_to_date(now_datetime(), minutes=otp_expiry_minutes)
+
+    # Fix 1 — save OTP to DB BEFORE sending via Kit19
+    # If Kit19 succeeds but DB write had failed, customer would have OTP with no match in DB.
+    # Saving first ensures the OTP is always in DB before the customer receives it.
     frappe.db.set_value("Crate Delivery", crate_delivery_name, {
         "otp": otp,
         "otp_expiry": expiry,
@@ -530,6 +528,48 @@ def send_delivery_otp(crate_delivery_name):
         "customer_phone": phone,
     })
     frappe.db.commit()
+
+    channel = "WhatsApp"
+    test_otp = None
+    try:
+        trans_msg = _send_kit19_transactional(
+            phone, customer_name,
+            int(flt(doc.crates_delivered)),
+            doc.sales_invoice or "",
+            int(flt(doc.crates_returned))
+        )
+        otp_msg = _send_kit19_otp(phone, otp)
+    except Exception as e:
+        frappe.log_error(
+            frappe.get_traceback(),
+            f"Kit19 OTP Send Failed | Crate Delivery: {crate_delivery_name}"
+        )
+        frappe.get_doc({
+            "doctype": "Comment",
+            "comment_type": "Comment",
+            "reference_doctype": "Crate Delivery",
+            "reference_name": crate_delivery_name,
+            "content": (
+                f"<b>WhatsApp send failed</b> at {now_datetime().strftime('%d-%m-%Y %H:%M')} &mdash; "
+                f"{str(e)[:300]}<br>"
+                f"OTP is available manually. Check <b>Error Log</b> for full traceback."
+            ),
+        }).insert(ignore_permissions=True)
+        channel = "manual"
+        test_otp = otp
+    else:
+        frappe.get_doc({
+            "doctype": "Comment",
+            "comment_type": "Comment",
+            "reference_doctype": "Crate Delivery",
+            "reference_name": crate_delivery_name,
+            "content": (
+                f"<b>WhatsApp sent successfully</b> at {now_datetime().strftime('%d-%m-%Y %H:%M')} &mdash; "
+                f"Delivery summary and OTP sent to {phone}.<br>"
+                f"Transactional: {trans_msg}<br>"
+                f"OTP: {otp_msg}"
+            ),
+        }).insert(ignore_permissions=True)
 
     result = {"sent_to": phone, "channel": channel}
     if test_otp:
@@ -555,6 +595,11 @@ def verify_delivery_otp(crate_delivery_name, otp):
         frappe.throw("No OTP found. Please send an OTP first.")
 
     if now_datetime() > doc.otp_expiry:
+        frappe.db.set_value("Crate Delivery", crate_delivery_name, {
+            "otp": "",
+            "otp_expiry": None,
+        })
+        frappe.db.commit()
         frappe.throw("OTP has expired. Please send a new OTP.")
 
     if str(otp).strip() != str(doc.otp).strip():
@@ -573,6 +618,93 @@ def verify_delivery_otp(crate_delivery_name, otp):
         cd.submit()
 
     return {"confirmed": 1}
+
+
+# =============================================================
+# OTP — SEND VIA SMS
+# =============================================================
+
+@frappe.whitelist()
+def send_delivery_sms(crate_delivery_name):
+    doc = frappe.get_doc("Crate Delivery", crate_delivery_name)
+
+    if doc.customer_confirmed:
+        frappe.throw("Delivery already confirmed by customer. No OTP needed.")
+
+    phone = doc.customer_phone
+    if not phone:
+        phone = _get_customer_phone(doc.actual_customer)
+    if not phone:
+        frappe.throw("No mobile number linked to this customer. Please add a phone number in the customer's Contact.")
+
+    otp_length = int(frappe.db.get_single_value("Crate Settings", "otp_length") or 4)
+    otp_expiry_minutes = int(frappe.db.get_single_value("Crate Settings", "otp_expiry_minutes") or 10)
+
+    customer_name = (
+        frappe.db.get_value("Customer", doc.actual_customer, "customer_name")
+        or doc.actual_customer
+    )
+
+    current_balance = flt(
+        frappe.db.get_value("Customer", doc.actual_customer, "custom_current_crate_balance") or 0
+    )
+
+    otp = str(random.randint(10 ** (otp_length - 1), 10 ** otp_length - 1))
+    expiry = add_to_date(now_datetime(), minutes=otp_expiry_minutes)
+
+    frappe.db.set_value("Crate Delivery", crate_delivery_name, {
+        "otp": otp,
+        "otp_expiry": expiry,
+        "otp_sent_to": phone,
+        "customer_phone": phone,
+    })
+    frappe.db.commit()
+
+    channel = "SMS"
+    test_otp = None
+    try:
+        sms_response = _send_sms_otp(
+            phone, customer_name,
+            int(flt(doc.crates_delivered)),
+            doc.sales_invoice or "",
+            doc.vehicle_movement_log or "",
+            int(flt(doc.crates_returned)),
+            int(current_balance),
+            otp
+        )
+        frappe.get_doc({
+            "doctype": "Comment",
+            "comment_type": "Comment",
+            "reference_doctype": "Crate Delivery",
+            "reference_name": crate_delivery_name,
+            "content": (
+                f"<b>SMS sent successfully</b> at {now_datetime().strftime('%d-%m-%Y %H:%M')} &mdash; "
+                f"OTP sent to {phone}.<br>{sms_response}"
+            ),
+        }).insert(ignore_permissions=True)
+    except Exception as e:
+        frappe.log_error(
+            frappe.get_traceback(),
+            f"SMS OTP Send Failed | Crate Delivery: {crate_delivery_name}"
+        )
+        frappe.get_doc({
+            "doctype": "Comment",
+            "comment_type": "Comment",
+            "reference_doctype": "Crate Delivery",
+            "reference_name": crate_delivery_name,
+            "content": (
+                f"<b>SMS send failed</b> at {now_datetime().strftime('%d-%m-%Y %H:%M')} &mdash; "
+                f"{str(e)[:300]}<br>"
+                f"OTP is available manually. Check <b>Error Log</b> for full traceback."
+            ),
+        }).insert(ignore_permissions=True)
+        channel = "manual"
+        test_otp = otp
+
+    result = {"sent_to": phone, "channel": channel}
+    if test_otp:
+        result["test_otp"] = test_otp
+    return result
 
 
 # =============================================================
@@ -607,73 +739,219 @@ def _get_customer_phone(customer):
     return phones[0].phone
 
 
-def _send_whatsapp(phone, message):
-    """Insert a frappe_whatsapp WhatsApp Message doc to send a plain text message."""
-
-    wa_doc = frappe.new_doc("WhatsApp Message")
-    wa_doc.to = phone
-    wa_doc.type = "Outgoing"
-    wa_doc.message_type = "Manual"
-    wa_doc.content_type = "text"
-    wa_doc.message = message
-    wa_doc.insert(ignore_permissions=True)
+def _normalize_phone_kit19(phone):
+    """Format phone number to 91XXXXXXXXXX (12-digit) as required by Kit19."""
+    mobile = (phone or "").strip().replace(" ", "").replace("-", "")
+    if mobile.startswith("+"):
+        mobile = mobile[1:]
+    if not mobile.startswith("91"):
+        mobile = "91" + mobile
+    return mobile
 
 
-def _send_sms(phone, otp_value):
+def _kit19_credentials():
+    """Read Kit19 credentials from Crate Settings. Throws if not configured."""
+    from frappe.utils.password import get_decrypted_password
+
+    api_key = get_decrypted_password("Crate Settings", "Crate Settings", "kit19_api_key", raise_exception=False)
+    username = frappe.db.get_single_value("Crate Settings", "kit19_username")
+
+    if not api_key or not username:
+        frappe.throw("Kit19 WhatsApp credentials not configured. Fill API Key and Username in Crate Settings.")
+
+    return api_key, username
+
+
+def _send_kit19_transactional(phone, customer_name, crates_delivered, invoice, crates_returned):
     """
-    Send OTP via Fast2SMS OTP API (https://www.fast2sms.com/dev/otp/send).
-    Reads 'authorization' and 'otp_id' from SMS Settings → Parameters child table.
+    Send delivery info via Kit19 WhatsApp utility template.
+    Parameters: customer_name, crates_delivered, invoice, crates_returned.
     """
     import requests
 
-    sms_settings = frappe.get_doc("SMS Settings")
+    api_key, username = _kit19_credentials()
+    mobile = _normalize_phone_kit19(phone)
 
-    api_key = None
-    otp_id = None
-    for row in sms_settings.get("parameters", []):
-        key = (row.parameter or "").lower().strip()
-        if key == "authorization":
-            api_key = row.value
-        elif key == "otp_id":
-            otp_id = row.value
+    template_name = "crate_return_confirmationnew_copy"
+    namespace     = "ab750a7e_4257_4e46_8b29_2bb25087d1c4"
 
-    if not api_key:
-        frappe.throw("SMS API key (authorization) not found in SMS Settings parameters.")
-    if not otp_id:
-        frappe.throw(
-            "OTP Template ID missing. Add a parameter named 'otp_id' in SMS Settings "
-            "with your Fast2SMS OTP Template ID."
-        )
+    payload = {
+        "key": api_key,
+        "username": username,
+        "name": "whatsapp",
+        "remarks": (
+            f"Hey {customer_name}, Total {crates_delivered} crates given to you "
+            f"against invoice {invoice}. {crates_returned} crates returned by you."
+        ),
+        "whatsapp": {
+            "to": mobile,
+            "type": "template",
+            "category": "UTILITY",
+            "recipient_type": "individual",
+            "template": {
+                "namespace": namespace,
+                "language": {"policy": "deterministic", "code": "en"},
+                "name": template_name,
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {"type": "text", "text": str(customer_name)},
+                            {"type": "text", "text": str(crates_delivered)},
+                            {"type": "text", "text": str(invoice)},
+                            {"type": "text", "text": str(crates_returned)},
+                        ]
+                    }
+                ]
+            }
+        }
+    }
 
-    # Normalize to 10-digit Indian mobile number
+    response = requests.post(
+        "https://services.kit19.com/IMS/Whatsapp/Template",
+        headers={"Content-Type": "application/json"},
+        json=payload,
+        timeout=10
+    )
+
+    if not response.ok:
+        frappe.throw(f"Kit19 transactional error ({response.status_code}): {response.text}")
+
+    return response.json().get("meta", {}).get("developer_message", "")
+
+
+def _send_kit19_otp(phone, otp):
+    """
+    Send OTP via Kit19 WhatsApp authentication template.
+    OTP appears in both the message body and the copy button.
+    """
+    import requests
+
+    api_key, username = _kit19_credentials()
+    mobile = _normalize_phone_kit19(phone)
+    otp_str = str(otp)
+
+    template_name = "otp_verification_copy"
+    namespace     = "ab750a7e_4257_4e46_8b29_2bb25087d1c4"
+
+    payload = {
+        "key": api_key,
+        "username": username,
+        "name": "whatsapp",
+        "remarks": f"{otp_str} is your verification code. For your security, do not share this code.",
+        "whatsapp": {
+            "to": mobile,
+            "type": "template",
+            "category": "AUTHENTICATION",
+            "recipient_type": "individual",
+            "template": {
+                "namespace": namespace,
+                "language": {"policy": "deterministic", "code": "en"},
+                "name": template_name,
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [{"type": "text", "text": otp_str}]
+                    },
+                    {
+                        "type": "button",
+                        "sub_type": "url",
+                        "index": "0",
+                        "parameters": [{"type": "text", "text": otp_str}]
+                    }
+                ]
+            }
+        }
+    }
+
+    response = requests.post(
+        "https://services.kit19.com/IMS/Whatsapp/Template",
+        headers={"Content-Type": "application/json"},
+        json=payload,
+        timeout=10
+    )
+
+    if not response.ok:
+        frappe.throw(f"Kit19 OTP error ({response.status_code}): {response.text}")
+
+    return response.json().get("meta", {}).get("developer_message", "")
+
+
+def _send_sms_otp(phone, customer_name, crates_delivered, invoice, trip_no, crates_returned, balance, otp):
+    import requests
+    from frappe.utils.password import get_decrypted_password
+
+    api_key = get_decrypted_password("Crate Settings", "Crate Settings", "sms_api_key", raise_exception=False)
+    username = frappe.db.get_single_value("Crate Settings", "sms_username")
+    sender_name = frappe.db.get_single_value("Crate Settings", "sms_sender_name")
+    pe_id = frappe.db.get_single_value("Crate Settings", "sms_pe_id")
+    template_id = frappe.db.get_single_value("Crate Settings", "sms_template_id")
+
+    if not api_key or not username:
+        frappe.throw("SMS credentials not configured. Fill SMS API Key and Username in Crate Settings.")
+
+    # Normalize to 10-digit for SMS gateway
     mobile = (phone or "").strip().replace(" ", "").replace("-", "")
     if mobile.startswith("+91"):
         mobile = mobile[3:]
     elif mobile.startswith("91") and len(mobile) == 12:
         mobile = mobile[2:]
 
-    headers = {
-        "authorization": api_key,
-        "Content-Type": "application/json",
-    }
+    message = (
+        f"Hello {customer_name}, A total of {crates_delivered} crates have been delivered to you "
+        f"against Invoice No. {invoice}. Against Trip No. {trip_no}, you have returned {crates_returned} crates. "
+        f"Your current crate balance is: {balance}. "
+        f"To approve and verify this transaction, please share OTP {otp} with the driver. "
+        f"This OTP is valid for 10 minutes. Regards, BASTAR DAIRY"
+    )
 
-    payload = {
-        "mobile": mobile,
-        "otp_id": otp_id,
-        "otp": str(otp_value),
-        "otp_expiry": 10,
-        "otp_length": 4,
-    }
-
-    response = requests.post(
-        "https://www.fast2sms.com/dev/otp/send",
-        headers=headers,
-        json=payload,
+    response = requests.get(
+        "http://sms.messageindia.in/v2/sendSMS",
+        params={
+            "username": username,
+            "message": message,
+            "sendername": sender_name,
+            "smstype": "TRANS",
+            "numbers": mobile,
+            "apikey": api_key,
+            "peid": pe_id,
+            "templateid": template_id,
+        },
+        timeout=10
     )
 
     if not response.ok:
-        frappe.throw(f"SMS OTP error ({response.status_code}): {response.text}")
+        frappe.throw(f"SMS gateway error ({response.status_code}): {response.text}")
 
-    resp_data = response.json()
-    if not resp_data.get("return", True):
-        frappe.throw(f"Fast2SMS error: {resp_data.get('message', response.text)}")
+    return response.text
+
+
+# =============================================================
+# SCHEDULED — CLEAR EXPIRED OTPs
+# =============================================================
+
+def clear_expired_otps():
+    """
+    Scheduled hourly job. Finds all Crate Deliveries where the OTP has
+    expired but was never cleared (driver abandoned the flow), and wipes
+    the otp and otp_expiry fields so they don't sit in the DB indefinitely.
+    """
+    expired = frappe.db.get_all(
+        "Crate Delivery",
+        filters={
+            "otp": ["!=", ""],
+            "otp_expiry": ["<", now_datetime()],
+        },
+        pluck="name"
+    )
+
+    if not expired:
+        return
+
+    for name in expired:
+        frappe.db.set_value("Crate Delivery", name, {
+            "otp": "",
+            "otp_expiry": None,
+        })
+
+    frappe.db.commit()

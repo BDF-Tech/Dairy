@@ -1204,6 +1204,35 @@ class VehicleMovementLog(Document):
 
 
 # =============================================================
+# CRATE SETTINGS — WAREHOUSE HELPERS
+# =============================================================
+
+_WAREHOUSE_TYPE_FIELD = {
+    "Dispatch": "dispatch_warehouses",
+    "Transit":  "transit_warehouses",
+    "Depot":    "depot_warehouses",
+}
+
+
+def _get_crate_warehouses(warehouse_type):
+    """Return all warehouses of the given type from Crate Settings."""
+    parentfield = _WAREHOUSE_TYPE_FIELD.get(warehouse_type)
+    if not parentfield:
+        return []
+    return frappe.db.get_all(
+        "Warehouse Child",
+        filters={"parent": "Crate Settings", "parentfield": parentfield},
+        pluck="warehouse"
+    )
+
+
+def _get_crate_warehouse(warehouse_type):
+    """Return the first warehouse of the given type from Crate Settings, or None."""
+    warehouses = _get_crate_warehouses(warehouse_type)
+    return warehouses[0] if warehouses else None
+
+
+# =============================================================
 # FETCH INVOICE + STOCK ENTRY DETAILS
 # =============================================================
 
@@ -1224,11 +1253,11 @@ def _get_stock_entry_crate_details(
     t_warehouse=None
 ):
 
-    t_warehouse = (
-        t_warehouse
-        or frappe.db.get_single_value(
-            "Crate Settings", "transit_warehouse"
-        )
+    t_warehouse = t_warehouse or _get_crate_warehouse("Transit")
+
+    crate_uom = (
+        frappe.db.get_single_value("Crate Settings", "crate_uom")
+        or "Crate"
     )
 
     conditions = [
@@ -1238,7 +1267,7 @@ def _get_stock_entry_crate_details(
     ]
 
     values = {
-        "uom": "Crate",
+        "uom": crate_uom,
         "t_warehouse": t_warehouse
     }
 
@@ -1336,9 +1365,14 @@ def get_invoice_details(invoices, posting_date):
 
         item_rows = []
 
+        crate_uom = (
+            frappe.db.get_single_value("Crate Settings", "crate_uom")
+            or "Crate"
+        )
+
         for item in doc.items:
 
-            if item.uom == "Crate":
+            if item.uom == crate_uom:
 
                 total_crates += item.qty
 
@@ -1438,11 +1472,12 @@ def get_stock_entry_query(
             "posting_date": filters.get("posting_date"),
             "t_warehouse": (
                 filters.get("t_warehouse")
-                or frappe.db.get_single_value(
-                    "Crate Settings", "transit_warehouse"
-                )
+                or _get_crate_warehouse("Transit")
             ),
-            "uom": "Crate",
+            "uom": (
+                frappe.db.get_single_value("Crate Settings", "crate_uom")
+                or "Crate"
+            ),
             "txt": f"%{txt or ''}%",
             "start": start,
             "page_len": page_len

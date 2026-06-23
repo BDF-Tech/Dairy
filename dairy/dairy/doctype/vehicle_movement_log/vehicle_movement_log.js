@@ -13,9 +13,6 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
         frm.refresh_field("security_loose_crate_entries");
 
-        const transit_warehouse =
-            "Goods and Transit - BDF";
-
         const add_invoice_rows = function(invoices) {
 
             invoices.forEach(inv => {
@@ -146,7 +143,7 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
         if (frm.doc.workflow_state === "Dispatch Loading") {
 
-        frm.add_custom_button("Get Invoices", () => {
+        frm.add_custom_button("Get Invoices", async () => {
 
             if (!frm.doc.route) {
 
@@ -166,6 +163,20 @@ frappe.ui.form.on("Vehicle Movement Log", {
                 return;
             }
 
+            const crate_settings = await frappe.db.get_doc("Crate Settings", "Crate Settings");
+            const dispatch_warehouses = (crate_settings.dispatch_warehouses || []).map(r => r.warehouse);
+
+            if (!dispatch_warehouses.length) {
+
+                frappe.msgprint({
+                    title: "Setup Required",
+                    indicator: "orange",
+                    message: "Please add at least one <b>Dispatch</b> warehouse in Crate Settings before fetching invoices."
+                });
+
+                return;
+            }
+
             new frappe.ui.form.MultiSelectDialog({
 
                 doctype: "Sales Invoice",
@@ -176,22 +187,16 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
                     customer_name: null,
 
-                    route: frm.doc.route,
-
                     delivery_shift: null
                 },
 
                 add_filters_group: 1,
-
-                date_field: "posting_date",
 
                 columns: [
 
                     "name",
 
                     "customer_name",
-
-                    "route",
 
                     "delivery_shift"
                 ],
@@ -210,6 +215,8 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
                             posting_date:
                                 frm.doc.date_and_time.split(" ")[0],
+
+                            set_warehouse: ["in", dispatch_warehouses],
 
                             custom_vehicle_movement_log: ""
                         }
@@ -343,10 +350,7 @@ frappe.ui.form.on("Vehicle Movement Log", {
                             filters: {
 
                                 posting_date:
-                                    frm.doc.date_and_time.split(" ")[0],
-
-                                t_warehouse:
-                                    transit_warehouse
+                                    frm.doc.date_and_time.split(" ")[0]
                             }
                         };
                     },
@@ -375,10 +379,7 @@ frappe.ui.form.on("Vehicle Movement Log", {
                                     selections,
 
                                 posting_date:
-                                    frm.doc.date_and_time.split(" ")[0],
-
-                                t_warehouse:
-                                    transit_warehouse
+                                    frm.doc.date_and_time.split(" ")[0]
                             },
 
                             freeze: true,
