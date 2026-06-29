@@ -97,7 +97,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Entry Type",
-   "options": "OUT\nIN"
+   "options": "OUT\nIN\nOpening\nAdjustment"
   },
   {
    "fieldname": "ledger_type",

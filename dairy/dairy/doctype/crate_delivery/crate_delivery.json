@@ -175,6 +175,14 @@
    "description": "Number the OTP was last sent to"
   },
   {
+   "fieldname": "otp_phone_override",
+   "fieldtype": "Data",
+   "label": "Send OTP To (Override)",
+   "options": "Phone",
+   "allow_on_submit": 1,
+   "description": "Leave blank to use the customer's default number. Fill this to send OTP to a different number."
+  },
+  {
    "fieldname": "column_break_otp",
    "fieldtype": "Column Break"
   },

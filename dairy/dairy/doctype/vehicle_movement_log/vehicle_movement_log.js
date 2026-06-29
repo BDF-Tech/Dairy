@@ -13,6 +13,18 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
         frm.refresh_field("security_loose_crate_entries");
 
+        // Control "+" button visibility on connection tiles based on workflow state
+        const _control_plus_buttons = () => {
+            const show_crate = frm.doc.workflow_state === "Submitted";
+
+            $(frm.wrapper).find('button.btn-new[data-doctype="Sales Invoice"]').hide();
+            $(frm.wrapper).find('button.btn-new[data-doctype="Stock Entry"]').hide();
+            $(frm.wrapper).find('button.btn-new[data-doctype="Crate Delivery"]').toggle(show_crate);
+        };
+
+        frappe.after_ajax(_control_plus_buttons);
+        setTimeout(_control_plus_buttons, 500);
+
         const add_invoice_rows = function(invoices) {
 
             invoices.forEach(inv => {
@@ -28,10 +40,8 @@ frappe.ui.form.on("Vehicle Movement Log", {
                 row.total_crate_out =
                     inv.total_crates;
 
-                row.total_crate_in = 0;
-
                 row.balance_crate =
-                    inv.total_crates;
+                    inv.customer_balance;
 
                 inv.items.forEach(item => {
 
@@ -409,6 +419,75 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
         } // end if Dispatch Loading
 
+    },
+
+    before_workflow_action: function(frm) {
+
+        if (frm.selected_workflow_action !== "Final check") return;
+
+        // Frappe freezes the DOM before firing this hook — unfreeze so dialog renders
+        frappe.dom.unfreeze();
+
+        const summary      = frm.doc.crate_summary || [];
+        const invoice_rows = summary.filter(r => r.sales_invoice);
+        const invoice_count = invoice_rows.length;
+        const total_crates  = frm.doc.total_invoice_crates || 0;
+
+        const loose_entries = frm.doc.loose_crate_detail || [];
+        const loose_total   = loose_entries.reduce((s, r) => s + (r.crates_out || 0), 0);
+
+        const inv_rows = invoice_rows.map(r =>
+            `<tr>
+                <td>${r.sales_invoice}</td>
+                <td style="text-align:right">${r.total_crate_out || 0}</td>
+            </tr>`
+        ).join('') || '<tr><td colspan="2" style="color:#999">None</td></tr>';
+
+        const loose_rows = loose_entries.map(r =>
+            `<tr>
+                <td>${r.crate_item || ''}</td>
+                <td style="text-align:right">${r.crates_out || 0}</td>
+            </tr>`
+        ).join('') || '<tr><td colspan="2" style="color:#999">None</td></tr>';
+
+        const driver  = frm.doc.driver || '—';
+        const vehicle = frm.doc.vehicle || '—';
+
+        const msg = `
+            <p style="margin-bottom:14px">
+                <b>Driver:</b> ${driver} &nbsp;&nbsp; <b>Vehicle:</b> ${vehicle}
+            </p>
+            <b>Invoices &mdash; ${invoice_count}</b>
+            <table class="table table-bordered table-condensed" style="margin:8px 0 16px">
+                <thead><tr><th>Invoice</th><th style="text-align:right">Crates</th></tr></thead>
+                <tbody>${inv_rows}</tbody>
+                <tfoot><tr>
+                    <th>Total Crates Assigned to Driver</th>
+                    <th style="text-align:right">${total_crates}</th>
+                </tr></tfoot>
+            </table>
+            <b>Loose Crates &mdash; ${loose_total}</b>
+            <table class="table table-bordered table-condensed" style="margin:8px 0 0">
+                <thead><tr><th>Item</th><th style="text-align:right">Qty</th></tr></thead>
+                <tbody>${loose_rows}</tbody>
+            </table>
+        `;
+
+        return new Promise((resolve, reject) => {
+            let d = new frappe.ui.Dialog({
+                title: __('Final Check Summary'),
+                fields: [{ fieldtype: 'HTML', options: msg }],
+                primary_action_label: __('Confirm & Submit'),
+                primary_action: function() {
+                    d.hide();
+                    frappe.dom.freeze();
+                    resolve();
+                },
+                secondary_action_label: __('Back to Gate Check'),
+                secondary_action: function() { d.hide(); reject(); },
+            });
+            d.show();
+        });
     }
 
 });

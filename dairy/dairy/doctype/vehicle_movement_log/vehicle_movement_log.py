@@ -32,36 +32,25 @@ class VehicleMovementLog(Document):
     # =========================================================
 
     def update_crate_summary_balance(self):
-
-        for row in self.crate_summary:
-
-            total_out = row.total_crate_out or 0
-
-            total_in = row.total_crate_in or 0
-
-            row.balance_crate = (
-                total_out - total_in
-            )
-
-            if total_in > 0:
-
-                row.return_verified = 1
-
-            else:
-
-                row.return_verified = 0
+        pass
 
     # =========================================================
     # POPULATE CUSTOMER NAMES IN CRATE SUMMARY
     # =========================================================
 
     def populate_crate_summary_customer_names(self):
-        """Fill customer_name on each crate_summary row from the linked Sales Invoice."""
+        """Fill customer_name and balance_crate (from Customer master) on each crate_summary row."""
         for row in self.crate_summary:
-            if row.sales_invoice and not row.customer_name:
-                row.customer_name = frappe.db.get_value(
-                    "Sales Invoice", row.sales_invoice, "customer_name"
-                )
+            if row.sales_invoice:
+                customer, customer_name = frappe.db.get_value(
+                    "Sales Invoice", row.sales_invoice, ["customer", "customer_name"]
+                ) or (None, None)
+                if customer_name:
+                    row.customer_name = customer_name
+                if customer:
+                    row.balance_crate = flt(
+                        frappe.db.get_value("Customer", customer, "custom_current_crate_balance")
+                    )
 
     # =========================================================
     # UPDATE LOOSE CRATE BALANCE
@@ -71,21 +60,7 @@ class VehicleMovementLog(Document):
 
         for row in self.loose_crate_detail:
 
-            total_out = row.crates_out or 0
-
-            total_in = row.crates_in or 0
-
-            row.balance = (
-                total_out - total_in
-            )
-
-            if total_in > 0:
-
-                row.return_verified = 1
-
-            else:
-
-                row.return_verified = 0
+            row.balance = row.crates_out or 0
 
     # =========================================================
     # UPDATE TOTAL INVOICE CRATES
@@ -148,6 +123,8 @@ class VehicleMovementLog(Document):
         if self.workflow_state == "Gate Check":
 
             self.link_sales_invoices()
+
+        if self.workflow_state == "Submitted":
 
             self.create_driver_crate_ledger_for_invoices()
 
@@ -235,7 +212,9 @@ class VehicleMovementLog(Document):
                 "crates_out",
                 "crates_in",
                 "driver",
-                "customer"
+                "customer",
+                "crate_type",
+                "crate_category",
             ]
         )
 
@@ -245,20 +224,18 @@ class VehicleMovementLog(Document):
         # ----------------------------------------------------------
         # Step 3: Calculate reversals
         #
-        # Original logic:
-        #   Driver OUT  → driver balance += crates_out
-        #   Driver IN   → driver balance -= crates_in
-        #   Customer IN → customer balance -= crates_in
+        # Invoice/Stock Entry crates  → reverse custom_invoice_crate_balance
+        # Loose crates (crate_category = "Loose Crate") → reverse
+        #     custom_crate_type_balances child table on Driver
+        # Customer IN → reverse custom_current_crate_balance
         #
-        # Reverse (undo):
-        #   Driver OUT  → driver balance -= crates_out  (change = -crates_out)
-        #   Driver IN   → driver balance += crates_in   (change = +crates_in)
-        #   Customer IN → customer balance += crates_in (change = +crates_in)
+        # Reversal formula: change = crates_in - crates_out
+        #   OUT entry: change = 0 - crates_out  (negative → subtracts from balance)
+        #   IN  entry: change = crates_in - 0   (positive → adds back to balance)
         # ----------------------------------------------------------
 
-        # Initialised here so message block can reference them
-        # even when entries list is empty (e.g. cancelled pre-Gate Check)
-        driver_changes = {}
+        driver_changes = {}          # driver → net change for custom_invoice_crate_balance
+        loose_changes  = {}          # driver → {crate_type → net change} for custom_crate_type_balances
         customer_changes = {}
 
         for e in entries:
@@ -267,9 +244,15 @@ class VehicleMovementLog(Document):
 
                 change = (e.crates_in or 0) - (e.crates_out or 0)
 
-                driver_changes[e.driver] = (
-                    driver_changes.get(e.driver, 0) + change
-                )
+                if e.crate_category == "Loose Crate" and e.crate_type:
+                    per_driver = loose_changes.setdefault(e.driver, {})
+                    per_driver[e.crate_type] = (
+                        per_driver.get(e.crate_type, 0) + change
+                    )
+                else:
+                    driver_changes[e.driver] = (
+                        driver_changes.get(e.driver, 0) + change
+                    )
 
             elif e.ledger_type == "Customer" and e.customer:
 
@@ -289,7 +272,7 @@ class VehicleMovementLog(Document):
         )
 
         # ----------------------------------------------------------
-        # Step 5: Apply reversals to Driver
+        # Step 5a: Reverse invoice/stock-entry crate balance on Driver
         # ----------------------------------------------------------
 
         for driver, change in driver_changes.items():
@@ -308,6 +291,27 @@ class VehicleMovementLog(Document):
                 "custom_invoice_crate_balance",
                 max(0, current + change)
             )
+
+        # ----------------------------------------------------------
+        # Step 5b: Reverse loose crate balances on Driver
+        #          (custom_crate_type_balances child table, per crate type)
+        # ----------------------------------------------------------
+
+        for driver, crate_type_changes in loose_changes.items():
+
+            driver_doc = frappe.get_doc("Driver", driver)
+
+            if not driver_doc.meta.get_field("custom_crate_type_balances"):
+                continue
+
+            for row in (driver_doc.get("custom_crate_type_balances") or []):
+                if row.crate_type in crate_type_changes:
+                    row.balance = max(
+                        0,
+                        (row.balance or 0) + crate_type_changes[row.crate_type]
+                    )
+
+            driver_doc.save(ignore_permissions=True)
 
         # ----------------------------------------------------------
         # Step 6: Apply reversals to Customer
@@ -380,10 +384,13 @@ class VehicleMovementLog(Document):
             if customer_in:
                 msg += f"<br>&nbsp;&nbsp;&nbsp;• Customer IN: {customer_in}"
 
-        if driver_changes or customer_changes:
+        if driver_changes or loose_changes or customer_changes:
             msg += "<br><br><b>Balances Reversed:</b>"
             for drv, chg in driver_changes.items():
-                msg += f"<br>&nbsp;&nbsp;&nbsp;• Driver {drv}: {'+' if chg >= 0 else ''}{chg} crates"
+                msg += f"<br>&nbsp;&nbsp;&nbsp;• Driver {drv} (invoice crates): {'+' if chg >= 0 else ''}{chg}"
+            for drv, crate_type_changes in loose_changes.items():
+                for ct, chg in crate_type_changes.items():
+                    msg += f"<br>&nbsp;&nbsp;&nbsp;• Driver {drv} loose ({ct}): {'+' if chg >= 0 else ''}{chg}"
             for cust, chg in customer_changes.items():
                 msg += f"<br>&nbsp;&nbsp;&nbsp;• Customer {cust}: {'+' if chg >= 0 else ''}{chg} crates"
 
@@ -616,122 +623,10 @@ class VehicleMovementLog(Document):
                 current + new_crates
             )
 
-    # =========================================================
-    # CUSTOMER CRATE RETURN PROCESS (FALLBACK — no Crate Delivery)
-    # =========================================================
-
     def process_customer_crate_return(self):
-        """
-        Fallback: runs at VML Submitted when no Crate Delivery was created.
-        Handles crates that customers returned directly to the driver
-        (tracked via total_crate_in on the VML crate_summary row).
-
-        Fixes applied:
-          Flaw 1 — Guard now includes vehicle_movement_log for proper idempotency.
-          Flaw 3 — Skips invoices already handled by a submitted Crate Delivery.
-          Flaw 6 — balance_crates uses actual running Customer balance, not trip row balance.
-          Flaw 7 — frappe.get_doc replaced with frappe.db.get_value (one field, one SQL).
-        """
-
-        processed_invoices = []
-
-        for row in self.crate_summary:
-
-            if not row.sales_invoice:
-                continue
-
-            if not row.total_crate_in:
-                continue
-
-            # Flaw 3: Crate Delivery already handled this invoice — skip
-            if frappe.db.exists(
-                "Crate Delivery",
-                {
-                    "sales_invoice": row.sales_invoice,
-                    "docstatus": 1
-                }
-            ):
-                continue
-
-            # Flaw 1: idempotency guard scoped to this VML
-            existing_ledger = frappe.db.exists(
-                "Customer Crate Ledger",
-                {
-                    "sales_invoice": row.sales_invoice,
-                    "entry_type": "IN",
-                    "ledger_type": "Customer",
-                    "vehicle_movement_log": self.name
-                }
-            )
-
-            if existing_ledger:
-                continue
-
-            # Flaw 7: single-field fetch, no full doc load
-            customer = frappe.db.get_value(
-                "Sales Invoice",
-                row.sales_invoice,
-                "customer"
-            )
-
-            # Flaw 6: running balance from DB, not trip-level row.balance_crate
-            current_balance = flt(
-                frappe.db.get_value(
-                    "Customer",
-                    customer,
-                    "custom_current_crate_balance"
-                )
-            )
-
-            new_balance = current_balance - row.total_crate_in
-
-            ledger = frappe.new_doc(
-                "Customer Crate Ledger"
-            )
-
-            ledger.posting_date = self.date_and_time
-
-            ledger.ledger_type = "Customer"
-
-            ledger.customer = customer
-
-            ledger.sales_invoice = row.sales_invoice
-
-            ledger.vehicle_movement_log = self.name
-
-            ledger.crates_out = 0
-
-            ledger.crates_in = row.total_crate_in
-
-            ledger.balance_crates = new_balance
-
-            ledger.entry_type = "IN"
-
-            ledger.insert(
-                ignore_permissions=True
-            )
-
-            frappe.db.set_value(
-                "Customer",
-                customer,
-                "custom_current_crate_balance",
-                new_balance
-            )
-
-            processed_invoices.append(
-                row.sales_invoice
-            )
-
-        if processed_invoices:
-
-            frappe.msgprint(
-                "<b>Successfully processed returned crates:</b><br><br>"
-                + "<br>".join(processed_invoices),
-
-                title="Vehicle Return Processed",
-
-                indicator="green"
-            )
+        # Customer returns are handled exclusively by Crate Delivery.
+        # total_crate_in was removed from the crate_summary child table.
+        pass
 
     # =========================================================
     # CLOSE DRIVER INVOICE CRATES ON VML RETURN (FLAW 2 FIX)
@@ -804,7 +699,7 @@ class VehicleMovementLog(Document):
 
     def create_driver_crate_ledger_for_stock_entries(self):
         """
-        At Gate Check: create a Driver OUT ledger entry for every
+        At Submitted: create a Driver OUT ledger entry for every
         crate_summary row that is linked to a Stock Entry (van-load
         crates that are NOT tied to a specific Sales Invoice).
         """
@@ -1394,6 +1289,10 @@ def get_invoice_details(invoices, posting_date):
                         item.qty
                 })
 
+        customer_balance = flt(
+            frappe.db.get_value("Customer", doc.customer, "custom_current_crate_balance")
+        )
+
         result["invoices"].append({
 
             "name":
@@ -1404,6 +1303,9 @@ def get_invoice_details(invoices, posting_date):
 
             "total_crates":
                 total_crates,
+
+            "customer_balance":
+                customer_balance,
 
             "items":
                 item_rows

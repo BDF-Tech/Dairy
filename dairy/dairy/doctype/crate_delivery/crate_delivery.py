@@ -27,6 +27,10 @@ class CrateDelivery(Document):
     # =========================================================
 
     def on_submit(self):
+        # For invoice deliveries, ledger is created only after OTP verification.
+        # Stock entries have no OTP so create ledger immediately.
+        if self.sales_invoice and not self.customer_confirmed:
+            return
 
         self._create_delivery_ledger()
 
@@ -454,6 +458,54 @@ class CrateDelivery(Document):
 # =============================================================
 
 @frappe.whitelist()
+def get_available_invoices_for_cd(doctype, txt, searchfield, start, page_len, filters):
+    """Return Sales Invoices linked to a VML that have no draft/submitted Crate Delivery."""
+    vml = (filters or {}).get("vml", "")
+    return frappe.db.sql(
+        """
+        SELECT si.name, si.customer_name
+        FROM `tabSales Invoice` si
+        WHERE si.custom_vehicle_movement_log = %(vml)s
+          AND si.docstatus = 1
+          AND NOT EXISTS (
+              SELECT 1 FROM `tabCrate Delivery` cd
+              WHERE cd.sales_invoice = si.name
+                AND cd.docstatus IN (0, 1)
+          )
+          AND (si.name LIKE %(txt)s OR si.customer_name LIKE %(txt)s)
+        ORDER BY si.name
+        LIMIT %(start)s, %(page_len)s
+        """,
+        {"vml": vml, "txt": f"%{txt}%", "start": int(start), "page_len": int(page_len)},
+        as_list=True,
+    )
+
+
+@frappe.whitelist()
+def get_available_stock_entries_for_cd(doctype, txt, searchfield, start, page_len, filters):
+    """Return Stock Entries linked to a VML that have no draft/submitted Crate Delivery."""
+    vml = (filters or {}).get("vml", "")
+    return frappe.db.sql(
+        """
+        SELECT se.name, se.stock_entry_type
+        FROM `tabStock Entry` se
+        WHERE se.van_collection_item = %(vml)s
+          AND se.docstatus = 1
+          AND NOT EXISTS (
+              SELECT 1 FROM `tabCrate Delivery` cd
+              WHERE cd.stock_entry = se.name
+                AND cd.docstatus IN (0, 1)
+          )
+          AND se.name LIKE %(txt)s
+        ORDER BY se.name
+        LIMIT %(start)s, %(page_len)s
+        """,
+        {"vml": vml, "txt": f"%{txt}%", "start": int(start), "page_len": int(page_len)},
+        as_list=True,
+    )
+
+
+@frappe.whitelist()
 def get_invoice_crate_qty(sales_invoice):
     """Return total crate qty from a Sales Invoice (uses Crate Settings UOM)."""
 
@@ -496,7 +548,7 @@ def send_delivery_otp(crate_delivery_name):
     if doc.customer_confirmed:
         frappe.throw("Delivery already confirmed by customer. No OTP needed.")
 
-    phone = doc.customer_phone
+    phone = doc.otp_phone_override or doc.customer_phone
     if not phone:
         phone = _get_customer_phone(doc.actual_customer)
 
@@ -612,10 +664,14 @@ def verify_delivery_otp(crate_delivery_name, otp):
     })
     frappe.db.commit()
 
-    # Submit the draft Crate Delivery now that customer confirmed
     cd = frappe.get_doc("Crate Delivery", crate_delivery_name)
     if cd.docstatus == 0:
+        # Mobile flow: draft → submit now, on_submit will create ledger
         cd.submit()
+    elif cd.docstatus == 1:
+        # ERP flow: already submitted before OTP, create ledger now
+        cd._create_delivery_ledger()
+        cd._create_return_ledger()
 
     return {"confirmed": 1}
 
@@ -631,7 +687,7 @@ def send_delivery_sms(crate_delivery_name):
     if doc.customer_confirmed:
         frappe.throw("Delivery already confirmed by customer. No OTP needed.")
 
-    phone = doc.customer_phone
+    phone = doc.otp_phone_override or doc.customer_phone
     if not phone:
         phone = _get_customer_phone(doc.actual_customer)
     if not phone:
@@ -898,11 +954,9 @@ def _send_sms_otp(phone, customer_name, crates_delivered, invoice, trip_no, crat
         mobile = mobile[2:]
 
     message = (
-        f"Hello {customer_name}, A total of {crates_delivered} crates have been delivered to you "
-        f"against Invoice No. {invoice}. Against Trip No. {trip_no}, you have returned {crates_returned} crates. "
-        f"Your current crate balance is: {balance}. "
-        f"To approve and verify this transaction, please share OTP {otp} with the driver. "
-        f"This OTP is valid for 10 minutes. Regards, BASTAR DAIRY"
+        f"Hi {customer_name}, Inv No. {invoice}, Delivered: {crates_delivered} crates. "
+        f"Trip No. {trip_no}, Returned: {crates_returned} crates. Balance: {balance}. "
+        f"OTP: {otp}. Share with driver for verification. Valid 10 min. - BASTAR DAIRY FARM"
     )
 
     response = requests.get(

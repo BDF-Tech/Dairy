@@ -6,21 +6,19 @@ frappe.ui.form.on('Crate Delivery', {
 
     refresh: function(frm) {
 
-        // Filter sales_invoice to only show invoices linked to this VML
+        // Only show invoices linked to this VML that have no active Crate Delivery
         frm.set_query('sales_invoice', function() {
             return {
-                filters: {
-                    custom_vehicle_movement_log: frm.doc.vehicle_movement_log || ''
-                }
+                query: 'dairy.dairy.doctype.crate_delivery.crate_delivery.get_available_invoices_for_cd',
+                filters: { vml: frm.doc.vehicle_movement_log || '' }
             };
         });
 
-        // Filter stock_entry to only show entries linked to this VML
+        // Only show stock entries linked to this VML that have no active Crate Delivery
         frm.set_query('stock_entry', function() {
             return {
-                filters: {
-                    van_collection_item: frm.doc.vehicle_movement_log || ''
-                }
+                query: 'dairy.dairy.doctype.crate_delivery.crate_delivery.get_available_stock_entries_for_cd',
+                filters: { vml: frm.doc.vehicle_movement_log || '' }
             };
         });
 
@@ -126,17 +124,15 @@ frappe.ui.form.on('Crate Delivery', {
         // Re-apply filters so dropdowns immediately reflect the new VML
         frm.set_query('sales_invoice', function() {
             return {
-                filters: {
-                    custom_vehicle_movement_log: frm.doc.vehicle_movement_log
-                }
+                query: 'dairy.dairy.doctype.crate_delivery.crate_delivery.get_available_invoices_for_cd',
+                filters: { vml: frm.doc.vehicle_movement_log || '' }
             };
         });
 
         frm.set_query('stock_entry', function() {
             return {
-                filters: {
-                    van_collection_item: frm.doc.vehicle_movement_log
-                }
+                query: 'dairy.dairy.doctype.crate_delivery.crate_delivery.get_available_stock_entries_for_cd',
+                filters: { vml: frm.doc.vehicle_movement_log || '' }
             };
         });
 

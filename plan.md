@@ -2,8 +2,8 @@
 
 **App:** `dairy`
 **Module:** `dairy` (dairy/dairy/)
-**Status:** ERPNext Backend Complete (Phase 3A) — App Side Next
-**Last Updated:** 2026-05-30
+**Status:** Phase 3C + Audit Report + Mobile App Delivery Flow Complete
+**Last Updated:** 2026-06-29
 
 ---
 
@@ -21,6 +21,8 @@ You must recreate them on prod before running `bench migrate`.
 | 5 | Sales Invoice | `custom_vehicle_movement_log` | Link | Vehicle Movement Log | Customize Form | Links invoice to its dispatch trip. Set at Gate Check via db.set_value. |
 | 6 | Stock Entry | `van_collection_item` | Link | Vehicle Movement Log | Customize Form | Links stock entry to its dispatch trip. Set at Gate Check via db.set_value. |
 | 7 | Sales Invoice | `custom_pickup_log` | Link | Pickup Log | Customize Form | Links invoice to its pickup entry. Set at submit via db.set_value. Read Only, No Copy. |
+
+> **All fields below (rows 1–7) were added via Customize Form / bench console and must be manually recreated on prod BEFORE running bench migrate.**
 
 > **How to recreate on prod:** Go to Customize Form → select the Doctype → add field → Save → bench migrate.
 > Fields added via bench console (row 3) must be recreated the same way on prod.
@@ -719,14 +721,27 @@ Phase 3  →  Crate Delivery + Pickup Log
                  - on_submit: Customer OUT + IN ledger per invoice row
                  - on_cancel: reverse all + delink invoices
                  - Customer Crate Ledger: pickup_log field + Pickup category
-             3C  Crate Reconciliation (opening balances)             ❌ NOT STARTED
+             3C  Crate Balance Adjustment (opening/closing balances)  ✅ COMPLETE
+                 - New doctype dairy/dairy/doctype/crate_balance_adjustment/
+                 - Party Type: Customer or Driver
+                 - Entry Type: Opening or Adjustment
+                 - Crates: positive = add balance, negative = reduce
+                 - on_submit: Customer Crate Ledger entry + master balance update
+                 - on_cancel: ledger deleted + balance reversed
+                 - Visible in Crate Audit Report (customer-wise section)
 
-Phase 4  →  Customer Crate Balance Report                           ❌ NOT STARTED
+Phase 4  →  Crate Audit Report                                      ✅ COMPLETE
+             - Trip-wise section: VML → Invoice/SE rows → Assigned/Given/Taken
+             - Customer-wise section: Customer → all invoices with trip ref
+             - View By filter: Both / Trip Wise / Customer Wise
+             - Filters: from_date, to_date, driver, customer, VML
+             - Summary bar: total assigned, given, taken, net outstanding
+             - File: dairy/dairy/report/crate_audit_report/
 
 Phase 5  →  Mobile App API (file: mobile/mobile/api.py)             🔨 IN PROGRESS
              get_user_info()                     ✅
-             get_driver_vmls(date?)              ✅
-             get_driver_vml_details(vml)         ✅
+             get_driver_vmls(date?)              ✅  (now filters: workflow_state = "Dispatch Loading" only)
+             get_driver_vml_details(vml)         ✅  (now returns customer_crate_balance per invoice row)
              get_driver_pending_deliveries(vml?) ✅
              create_crate_delivery(...)          ✅
              confirm_customer_otp(cd_name)       ✅
@@ -737,3 +752,78 @@ Phase 5  →  Mobile App API (file: mobile/mobile/api.py)             🔨 IN PR
              get_customer_crate_ledger(...)      ✅
              get_customer_pending_deliveries()   ❌
 ```
+
+---
+
+## Session Changes — 2026-06-29
+
+### VML Form Fixes (vehicle_movement_log.js + .py)
+
+| Change | Detail |
+|---|---|
+| "+" button selectors fixed | Selector was `btn-new-doc` — correct class is `btn-new` with `data-doctype` attribute |
+| Sales Invoice "+" always hidden | Never show at any workflow state |
+| Stock Entry "+" always hidden | Never show at any workflow state |
+| Crate Delivery "+" only at Submitted | `toggle(frm.doc.workflow_state === "Submitted")` |
+| Final check dialog | `before_workflow_action` returns Promise; unfreezes DOM before showing dialog |
+| Crate assignment timing | Driver ledger created at "Submitted" (after Final check), NOT at Gate Check |
+| Crate cancellation — loose crates | `_cleanup_crate_entries` now reverses `custom_crate_type_balances` child table separately from invoice crates |
+| `total_crate_in` removed from Vehicle Invoice Crate Detail | `update_crate_summary_balance` simplified to no-op; `process_customer_crate_return` gutted to pass |
+| `crates_in` removed from Loose Crate Detail | `update_loose_crate_balance` simplified: `row.balance = row.crates_out or 0` |
+| Customer balance in crate summary | `balance_crate` field on Vehicle Invoice Crate Detail now shows `Customer.custom_current_crate_balance`; label changed to "Customer Balance"; populated in `populate_crate_summary_customer_names` and in `get_invoice_details` JS response |
+
+### Crate Delivery Fixes (crate_delivery.js + .py)
+
+| Change | Detail |
+|---|---|
+| Sales Invoice dropdown filter | Custom server query `get_available_invoices_for_cd` — only shows invoices linked to VML with no active Crate Delivery |
+| Stock Entry dropdown filter | Custom server query `get_available_stock_entries_for_cd` — same logic |
+| OTP phone override field | `otp_phone_override` Data field added to Crate Delivery JSON; `allow_on_submit: 1`; both `send_delivery_otp` and `send_delivery_sms` use this number first |
+| Ledger gated behind OTP | `on_submit` skips `_create_delivery_ledger` / `_create_return_ledger` if `sales_invoice` set but `customer_confirmed = 0`; `verify_delivery_otp` calls them directly if doc already submitted |
+| SMS DLT template updated | New 7-variable template with Inv No, Delivered, Trip No, Returned, Balance, OTP |
+
+### New Doctypes (dairy/dairy/doctype/)
+
+| Doctype | Purpose |
+|---|---|
+| `Crate Balance Adjustment` | Create opening / adjustment balance entries for Customer or Driver; writes to Customer Crate Ledger; updates master balance on submit/cancel |
+
+### Customer Crate Ledger
+
+| Change | Detail |
+|---|---|
+| `entry_type` options | Added "Opening" and "Adjustment" alongside existing "OUT" and "IN" |
+
+### Crate Audit Report (dairy/dairy/report/crate_audit_report/)
+
+Completely redesigned. Previous customer/driver section report replaced with:
+- **Trip Wise**: VML header → Invoice/SE rows with Assigned to Driver, Given to Customer, Taken from Customer
+- **Customer Wise**: Customer header → all invoices/SEs with date, VML, Given, Taken
+- **View By** filter: Both / Trip Wise / Customer Wise
+- **Customer filter** added
+- Crate Balance Adjustment entries automatically appear in Customer Wise section (via Customer Crate Ledger)
+
+### Mobile API (mobile/mobile/api.py)
+
+| Change | Detail |
+|---|---|
+| `get_driver_vmls` | Now filters `workflow_state = "Dispatch Loading"` only — driver only sees active trips |
+| `get_driver_vml_details` | Returns `customer_crate_balance` per invoice row from `Customer.custom_current_crate_balance` |
+
+### Flutter App (bastar_dairy_farm)
+
+| File | Change |
+|---|---|
+| `driver_trip_detail_screen.dart` | Invoice delivery card shows "Customer has X crates" below invoice number |
+
+---
+
+## Fields Added via Code (auto-migrated — no manual step on prod)
+
+These were added to doctype JSON files and will apply automatically on `bench migrate`:
+
+| Doctype | Fieldname | Type | Notes |
+|---|---|---|---|
+| Crate Delivery | `otp_phone_override` | Data (Phone) | Allow on submit. Override number for OTP sending. |
+| Vehicle Invoice Crate Detail | `balance_crate` label changed | — | Label changed to "Customer Balance"; now read_only; shows customer's current crate balance |
+| Customer Crate Ledger | `entry_type` options | — | Added "Opening" and "Adjustment" options |
