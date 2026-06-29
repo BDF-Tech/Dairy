@@ -12,8 +12,12 @@
   "date",
   "col_break_1",
   "entry_type",
+  "driver_balance_type",
+  "crate_type",
   "crates",
   "reason",
+  "balance_section",
+  "current_balance_html",
   "amended_from"
  ],
  "fields": [
@@ -71,17 +75,46 @@
    "in_list_view": 1
   },
   {
+   "fieldname": "driver_balance_type",
+   "fieldtype": "Select",
+   "label": "Balance Type",
+   "options": "\nInvoice Crates\nLoose Crate",
+   "depends_on": "eval:doc.party_type=='Driver'",
+   "mandatory_depends_on": "eval:doc.party_type=='Driver'",
+   "description": "Invoice Crates = crates assigned via invoices/stock entries. Loose Crate = per crate type balance."
+  },
+  {
+   "fieldname": "crate_type",
+   "fieldtype": "Link",
+   "label": "Crate Type",
+   "options": "Crate Type",
+   "depends_on": "eval:doc.party_type=='Driver' && doc.driver_balance_type=='Loose Crate'",
+   "mandatory_depends_on": "eval:doc.party_type=='Driver' && doc.driver_balance_type=='Loose Crate'"
+  },
+  {
    "fieldname": "crates",
    "fieldtype": "Float",
    "label": "Crates",
    "reqd": 1,
-   "description": "Positive = crates outstanding with party. Negative = reduce balance."
+   "description": "Positive = add to balance. Negative = reduce balance."
   },
   {
    "fieldname": "reason",
    "fieldtype": "Small Text",
    "label": "Reason",
    "reqd": 1
+  },
+  {
+   "fieldname": "balance_section",
+   "fieldtype": "Section Break",
+   "label": "Current Balance",
+   "depends_on": "eval:doc.party_type && (doc.customer || doc.driver)"
+  },
+  {
+   "fieldname": "current_balance_html",
+   "fieldtype": "HTML",
+   "label": "Current Balance",
+   "options": "<div id='cba-balance-display' style='color:#888'>Select a party to see current balance.</div>"
   },
   {
    "fieldname": "amended_from",
@@ -95,7 +128,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-06-27 00:00:00.000000",
+ "modified": "2026-06-29 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "dairy",
  "name": "Crate Balance Adjustment",

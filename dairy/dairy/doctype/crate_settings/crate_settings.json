@@ -117,6 +117,13 @@
    "label": "Auto Create Stock Entry on Gate Check"
   },
   {
+   "default": "0",
+   "fieldname": "allow_negative_crate",
+   "fieldtype": "Check",
+   "label": "Allow Negative Crate Balance",
+   "description": "If unchecked, Crate Balance Adjustment cannot reduce a party's balance below zero."
+  },
+  {
    "default": "7",
    "fieldname": "overdue_days",
    "fieldtype": "Int",

@@ -11,7 +11,7 @@ def get_columns():
     return [
         {"label": "Asset Code", "fieldname": "assets_code", "fieldtype": "Data", "width": 150},
         {"label": "Asset Category", "fieldname": "asset_category", "fieldtype": "Data", "width": 150},
-        {"label": "Asset Serial No", "fieldname": "asset_sn", "fieldtype": "Data", "width": 150},
+        {"label": "Asset Serial No", "fieldname": "aseet_sn", "fieldtype": "Data", "width": 150},
         {"label": "Location", "fieldname": "location", "fieldtype": "Data", "width": 150},
         {"label": "Purchase Date", "fieldname": "purchase_date", "fieldtype": "Date", "width": 120},
         {"label": "Custodian", "fieldname": "custodian", "fieldtype": "Data", "width": 150},
@@ -33,7 +33,7 @@ def get_data(filters):
         SELECT
             assets_code,
             asset_category,
-            asset_sn,
+            aseet_sn,
             location,
             purchase_date,
             custodian,
