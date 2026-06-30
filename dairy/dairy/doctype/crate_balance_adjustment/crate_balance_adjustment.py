@@ -80,10 +80,10 @@ class CrateBalanceAdjustment(Document):
     def _create_ledger_entry(self):
         crates = flt(self.crates)
         ledger = frappe.new_doc("Customer Crate Ledger")
-        ledger.posting_date   = self.date
-        ledger.entry_type     = self.entry_type
-        ledger.crate_category = self.entry_type
-        ledger.crate_delivery = self.name
+        ledger.posting_date              = self.date
+        ledger.entry_type                = self.entry_type
+        ledger.crate_category            = self.entry_type
+        ledger.crate_balance_adjustment  = self.name
 
         if self.party_type == "Customer":
             ledger.ledger_type    = "Customer"
@@ -114,7 +114,7 @@ class CrateBalanceAdjustment(Document):
     def _delete_ledger_entry(self):
         name = frappe.db.get_value(
             "Customer Crate Ledger",
-            {"crate_delivery": self.name},
+            {"crate_balance_adjustment": self.name},
             "name"
         )
         if name:

@@ -36,7 +36,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Crate Category",
-   "options": "Sales Invoice\nStock Entry\nLoose Crate\nPickup"
+   "options": "Sales Invoice\nStock Entry\nLoose Crate\nPickup\nOpening\nAdjustment"
   },
   {
    "fieldname": "customer",
@@ -130,6 +130,13 @@
    "in_standard_filter": 1,
    "label": "Pickup Log",
    "options": "Pickup Log"
+  },
+  {
+   "fieldname": "crate_balance_adjustment",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Crate Balance Adjustment",
+   "options": "Crate Balance Adjustment"
   }
  ],
  "grid_page_length": 50,

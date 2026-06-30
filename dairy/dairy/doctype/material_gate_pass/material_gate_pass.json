@@ -1,0 +1,360 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-06-29 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "gate_pass_type",
+  "trip_type",
+  "date",
+  "time",
+  "col_break_1",
+  "status",
+  "company",
+  "supplier_section",
+  "supplier",
+  "supplier_name",
+  "purchase_order",
+  "location_section",
+  "from_location",
+  "to_location",
+  "col_break_2",
+  "to_warehouse",
+  "vehicle_section",
+  "vehicle_number",
+  "driver_name",
+  "col_break_3",
+  "seal_number",
+  "items_section",
+  "items",
+  "people_section",
+  "security_guard",
+  "checked_out_time",
+  "col_break_4",
+  "accepted_by",
+  "verified_by",
+  "return_section",
+  "return_items",
+  "return_people_section",
+  "return_security_guard",
+  "return_checked_in_time",
+  "col_break_5",
+  "return_accepted_by",
+  "return_verified_by",
+  "return_remarks",
+  "notes_section",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "GATE-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gate_pass_type",
+   "fieldtype": "Select",
+   "label": "Gate Pass Type",
+   "options": "\nInward\nTransfer",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "trip_type",
+   "fieldtype": "Select",
+   "label": "Trip Type",
+   "options": "\nOne Way\nReturn Trip",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "One Way = vehicle goes and does not return with material. Return Trip = vehicle goes and comes back with material."
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "time",
+   "fieldtype": "Time",
+   "label": "Time"
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nChecked Out\nIn Transit\nReturned\nCompleted\nRejected",
+   "default": "Draft",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "supplier_section",
+   "fieldtype": "Section Break",
+   "label": "Supplier Details",
+   "depends_on": "eval:doc.gate_pass_type=='Inward'"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier",
+   "depends_on": "eval:doc.gate_pass_type=='Inward'",
+   "mandatory_depends_on": "eval:doc.gate_pass_type=='Inward'"
+  },
+  {
+   "fetch_from": "supplier.supplier_name",
+   "fieldname": "supplier_name",
+   "fieldtype": "Data",
+   "label": "Supplier Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "purchase_order",
+   "fieldtype": "Link",
+   "label": "Purchase Order",
+   "options": "Purchase Order",
+   "depends_on": "eval:doc.gate_pass_type=='Inward'"
+  },
+  {
+   "fieldname": "location_section",
+   "fieldtype": "Section Break",
+   "label": "Location Details"
+  },
+  {
+   "fieldname": "from_location",
+   "fieldtype": "Link",
+   "label": "From Location / Plant",
+   "options": "Location",
+   "depends_on": "eval:doc.gate_pass_type=='Transfer'",
+   "mandatory_depends_on": "eval:doc.gate_pass_type=='Transfer'"
+  },
+  {
+   "fieldname": "to_location",
+   "fieldtype": "Link",
+   "label": "To Location / Plant",
+   "options": "Location",
+   "depends_on": "eval:doc.gate_pass_type=='Transfer'",
+   "mandatory_depends_on": "eval:doc.gate_pass_type=='Transfer'"
+  },
+  {
+   "fieldname": "col_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "to_warehouse",
+   "fieldtype": "Link",
+   "label": "Receiving Warehouse",
+   "options": "Warehouse",
+   "depends_on": "eval:doc.gate_pass_type=='Inward'",
+   "mandatory_depends_on": "eval:doc.gate_pass_type=='Inward'"
+  },
+  {
+   "fieldname": "vehicle_section",
+   "fieldtype": "Section Break",
+   "label": "Vehicle Details"
+  },
+  {
+   "fieldname": "vehicle_number",
+   "fieldtype": "Data",
+   "label": "Vehicle Number",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "driver_name",
+   "fieldtype": "Data",
+   "label": "Driver Name"
+  },
+  {
+   "fieldname": "col_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "seal_number",
+   "fieldtype": "Data",
+   "label": "Seal Number"
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break",
+   "label": "Outgoing Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Outgoing Items",
+   "options": "Material Gate Pass Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "people_section",
+   "fieldtype": "Section Break",
+   "label": "Outgoing — Gate Entry"
+  },
+  {
+   "fieldname": "security_guard",
+   "fieldtype": "Link",
+   "label": "Security Guard",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "checked_out_time",
+   "fieldtype": "Datetime",
+   "label": "Checked Out Time"
+  },
+  {
+   "fieldname": "col_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "accepted_by",
+   "fieldtype": "Link",
+   "label": "Authorised By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Link",
+   "label": "Verified By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "return_section",
+   "fieldtype": "Section Break",
+   "label": "Return — Items Brought Back",
+   "depends_on": "eval:doc.trip_type=='Return Trip'",
+   "collapsible": 0
+  },
+  {
+   "fieldname": "return_items",
+   "fieldtype": "Table",
+   "label": "Return Items",
+   "options": "Material Gate Pass Item",
+   "depends_on": "eval:doc.trip_type=='Return Trip'"
+  },
+  {
+   "fieldname": "return_people_section",
+   "fieldtype": "Section Break",
+   "label": "Return — Gate Entry",
+   "depends_on": "eval:doc.trip_type=='Return Trip'"
+  },
+  {
+   "fieldname": "return_security_guard",
+   "fieldtype": "Link",
+   "label": "Security Guard (Return)",
+   "options": "Employee",
+   "depends_on": "eval:doc.trip_type=='Return Trip'"
+  },
+  {
+   "fieldname": "return_checked_in_time",
+   "fieldtype": "Datetime",
+   "label": "Returned At",
+   "depends_on": "eval:doc.trip_type=='Return Trip'"
+  },
+  {
+   "fieldname": "col_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "return_accepted_by",
+   "fieldtype": "Link",
+   "label": "Return Accepted By",
+   "options": "Employee",
+   "depends_on": "eval:doc.trip_type=='Return Trip'"
+  },
+  {
+   "fieldname": "return_verified_by",
+   "fieldtype": "Link",
+   "label": "Return Verified By",
+   "options": "Employee",
+   "depends_on": "eval:doc.trip_type=='Return Trip'"
+  },
+  {
+   "fieldname": "return_remarks",
+   "fieldtype": "Small Text",
+   "label": "Return Remarks",
+   "depends_on": "eval:doc.trip_type=='Return Trip'"
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Material Gate Pass",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-06-29 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "dairy",
+ "name": "Material Gate Pass",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "role": "Stock Manager"
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "report": 1,
+   "role": "Stock User"
+  }
+ ],
+ "search_fields": "gate_pass_type,trip_type,supplier_name,vehicle_number,status",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
