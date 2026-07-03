@@ -8,6 +8,16 @@ frappe.ui.form.on('Crate Delivery', {
 
         _render_location_map(frm);
 
+        // Permanently hide the "+" (New) button on the Customer Crate Ledger
+        // connection — ledger rows are only ever created by the system.
+        // A CSS rule is used because the form dashboard re-shows the button in
+        // after_refresh() (based on can_create), which would override a .hide().
+        if (!document.getElementById('hide-ccl-new-btn')) {
+            $(`<style id="hide-ccl-new-btn">
+                .btn-new[data-doctype="Customer Crate Ledger"] { display: none !important; }
+            </style>`).appendTo('head');
+        }
+
         // Only show invoices linked to this VML that have no active Crate Delivery
         frm.set_query('sales_invoice', function() {
             return {
