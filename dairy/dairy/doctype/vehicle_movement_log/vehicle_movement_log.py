@@ -79,23 +79,15 @@ class VehicleMovementLog(Document):
 
     def sync_crate_item_details(self):
         """
-        Removes rows from crate_item_details whose sales_invoice or
-        stock_entry no longer exists in crate_summary.
-        Called on every save so deletions from the summary table
-        are immediately reflected in the item detail table.
+        crate_item_details rows are CONSOLIDATED per item_code (across all
+        invoices / all stock entries), so a row carries a *representative*
+        source rather than a specific one. Keep an item row as long as its
+        source TYPE still has rows in crate_summary; drop it only when the
+        whole invoice (or stock-entry) set has been cleared.
         """
 
-        valid_invoices = {
-            row.sales_invoice
-            for row in self.crate_summary
-            if row.sales_invoice
-        }
-
-        valid_stock_entries = {
-            row.stock_entry
-            for row in self.crate_summary
-            if row.stock_entry
-        }
+        has_invoices = any(row.sales_invoice for row in self.crate_summary)
+        has_stock_entries = any(row.stock_entry for row in self.crate_summary)
 
         filtered = []
 
@@ -103,10 +95,10 @@ class VehicleMovementLog(Document):
 
             keep = False
 
-            if row.sales_invoice and row.sales_invoice in valid_invoices:
+            if row.sales_invoice and has_invoices:
                 keep = True
 
-            if row.stock_entry and row.stock_entry in valid_stock_entries:
+            if row.stock_entry and has_stock_entries:
                 keep = True
 
             if keep:

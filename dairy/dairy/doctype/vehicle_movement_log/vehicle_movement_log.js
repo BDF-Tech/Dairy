@@ -32,6 +32,7 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
         const add_invoice_rows = function(invoices) {
 
+            // Summary stays per-invoice
             invoices.forEach(inv => {
 
                 let row =
@@ -48,39 +49,45 @@ frappe.ui.form.on("Vehicle Movement Log", {
                 row.balance_crate =
                     inv.customer_balance;
 
-                inv.items.forEach(item => {
+            });
 
-                    let item_row =
-                        frm.add_child(
-                            "crate_item_details"
-                        );
+            // Item details CONSOLIDATED by item_code across all invoices
+            let item_map = {};
 
-                    item_row.sales_invoice =
-                        inv.name;
-
-                    item_row.item_code =
-                        item.item_code;
-
-                    item_row.item_name =
-                        item.item_name;
-
-                    item_row.qty =
-                        item.qty;
-
-                    item_row.uom =
-                        item.uom;
-
-                    item_row.crates =
-                        item.crates;
-
+            invoices.forEach(inv => {
+                (inv.items || []).forEach(item => {
+                    let key = item.item_code;
+                    if (!item_map[key]) {
+                        item_map[key] = {
+                            sales_invoice: inv.name,   // representative source
+                            item_code: item.item_code,
+                            item_name: item.item_name,
+                            uom: item.uom,
+                            qty: 0,
+                            crates: 0
+                        };
+                    }
+                    item_map[key].qty += (item.qty || 0);
+                    item_map[key].crates += (item.crates || 0);
                 });
+            });
 
+            Object.values(item_map).forEach(agg => {
+                let item_row =
+                    frm.add_child("crate_item_details");
+                item_row.sales_invoice = agg.sales_invoice;
+                item_row.item_code = agg.item_code;
+                item_row.item_name = agg.item_name;
+                item_row.qty = agg.qty;
+                item_row.uom = agg.uom;
+                item_row.crates = agg.crates;
             });
 
         };
 
         const add_stock_entry_rows = function(stock_entries) {
 
+            // Summary stays per-stock-entry
             stock_entries.forEach(se => {
 
                 let row =
@@ -99,33 +106,38 @@ frappe.ui.form.on("Vehicle Movement Log", {
                 row.balance_crate =
                     se.total_crates;
 
-                se.items.forEach(item => {
+            });
 
-                    let item_row =
-                        frm.add_child(
-                            "crate_item_details"
-                        );
+            // Item details CONSOLIDATED by item_code across all stock entries
+            let item_map = {};
 
-                    item_row.stock_entry =
-                        se.name;
-
-                    item_row.item_code =
-                        item.item_code;
-
-                    item_row.item_name =
-                        item.item_name;
-
-                    item_row.qty =
-                        item.qty;
-
-                    item_row.uom =
-                        item.uom;
-
-                    item_row.crates =
-                        item.crates;
-
+            stock_entries.forEach(se => {
+                (se.items || []).forEach(item => {
+                    let key = item.item_code;
+                    if (!item_map[key]) {
+                        item_map[key] = {
+                            stock_entry: se.name,   // representative source
+                            item_code: item.item_code,
+                            item_name: item.item_name,
+                            uom: item.uom,
+                            qty: 0,
+                            crates: 0
+                        };
+                    }
+                    item_map[key].qty += (item.qty || 0);
+                    item_map[key].crates += (item.crates || 0);
                 });
+            });
 
+            Object.values(item_map).forEach(agg => {
+                let item_row =
+                    frm.add_child("crate_item_details");
+                item_row.stock_entry = agg.stock_entry;
+                item_row.item_code = agg.item_code;
+                item_row.item_name = agg.item_name;
+                item_row.qty = agg.qty;
+                item_row.uom = agg.uom;
+                item_row.crates = agg.crates;
             });
 
         };
