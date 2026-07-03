@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "naming_series:",
- "creation": "2026-05-27 00:00:00.000000",
+ "creation": "2026-05-27 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -30,7 +30,17 @@
   "column_break_otp",
   "otp",
   "otp_expiry",
-  "amended_from"
+  "otp_bypassed",
+  "otp_bypass_reason",
+  "section_break_location",
+  "location_source",
+  "delivery_latitude",
+  "delivery_longitude",
+  "column_break_location",
+  "location_captured_at",
+  "location_map_html",
+  "amended_from",
+  "otp_phone_override"
  ],
  "fields": [
   {
@@ -42,18 +52,18 @@
   {
    "fieldname": "vehicle_movement_log",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Vehicle Movement Log",
    "options": "Vehicle Movement Log",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "default": "Today",
    "fieldname": "date",
    "fieldtype": "Date",
+   "in_list_view": 1,
    "label": "Date",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "column_break_1",
@@ -62,10 +72,10 @@
   {
    "fieldname": "driver",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Driver",
    "options": "Driver",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "vehicle",
@@ -87,9 +97,9 @@
   {
    "fieldname": "sales_invoice",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Sales Invoice",
-   "options": "Sales Invoice",
-   "in_list_view": 1
+   "options": "Sales Invoice"
   },
   {
    "fieldname": "stock_entry",
@@ -105,29 +115,29 @@
    "read_only": 1
   },
   {
+   "description": "Change only if redirecting delivery to a different customer. Defaults to the invoice customer.",
    "fieldname": "actual_customer",
    "fieldtype": "Link",
    "label": "Actual Customer",
-   "options": "Customer",
-   "description": "Change only if redirecting delivery to a different customer. Defaults to the invoice customer."
+   "options": "Customer"
   },
   {
    "fieldname": "column_break_2",
    "fieldtype": "Column Break"
   },
   {
+   "description": "Total crate items (UOM = Crate) on the Sales Invoice",
    "fieldname": "invoice_crate_qty",
    "fieldtype": "Float",
    "label": "Invoice Crate Qty",
-   "read_only": 1,
-   "description": "Total crate items (UOM = Crate) on the Sales Invoice"
+   "read_only": 1
   },
   {
+   "description": "Live crate balance of the Actual Customer before this delivery",
    "fieldname": "customer_current_balance",
    "fieldtype": "Float",
    "label": "Customer Current Balance",
-   "read_only": 1,
-   "description": "Live crate balance of the Actual Customer before this delivery"
+   "read_only": 1
   },
   {
    "fieldname": "section_break_delivery",
@@ -135,25 +145,26 @@
    "label": "Delivery"
   },
   {
+   "description": "Must be \u2265 Invoice Crate Qty",
    "fieldname": "crates_delivered",
    "fieldtype": "Float",
    "label": "Crates Delivered",
-   "reqd": 1,
-   "description": "Must be ≥ Invoice Crate Qty"
+   "reqd": 1
   },
   {
    "default": "0",
+   "description": "Empty crates the customer gave back to the driver on the spot",
    "fieldname": "crates_returned",
    "fieldtype": "Float",
-   "label": "Crates Returned",
-   "description": "Empty crates the customer gave back to the driver on the spot"
+   "label": "Crates Returned"
   },
   {
+   "default": "0",
+   "description": "Set by OTP confirmation on the app",
    "fieldname": "customer_confirmed",
    "fieldtype": "Check",
    "label": "Customer Confirmed (OTP)",
-   "read_only": 1,
-   "description": "Set by OTP confirmation on the app"
+   "read_only": 1
   },
   {
    "fieldname": "section_break_otp",
@@ -161,46 +172,104 @@
    "label": "OTP Confirmation"
   },
   {
+   "description": "Mobile number fetched from the Actual Customer",
    "fieldname": "customer_phone",
    "fieldtype": "Data",
    "label": "Customer Phone",
-   "read_only": 1,
-   "description": "Mobile number fetched from the Actual Customer"
+   "read_only": 1
   },
   {
+   "description": "Number the OTP was last sent to",
    "fieldname": "otp_sent_to",
    "fieldtype": "Data",
    "label": "OTP Sent To",
-   "read_only": 1,
-   "description": "Number the OTP was last sent to"
+   "read_only": 1
   },
   {
+   "allow_on_submit": 1,
+   "description": "Leave blank to use the customer's default number. Fill this to send OTP to a different number.",
    "fieldname": "otp_phone_override",
    "fieldtype": "Data",
    "label": "Send OTP To (Override)",
-   "options": "Phone",
-   "allow_on_submit": 1,
-   "description": "Leave blank to use the customer's default number. Fill this to send OTP to a different number."
+   "options": "Phone"
   },
   {
    "fieldname": "column_break_otp",
    "fieldtype": "Column Break"
   },
   {
+   "description": "Internal \u2014 do not display to user",
    "fieldname": "otp",
    "fieldtype": "Data",
-   "label": "OTP",
    "hidden": 1,
-   "no_copy": 1,
-   "description": "Internal — do not display to user"
+   "label": "OTP",
+   "no_copy": 1
   },
   {
    "fieldname": "otp_expiry",
    "fieldtype": "Datetime",
-   "label": "OTP Expiry",
    "hidden": 1,
-   "read_only": 1,
+   "label": "OTP Expiry",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "otp_bypassed",
+   "fieldtype": "Check",
+   "label": "OTP Bypassed",
    "no_copy": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.otp_bypassed",
+   "fieldname": "otp_bypass_reason",
+   "fieldtype": "Small Text",
+   "label": "OTP Bypass Reason",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_location",
+   "fieldtype": "Section Break",
+   "label": "Delivery Location"
+  },
+  {
+   "description": "Mobile GPS = captured from driver's phone. ERP Manual = entered from plant/computer (driver app fallback).",
+   "fieldname": "location_source",
+   "fieldtype": "Select",
+   "label": "Location Source",
+   "options": "\nMobile GPS\nERP Manual"
+  },
+  {
+   "fieldname": "delivery_latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "precision": "9",
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivery_longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "precision": "9",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_location",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "location_captured_at",
+   "fieldtype": "Datetime",
+   "label": "Location Captured At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "location_map_html",
+   "fieldtype": "HTML",
+   "label": "Map"
   },
   {
    "fieldname": "amended_from",
@@ -212,13 +281,13 @@
    "read_only": 1
   }
  ],
- "index_web_pages_for_search": 0,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-27 00:00:00.000000",
+ "modified": "2026-07-02 16:22:44.446847",
  "modified_by": "Administrator",
  "module": "dairy",
  "name": "Crate Delivery",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
@@ -237,6 +306,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

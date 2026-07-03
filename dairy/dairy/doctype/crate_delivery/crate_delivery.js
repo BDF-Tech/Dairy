@@ -6,6 +6,8 @@ frappe.ui.form.on('Crate Delivery', {
 
     refresh: function(frm) {
 
+        _render_location_map(frm);
+
         // Only show invoices linked to this VML that have no active Crate Delivery
         frm.set_query('sales_invoice', function() {
             return {
@@ -103,6 +105,46 @@ frappe.ui.form.on('Crate Delivery', {
 
                 }).addClass('btn-primary');
             }
+
+            // "Bypass OTP" button — only if enabled in Crate Settings
+            frappe.db.get_single_value('Crate Settings', 'allow_otp_bypass').then(function(allow) {
+                if (!allow) return;
+
+                frm.add_custom_button(__('Bypass OTP'), function() {
+
+                    frappe.prompt(
+                        {
+                            label: __('Reason for bypassing OTP'),
+                            fieldname: 'reason',
+                            fieldtype: 'Small Text',
+                            reqd: 1
+                        },
+                        function(values) {
+                            frappe.confirm(
+                                __('Confirm this delivery WITHOUT OTP verification?'),
+                                function() {
+                                    frappe.call({
+                                        method: 'dairy.dairy.doctype.crate_delivery.crate_delivery.bypass_delivery_otp',
+                                        args: {
+                                            crate_delivery_name: frm.doc.name,
+                                            reason: values.reason
+                                        },
+                                        callback: function(r) {
+                                            if (r.message && r.message.confirmed) {
+                                                frappe.show_alert({ message: __('Delivery confirmed (OTP bypassed)'), indicator: 'orange' });
+                                                frm.reload_doc();
+                                            }
+                                        }
+                                    });
+                                }
+                            );
+                        },
+                        __('Bypass OTP'),
+                        __('Continue')
+                    );
+
+                }).removeClass('btn-default').addClass('btn-danger');
+            });
         }
     },
 
@@ -185,6 +227,28 @@ frappe.ui.form.on('Crate Delivery', {
     },
 
     // =========================================================
+    // Stock Entry → fetch crate qty (like Sales Invoice)
+    // =========================================================
+
+    stock_entry: function(frm) {
+
+        if (!frm.doc.stock_entry) {
+            frm.set_value('invoice_crate_qty', 0);
+            return;
+        }
+
+        frappe.call({
+            method: 'dairy.dairy.doctype.crate_delivery.crate_delivery.get_stock_entry_crate_qty',
+            args: { stock_entry: frm.doc.stock_entry },
+            callback: function(r) {
+                if (r.message !== undefined) {
+                    frm.set_value('invoice_crate_qty', r.message);
+                }
+            }
+        });
+    },
+
+    // =========================================================
     // Actual Customer → refresh live balance
     // =========================================================
 
@@ -254,3 +318,38 @@ frappe.ui.form.on('Crate Delivery', {
     }
 
 });
+
+function _render_location_map(frm) {
+    const wrapper = frm.fields_dict['location_map_html'];
+    if (!wrapper) return;
+
+    const lat = frm.doc.delivery_latitude;
+    const lng = frm.doc.delivery_longitude;
+
+    if (!lat || !lng) {
+        wrapper.$wrapper.html(
+            '<div style="color:#aaa;font-size:12px;padding:8px 0;">No location captured.</div>'
+        );
+        return;
+    }
+
+    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+    wrapper.$wrapper.html(`
+        <div style="padding:8px 0;">
+            <a href="${mapsUrl}" target="_blank"
+               style="display:inline-flex;align-items:center;gap:8px;
+                      background:#2d6a4f;color:#fff;padding:8px 16px;
+                      border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;">
+                📍 Open in Google Maps
+            </a>
+            <div style="margin-top:8px;font-size:12px;color:#888;">
+                ${lat}, ${lng}
+            </div>
+            <iframe
+                width="100%" height="220" frameborder="0" style="border:0;border-radius:8px;margin-top:10px;"
+                src="https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed"
+                allowfullscreen>
+            </iframe>
+        </div>
+    `);
+}

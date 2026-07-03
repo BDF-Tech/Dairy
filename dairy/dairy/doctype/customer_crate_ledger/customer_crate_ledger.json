@@ -10,6 +10,7 @@
   "crate_category",
   "customer",
   "driver",
+  "warehouse",
   "sales_invoice",
   "stock_entry",
   "vehicle_movement_log",
@@ -103,13 +104,19 @@
    "fieldname": "ledger_type",
    "fieldtype": "Select",
    "label": "Ledger Type",
-   "options": "Customer\nDriver"
+   "options": "Customer\nDriver\nWarehouse"
   },
   {
    "fieldname": "driver",
    "fieldtype": "Link",
    "label": "Driver",
    "options": "Driver"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
   },
   {
    "fieldname": "crate_type",

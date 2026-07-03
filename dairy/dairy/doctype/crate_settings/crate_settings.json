@@ -8,6 +8,7 @@
   "dispatch_warehouses",
   "transit_warehouses",
   "depot_warehouses",
+  "transit_warehouse_map",
   "crate_section",
   "crate_uom",
   "otp_section",
@@ -55,6 +56,13 @@
    "description": "Customer-facing pickup/depot warehouses"
   },
   {
+   "fieldname": "transit_warehouse_map",
+   "fieldtype": "Table",
+   "label": "Transit → Warehouse Mapping",
+   "options": "Crate Transit Warehouse Map",
+   "description": "Maps each transit warehouse to the warehouse that owns its crate balance. On a crate delivery, the transaction is applied to the linked warehouse."
+  },
+  {
    "fieldname": "crate_section",
    "fieldtype": "Section Break",
    "label": "Crate Settings"
@@ -87,6 +95,13 @@
    "label": "OTP Length (Digits)",
    "reqd": 1,
    "description": "Number of digits in the delivery OTP"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_otp_bypass",
+   "fieldtype": "Check",
+   "label": "Allow OTP Bypass",
+   "description": "If enabled, a delivery can be confirmed without OTP (e.g. customer unreachable). A reason is required and recorded."
   },
   {
    "fieldname": "whatsapp_section",

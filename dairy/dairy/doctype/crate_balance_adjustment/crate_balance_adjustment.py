@@ -3,28 +3,42 @@ from frappe.model.document import Document
 from frappe.utils import flt
 
 
+# party_type -> (doctype, invoice_balance_field, supports_loose)
+PARTY_MAP = {
+    "Customer":  ("Customer",  "custom_current_crate_balance", False),
+    "Driver":    ("Driver",    "custom_invoice_crate_balance", True),
+    "Warehouse": ("Warehouse", "custom_crate_balance",         True),
+}
+
+LOOSE_CHILD_DOCTYPE = "Driver Crate Type Balance"
+LOOSE_CHILD_FIELD = "custom_crate_type_balances"
+
+
 @frappe.whitelist()
 def get_party_crate_balances(party_type, party):
     """Return current crate balances for display in the form."""
-    if party_type == "Customer":
-        balance = flt(frappe.db.get_value("Customer", party, "custom_current_crate_balance"))
-        return {"type": "customer", "invoice_balance": balance}
+    cfg = PARTY_MAP.get(party_type)
+    if not cfg or not party:
+        return {}
 
-    elif party_type == "Driver":
-        invoice_balance = flt(frappe.db.get_value("Driver", party, "custom_invoice_crate_balance"))
-        loose_rows = frappe.db.get_all(
-            "Driver Crate Type Balance",
-            filters={"parent": party},
+    doctype, invoice_field, supports_loose = cfg
+    invoice_balance = flt(frappe.db.get_value(doctype, party, invoice_field))
+
+    result = {
+        "type": party_type.lower(),
+        "invoice_balance": invoice_balance,
+        "supports_loose": supports_loose,
+    }
+
+    if supports_loose:
+        result["loose_balances"] = frappe.db.get_all(
+            LOOSE_CHILD_DOCTYPE,
+            filters={"parent": party, "parenttype": doctype},
             fields=["crate_type", "balance"],
-            order_by="crate_type"
+            order_by="crate_type",
         )
-        return {
-            "type": "driver",
-            "invoice_balance": invoice_balance,
-            "loose_balances": loose_rows
-        }
 
-    return {}
+    return result
 
 
 class CrateBalanceAdjustment(Document):
@@ -32,10 +46,18 @@ class CrateBalanceAdjustment(Document):
     def validate(self):
         if not self.crates:
             frappe.throw("Crates cannot be zero.")
-        if self.party_type == "Driver" and not self.driver_balance_type:
-            frappe.throw("Balance Type is required for Driver.")
-        if self.party_type == "Driver" and self.driver_balance_type == "Loose Crate" and not self.crate_type:
-            frappe.throw("Crate Type is required for Loose Crate adjustment.")
+
+        cfg = PARTY_MAP.get(self.party_type)
+        if not cfg:
+            frappe.throw("Invalid Party Type.")
+
+        _, _, supports_loose = cfg
+        if supports_loose:
+            if not self.driver_balance_type:
+                frappe.throw(f"Balance Type is required for {self.party_type}.")
+            if self.driver_balance_type == "Loose Crate" and not self.crate_type:
+                frappe.throw("Crate Type is required for Loose Crate adjustment.")
+
         self._check_negative_balance()
 
     def _check_negative_balance(self):
@@ -55,15 +77,34 @@ class CrateBalanceAdjustment(Document):
                 f"Enable <b>Allow Negative Crate Balance</b> in Crate Settings to proceed."
             )
 
+    # =========================================================
+    # HELPERS — resolve the selected party
+    # =========================================================
+
+    def _party(self):
+        """Return (doctype, party_name, invoice_field, supports_loose) for the selected party."""
+        cfg = PARTY_MAP.get(self.party_type)
+        if not cfg:
+            return None, None, None, False
+        doctype, invoice_field, supports_loose = cfg
+        party_name = {
+            "Customer": self.customer,
+            "Driver": self.driver,
+            "Warehouse": self.warehouse,
+        }.get(self.party_type)
+        return doctype, party_name, invoice_field, supports_loose
+
+    def _is_loose(self):
+        _, _, _, supports_loose = self._party()
+        return supports_loose and self.driver_balance_type == "Loose Crate"
+
     def _get_current_balance(self):
-        if self.party_type == "Customer" and self.customer:
-            return flt(frappe.db.get_value("Customer", self.customer, "custom_current_crate_balance"))
-        elif self.party_type == "Driver" and self.driver:
-            if self.driver_balance_type == "Loose Crate" and self.crate_type:
-                return self._get_driver_loose_balance(self.driver, self.crate_type)
-            else:
-                return flt(frappe.db.get_value("Driver", self.driver, "custom_invoice_crate_balance"))
-        return 0
+        doctype, party_name, invoice_field, _ = self._party()
+        if not party_name:
+            return 0
+        if self._is_loose():
+            return self._get_loose_balance(doctype, party_name, self.crate_type)
+        return flt(frappe.db.get_value(doctype, party_name, invoice_field))
 
     def on_submit(self):
         self._create_ledger_entry()
@@ -79,35 +120,31 @@ class CrateBalanceAdjustment(Document):
 
     def _create_ledger_entry(self):
         crates = flt(self.crates)
+        doctype, party_name, _, _ = self._party()
+
         ledger = frappe.new_doc("Customer Crate Ledger")
-        ledger.posting_date              = self.date
-        ledger.entry_type                = self.entry_type
-        ledger.crate_category            = self.entry_type
-        ledger.crate_balance_adjustment  = self.name
+        ledger.posting_date             = self.date
+        ledger.entry_type               = self.entry_type
+        ledger.crate_category           = self.entry_type
+        ledger.crate_balance_adjustment = self.name
+        ledger.ledger_type              = self.party_type
+        ledger.crates_out               = crates if crates > 0 else 0
+        ledger.crates_in                = abs(crates) if crates < 0 else 0
 
+        # Link the party on the ledger
         if self.party_type == "Customer":
-            ledger.ledger_type    = "Customer"
-            ledger.customer       = self.customer
-            ledger.crates_out     = crates if crates > 0 else 0
-            ledger.crates_in      = abs(crates) if crates < 0 else 0
-            ledger.balance_crates = flt(
-                frappe.db.get_value("Customer", self.customer, "custom_current_crate_balance")
-            ) + crates
-
+            ledger.customer = party_name
         elif self.party_type == "Driver":
-            ledger.ledger_type    = "Driver"
-            ledger.driver         = self.driver
-            ledger.crates_out     = crates if crates > 0 else 0
-            ledger.crates_in      = abs(crates) if crates < 0 else 0
+            ledger.driver = party_name
+        elif self.party_type == "Warehouse":
+            ledger.warehouse = party_name
 
-            if self.driver_balance_type == "Loose Crate":
-                ledger.crate_category = f"{self.entry_type} — Loose"
-                ledger.crate_type     = self.crate_type
-                current = self._get_driver_loose_balance(self.driver, self.crate_type)
-                ledger.balance_crates = current + crates
-            else:
-                current = flt(frappe.db.get_value("Driver", self.driver, "custom_invoice_crate_balance"))
-                ledger.balance_crates = current + crates
+        if self._is_loose():
+            ledger.crate_category = "Loose Crate"
+            ledger.crate_type = self.crate_type
+            ledger.balance_crates = self._get_loose_balance(doctype, party_name, self.crate_type) + crates
+        else:
+            ledger.balance_crates = self._get_current_balance() + crates
 
         ledger.insert(ignore_permissions=True)
 
@@ -125,39 +162,38 @@ class CrateBalanceAdjustment(Document):
     # =========================================================
 
     def _update_master_balance(self, delta):
-        if self.party_type == "Customer" and self.customer:
-            current = flt(frappe.db.get_value("Customer", self.customer, "custom_current_crate_balance"))
-            frappe.db.set_value("Customer", self.customer, "custom_current_crate_balance", current + delta)
+        doctype, party_name, invoice_field, _ = self._party()
+        if not party_name:
+            return
 
-        elif self.party_type == "Driver" and self.driver:
-            if self.driver_balance_type == "Loose Crate" and self.crate_type:
-                self._update_driver_loose_balance(self.driver, self.crate_type, delta)
-            else:
-                current = flt(frappe.db.get_value("Driver", self.driver, "custom_invoice_crate_balance"))
-                frappe.db.set_value("Driver", self.driver, "custom_invoice_crate_balance", current + delta)
+        if self._is_loose():
+            self._update_loose_balance(doctype, party_name, self.crate_type, delta)
+        else:
+            current = flt(frappe.db.get_value(doctype, party_name, invoice_field))
+            frappe.db.set_value(doctype, party_name, invoice_field, current + delta)
 
     # =========================================================
-    # LOOSE CRATE HELPERS
+    # LOOSE CRATE HELPERS (Driver + Warehouse)
     # =========================================================
 
-    def _get_driver_loose_balance(self, driver, crate_type):
+    def _get_loose_balance(self, doctype, party_name, crate_type):
         result = frappe.db.get_value(
-            "Driver Crate Type Balance",
-            {"parent": driver, "crate_type": crate_type},
+            LOOSE_CHILD_DOCTYPE,
+            {"parent": party_name, "parenttype": doctype, "crate_type": crate_type},
             "balance"
         )
         return flt(result)
 
-    def _update_driver_loose_balance(self, driver, crate_type, delta):
-        driver_doc = frappe.get_doc("Driver", driver)
-        for row in driver_doc.custom_crate_type_balances:
+    def _update_loose_balance(self, doctype, party_name, crate_type, delta):
+        party_doc = frappe.get_doc(doctype, party_name)
+        for row in party_doc.get(LOOSE_CHILD_FIELD):
             if row.crate_type == crate_type:
                 row.balance = flt(row.balance) + delta
-                driver_doc.save(ignore_permissions=True)
+                party_doc.save(ignore_permissions=True)
                 return
         # Crate type not found — create new row
-        driver_doc.append("custom_crate_type_balances", {
+        party_doc.append(LOOSE_CHILD_FIELD, {
             "crate_type": crate_type,
             "balance": delta
         })
-        driver_doc.save(ignore_permissions=True)
+        party_doc.save(ignore_permissions=True)

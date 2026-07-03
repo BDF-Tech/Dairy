@@ -156,15 +156,54 @@ class VehicleMovementLog(Document):
     # CLEANUP ON CANCEL / TRASH
     # =========================================================
 
+    def _cancel_linked_crate_deliveries(self):
+        """
+        Cancel (or delete drafts of) all Crate Delivery docs linked to this VML.
+        A submitted Crate Delivery's on_cancel reverses its own delivery/return
+        ledgers and master balances, and deletes its own ledger entries — so this
+        must run BEFORE the VML-level ledger cleanup to avoid double reversal.
+        """
+
+        deliveries = frappe.db.get_all(
+            "Crate Delivery",
+            filters={"vehicle_movement_log": self.name},
+            fields=["name", "docstatus"]
+        )
+
+        for d in deliveries:
+            try:
+                if d.docstatus == 1:
+                    cd = frappe.get_doc("Crate Delivery", d.name)
+                    cd.flags.ignore_permissions = True
+                    cd.cancel()
+                elif d.docstatus == 0:
+                    frappe.delete_doc(
+                        "Crate Delivery", d.name,
+                        ignore_permissions=True, force=True
+                    )
+            except Exception:
+                frappe.log_error(
+                    title="VML cancel — Crate Delivery cleanup failed",
+                    message=f"VML {self.name} / Crate Delivery {d.name}\n{frappe.get_traceback()}"
+                )
+
     def _cleanup_crate_entries(self):
         """
         Called when workflow_state → Cancelled or document is deleted.
 
+        0. Cancels/deletes linked Crate Delivery documents (they self-reverse
+           their own delivery/return ledgers + master balances).
         1. Delinks all Sales Invoices linked to this VML.
         2. Reverses Driver custom_invoice_crate_balance.
         3. Reverses Customer custom_current_crate_balance.
         4. Deletes all Customer Crate Ledger entries for this VML.
         """
+
+        # ----------------------------------------------------------
+        # Step 0: Cancel linked Crate Delivery documents first
+        # ----------------------------------------------------------
+
+        self._cancel_linked_crate_deliveries()
 
         # ----------------------------------------------------------
         # Step 1: Delink Sales Invoices and Stock Entries
@@ -213,6 +252,7 @@ class VehicleMovementLog(Document):
                 "crates_in",
                 "driver",
                 "customer",
+                "warehouse",
                 "crate_type",
                 "crate_category",
             ]
@@ -237,6 +277,7 @@ class VehicleMovementLog(Document):
         driver_changes = {}          # driver → net change for custom_invoice_crate_balance
         loose_changes  = {}          # driver → {crate_type → net change} for custom_crate_type_balances
         customer_changes = {}
+        warehouse_changes = {}       # warehouse → net change for custom_crate_balance
 
         for e in entries:
 
@@ -260,6 +301,18 @@ class VehicleMovementLog(Document):
 
                 customer_changes[e.customer] = (
                     customer_changes.get(e.customer, 0) + change
+                )
+
+            elif e.ledger_type == "Warehouse" and e.warehouse:
+
+                # Warehouse balance was reduced by (out - in) on create,
+                # so the reversal ADDS (out - in) back — opposite sign to
+                # driver/customer entries. (Safety net: normal flow reverses
+                # these via the Crate Delivery cancel path in Step 0.)
+                change = (e.crates_out or 0) - (e.crates_in or 0)
+
+                warehouse_changes[e.warehouse] = (
+                    warehouse_changes.get(e.warehouse, 0) + change
                 )
 
         # ----------------------------------------------------------
@@ -332,6 +385,27 @@ class VehicleMovementLog(Document):
                 customer,
                 "custom_current_crate_balance",
                 max(0, current + change)
+            )
+
+        # ----------------------------------------------------------
+        # Step 7: Reverse warehouse crate balance (safety net)
+        # ----------------------------------------------------------
+
+        for warehouse, change in warehouse_changes.items():
+
+            current = flt(
+                frappe.db.get_value(
+                    "Warehouse",
+                    warehouse,
+                    "custom_crate_balance"
+                )
+            )
+
+            frappe.db.set_value(
+                "Warehouse",
+                warehouse,
+                "custom_crate_balance",
+                current + change
             )
 
         # ----------------------------------------------------------
@@ -1127,6 +1201,35 @@ def _get_crate_warehouse(warehouse_type):
     return warehouses[0] if warehouses else None
 
 
+def _item_crate_factor(item_code, crate_uom):
+    """Nos per crate for an item (its Crate UOM conversion factor). 0 if none."""
+    return flt(
+        frappe.db.get_value(
+            "UOM Conversion Detail",
+            {"parent": item_code, "uom": crate_uom},
+            "conversion_factor"
+        )
+    )
+
+
+def whole_crates_for_item(item_code, nos, crate_uom=None):
+    """
+    Whole crates for a Crate-item line, given its qty in stock UOM (nos).
+      e.g. 22 nos with 1 crate = 20 nos  →  floor(22/20) = 1 crate.
+    The remainder (2 nos) is loose crate, entered manually at dispatch.
+    Only applies to items whose sales_uom = Crate; others return 0.
+    """
+    crate_uom = crate_uom or (
+        frappe.db.get_single_value("Crate Settings", "crate_uom") or "Crate"
+    )
+    if frappe.db.get_value("Item", item_code, "sales_uom") != crate_uom:
+        return 0
+    factor = _item_crate_factor(item_code, crate_uom)
+    if factor <= 0:
+        return 0
+    return int(flt(nos) // factor)
+
+
 # =============================================================
 # FETCH INVOICE + STOCK ENTRY DETAILS
 # =============================================================
@@ -1148,7 +1251,15 @@ def _get_stock_entry_crate_details(
     t_warehouse=None
 ):
 
-    t_warehouse = t_warehouse or _get_crate_warehouse("Transit")
+    # Match against EVERY transit warehouse in Crate Settings (Table MultiSelect),
+    # unless a specific one is passed in.
+    if t_warehouse:
+        transit_warehouses = [t_warehouse]
+    else:
+        transit_warehouses = _get_crate_warehouses("Transit")
+
+    if not transit_warehouses:
+        return []
 
     crate_uom = (
         frappe.db.get_single_value("Crate Settings", "crate_uom")
@@ -1157,13 +1268,13 @@ def _get_stock_entry_crate_details(
 
     conditions = [
         "se.docstatus = 1",
-        "sed.uom = %(uom)s",
-        "sed.t_warehouse = %(t_warehouse)s"
+        "i.sales_uom = %(uom)s",
+        "sed.t_warehouse in %(t_warehouses)s"
     ]
 
     values = {
         "uom": crate_uom,
-        "t_warehouse": t_warehouse
+        "t_warehouses": tuple(transit_warehouses)
     }
 
     if posting_date:
@@ -1191,10 +1302,13 @@ def _get_stock_entry_crate_details(
                 sed.item_code,
                 sed.item_name,
                 sed.qty,
-                sed.uom
+                sed.uom,
+                sed.conversion_factor
             from `tabStock Entry` se
             inner join `tabStock Entry Detail` sed
                 on sed.parent = se.name
+            inner join `tabItem` i
+                on i.name = sed.item_code
             where {" and ".join(conditions)}
             order by se.name, sed.idx
         """,
@@ -1206,6 +1320,13 @@ def _get_stock_entry_crate_details(
 
     for row in rows:
 
+        # Convert the line (stored in Nos) to whole crates via item factor
+        nos = flt(row.qty) * flt(row.conversion_factor or 1)
+        crates = whole_crates_for_item(row.item_code, nos, crate_uom)
+
+        if not crates:
+            continue
+
         if row.name not in stock_entry_map:
 
             stock_entry_map[row.name] = {
@@ -1216,7 +1337,7 @@ def _get_stock_entry_crate_details(
 
         stock_entry_map[row.name][
             "total_crates"
-        ] += row.qty or 0
+        ] += crates
 
         stock_entry_map[row.name][
             "items"
@@ -1225,7 +1346,7 @@ def _get_stock_entry_crate_details(
             "item_name": row.item_name,
             "qty": row.qty,
             "uom": row.uom,
-            "crates": row.qty
+            "crates": crates
         })
 
     return list(
@@ -1267,9 +1388,14 @@ def get_invoice_details(invoices, posting_date):
 
         for item in doc.items:
 
-            if item.uom == crate_uom:
+            # Crate-item lines are stored in Nos; convert to whole crates
+            # using the item's Crate conversion factor (floor). Remainder = loose.
+            nos = flt(item.qty) * flt(item.conversion_factor or 1)
+            crates = whole_crates_for_item(item.item_code, nos, crate_uom)
 
-                total_crates += item.qty
+            if crates:
+
+                total_crates += crates
 
                 item_rows.append({
 
@@ -1286,7 +1412,7 @@ def get_invoice_details(invoices, posting_date):
                         item.uom,
 
                     "crates":
-                        item.qty
+                        crates
                 })
 
         customer_balance = flt(
@@ -1348,12 +1474,32 @@ def get_stock_entry_query(
 
         filters = json.loads(filters)
 
+    # Match the stock entry's target warehouse against EVERY transit warehouse
+    # configured in Crate Settings (transit_warehouses is a Table MultiSelect).
+    if filters.get("t_warehouse"):
+        transit_warehouses = [filters.get("t_warehouse")]
+    else:
+        transit_warehouses = _get_crate_warehouses("Transit")
+
+    # No transit warehouses configured → nothing to show
+    if not transit_warehouses:
+        return []
+
     return frappe.db.sql(
         """
             select
                 se.name,
                 se.posting_date,
-                se.stock_entry_type
+                se.posting_time,
+                (
+                    select sed2.t_warehouse
+                    from `tabStock Entry Detail` sed2
+                    where
+                        sed2.parent = se.name
+                        and sed2.uom = %(uom)s
+                        and sed2.t_warehouse in %(t_warehouses)s
+                    limit 1
+                ) as to_warehouse
             from `tabStock Entry` se
             where
                 se.docstatus = 1
@@ -1365,17 +1511,14 @@ def get_stock_entry_query(
                     where
                         sed.parent = se.name
                         and sed.uom = %(uom)s
-                        and sed.t_warehouse = %(t_warehouse)s
+                        and sed.t_warehouse in %(t_warehouses)s
                 )
             order by se.posting_date desc, se.name desc
             limit %(start)s, %(page_len)s
         """,
         {
             "posting_date": filters.get("posting_date"),
-            "t_warehouse": (
-                filters.get("t_warehouse")
-                or _get_crate_warehouse("Transit")
-            ),
+            "t_warehouses": tuple(transit_warehouses),
             "uom": (
                 frappe.db.get_single_value("Crate Settings", "crate_uom")
                 or "Crate"

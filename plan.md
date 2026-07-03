@@ -2,8 +2,8 @@
 
 **App:** `dairy`
 **Module:** `dairy` (dairy/dairy/)
-**Status:** Phase 3C + Audit Report + Mobile App Delivery Flow Complete
-**Last Updated:** 2026-06-29
+**Status:** Phase 3C + Audit Report + Mobile Delivery + Warehouse Crates + GPS Capture + Material Gate Pass
+**Last Updated:** 2026-07-02
 
 ---
 
@@ -21,8 +21,29 @@ You must recreate them on prod before running `bench migrate`.
 | 5 | Sales Invoice | `custom_vehicle_movement_log` | Link | Vehicle Movement Log | Customize Form | Links invoice to its dispatch trip. Set at Gate Check via db.set_value. |
 | 6 | Stock Entry | `van_collection_item` | Link | Vehicle Movement Log | Customize Form | Links stock entry to its dispatch trip. Set at Gate Check via db.set_value. |
 | 7 | Sales Invoice | `custom_pickup_log` | Link | Pickup Log | Customize Form | Links invoice to its pickup entry. Set at submit via db.set_value. Read Only, No Copy. |
+| 8 | Warehouse | `custom_crate_section` | Section Break | — | bench console (create_custom_fields) | Collapsible "Crate Balance" section, inserted after `warehouse_name`. |
+| 9 | Warehouse | `custom_crate_balance` | Float | — | bench console (create_custom_fields) | Total crates maintained at the warehouse (e.g. plant pool). Inserted after `custom_crate_section`. |
+| 10 | Warehouse | `custom_crate_type_balances` | Table | Driver Crate Type Balance | bench console (create_custom_fields) | Per-crate-type loose balance for the warehouse. Reuses the Driver child doctype. Inserted after `custom_crate_balance`. |
 
-> **All fields below (rows 1–7) were added via Customize Form / bench console and must be manually recreated on prod BEFORE running bench migrate.**
+> **All fields above (rows 1–10) were added via Customize Form / bench console and must be manually recreated on prod BEFORE running bench migrate.**
+
+**Prod recreation script for rows 8–10 (Warehouse) — run in `bench --site <prod> console`:**
+```python
+from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+create_custom_fields({
+    "Warehouse": [
+        {"fieldname": "custom_crate_section", "label": "Crate Balance",
+         "fieldtype": "Section Break", "insert_after": "warehouse_name", "collapsible": 1},
+        {"fieldname": "custom_crate_balance", "label": "Crate Balance",
+         "fieldtype": "Float", "insert_after": "custom_crate_section",
+         "description": "Total crates maintained at this warehouse."},
+        {"fieldname": "custom_crate_type_balances", "label": "Loose Crate Balances",
+         "fieldtype": "Table", "options": "Driver Crate Type Balance",
+         "insert_after": "custom_crate_balance"},
+    ]
+}, ignore_validate=True)
+frappe.db.commit()
+```
 
 > **How to recreate on prod:** Go to Customize Form → select the Doctype → add field → Save → bench migrate.
 > Fields added via bench console (row 3) must be recreated the same way on prod.
@@ -818,6 +839,132 @@ Completely redesigned. Previous customer/driver section report replaced with:
 
 ---
 
+## Session Changes — 2026-07-02
+
+### Crate Balance Adjustment — Warehouse party + Loose crates
+
+| Change | Detail |
+|---|---|
+| Warehouse party type | Added `Warehouse` as a 3rd Party Type (alongside Customer, Driver). New `warehouse` Link field on the doctype. |
+| Loose crate support | `driver_balance_type` (Invoice Crates / Loose Crate) + `crate_type` fields now shown for **both Driver and Warehouse** (depends_on generalized). Warehouse loose balances stored per crate type. |
+| Warehouse balance storage | Warehouse total → `Warehouse.custom_crate_balance`; loose per-type → `Warehouse.custom_crate_type_balances` (reuses `Driver Crate Type Balance` child doctype). See prod checklist rows 8–10. |
+| Python generalized | `crate_balance_adjustment.py` refactored to a single `PARTY_MAP` handling Customer/Driver/Warehouse uniformly (ledger + master balance + loose helpers). |
+| Current-balance panel | `get_party_crate_balances` + JS now render live balance cards for the selected party (customer single card; driver/warehouse show invoice + per-type loose cards). |
+| Negative balance guard | On submit, an adjustment that pushes any balance below 0 is blocked unless **Crate Settings → Allow Negative Crate Balance** is ticked. |
+| Bug fix — invalid ledger link | Adjustment ledger entries were writing to `crate_delivery` (Link to Crate Delivery) → LinkValidationError. Added dedicated `crate_balance_adjustment` Link field on Customer Crate Ledger and use it. |
+| Bug fix — crate_category | Loose adjustments set `crate_category = "Opening — Loose"` which is not a valid Select option → ValidationError. Now uses valid `"Loose Crate"` category; direction carried by `entry_type` + `crate_type`. |
+
+### Crate Settings
+
+| Change | Detail |
+|---|---|
+| `allow_negative_crate` | New Check field (default 0). When off, Crate Balance Adjustment cannot reduce a balance below zero. |
+
+### Customer Crate Ledger
+
+| Change | Detail |
+|---|---|
+| `crate_balance_adjustment` | New Link field → Crate Balance Adjustment. |
+| `warehouse` | New Link field → Warehouse. |
+| `ledger_type` options | Added "Warehouse". |
+| `crate_category` options | Added "Opening", "Adjustment" (in addition to the earlier Loose Crate/Pickup etc.). |
+
+### Crate Delivery — GPS / Location capture
+
+| Change | Detail |
+|---|---|
+| Location fields | Added `location_source` (Mobile GPS / ERP Manual), `delivery_latitude`, `delivery_longitude`, `location_captured_at`, and a `location_map_html` (Google Maps embed + link) — all in the doctype JSON (auto-migrated). |
+| ERP fallback default | `validate()` defaults `location_source = "ERP Manual"` when not set — used when the dispatch team enters a delivery from the plant/computer because the driver app/phone failed. |
+| Mobile GPS required | `create_crate_delivery` (mobile API) now **requires** `latitude`/`longitude` — throws if missing — and stamps `location_source = "Mobile GPS"`, `location_captured_at`. Refreshes GPS on an existing draft too. |
+| Desk map | `crate_delivery.js` renders a Google Maps embed + "Open in Google Maps" button from the captured lat/long. |
+
+### Material Gate Pass (NEW doctype — dairy/dairy/doctype/)
+
+| Item | Detail |
+|---|---|
+| Purpose | Gate pass for material movement, **separate** from the existing milk-route "Gate Pass" (milk_entry module). |
+| Types | `gate_pass_type`: Inward (supplier) / Transfer (plant→plant/location). `trip_type`: One Way / Return Trip. |
+| Return trip | Return Trip shows a second items table + return gate-entry section (return security guard, returned-at time, accepted/verified by). Status flow Draft → In Transit → Returned → Completed. |
+| Child table | `Material Gate Pass Item` (item, qty, uom, received_qty, remarks). |
+
+### Reports
+
+| Report | Fix |
+|---|---|
+| Assets location details | SQL queried `asset_sn` but the doctype fieldname is `aseet_sn` (typo in field) → `OperationalError`. Report column + SELECT changed to `aseet_sn`. |
+
+### Mobile API (mobile/mobile/api.py)
+
+| Change | Detail |
+|---|---|
+| `get_customer_crate_balance` | Returns logged-in customer's `custom_current_crate_balance`. (Removed wrong `_require("customer")` — customer endpoints use `get_logged_in_customer()` directly.) |
+| `get_customer_crate_ledger` | Returns the customer's crate ledger. Uses `frappe.get_all(..., ignore_permissions=True)` (customers have no read role on Customer Crate Ledger); returns `creation`, `crate_type`, `crate_balance_adjustment` for detailed display. |
+| `create_crate_delivery` | New `latitude`/`longitude` params — required; sets Mobile GPS location fields. |
+
+### Flutter App (bastar_dairy_farm)
+
+| File | Change |
+|---|---|
+| `dashboard_screen.dart` | "Crate Balance" card (taps to ledger) + "Crates" quick-action; overflow fixes. |
+| `crate_ledger_screen.dart` | Full detailed ledger — what it's against, action, trip, date+time, +/- qty, running balance; period filter. |
+| `crate_delivery_form_screen.dart` | Captures GPS (geolocator) before submitting; blocks delivery if location/permission off. |
+| `data_service.dart` | `getCustomerCrateBalance`, `getCustomerCrateLedger` (correct `mobile.api.*` paths); `createCrateDelivery` sends latitude/longitude. |
+| `pubspec.yaml` | Added `geolocator: ^13.0.1`. |
+| `AndroidManifest.xml` | Added `ACCESS_FINE_LOCATION` + `ACCESS_COARSE_LOCATION`. |
+
+### Driver Crate Ledger (full chain view)
+
+| Change | Detail |
+|---|---|
+| `get_driver_crate_ledger` (mobile API) | New endpoint. Pulls every Customer Crate Ledger row where `driver = logged-in driver` and classifies each into the chain: `assigned` (plant→driver, ledger_type=Driver OUT), `to_customer` (delivery OUT), `from_customer` (return IN). Resolves customer names. Works because delivery + return ledgers already store both `driver` and `customer`. |
+| `DriverCrateLedgerScreen` (Flutter, driver/) | New screen — balance card + legend (navy=assigned, red=given, green=returned) + movement list (customer/invoice, trip, date+time, signed qty). |
+| Driver Profile | New "Crates With You" card that opens the driver crate ledger. `data_service.getDriverCrateLedger()` added. |
+
+### VML cancel → cancel linked Crate Deliveries
+
+| Change | Detail |
+|---|---|
+| `_cancel_linked_crate_deliveries` (vehicle_movement_log.py) | When a VML is cancelled/trashed, `_cleanup_crate_entries` now first cancels submitted linked Crate Deliveries (their `on_cancel` self-reverses delivery/return ledgers + master balances and deletes their ledger rows) and deletes draft ones. Runs BEFORE VML-level ledger cleanup to avoid double-reversal. Per-delivery failures are logged via `frappe.log_error`, not fatal. |
+
+### Warehouse crate balance at Crate Delivery + Transit→Warehouse mapping
+
+| Change | Detail |
+|---|---|
+| `Crate Transit Warehouse Map` (NEW child doctype) | Two Link fields: `transit_warehouse`, `warehouse` (linked). Maps a transit warehouse to the warehouse that owns its crate balance. |
+| Crate Settings → `transit_warehouse_map` | New Table field (options `Crate Transit Warehouse Map`) under the Warehouses section. Admin fills the transit→warehouse rows. **Auto-migrated (JSON).** |
+| `_get_mapped_warehouse` (crate_delivery.py) | Resolves the affected warehouse: reads the TRANSIT warehouse from the delivery doc — Stock Entry `to_warehouse` (else first item `t_warehouse`), or Sales Invoice `set_warehouse` — then looks it up in the mapping → uses the LINKED warehouse. Falls back to the transit warehouse itself if unmapped. |
+| Warehouse movement on delivery/return | `_warehouse_movement`: delivery → warehouse `custom_crate_balance` ▼ by crates_delivered; return → ▲ by crates_returned. Each writes a `ledger_type=Warehouse` Customer Crate Ledger row (linked to delivery/invoice/SE/driver/customer/VML) for audit. |
+| Reversal on Crate Delivery cancel | `_reverse_warehouse_movement`: delivery reversal ▲, return reversal ▼. Ledger rows deleted by `crate_delivery`. |
+| Strict reversal on VML cancel | `_cleanup_crate_entries` now also reverses Warehouse-type rows (Step 7) with the OPPOSITE sign (`crates_out − crates_in`) — a safety net for warehouse rows still tied to the VML if a Crate Delivery cancel failed. `warehouse` added to the collected ledger fields. |
+
+### Crate Delivery — stock-entry crate qty + OTP bypass
+
+| Change | Detail |
+|---|---|
+| `get_stock_entry_crate_qty` + `_set_crates_from_stock_entry` (crate_delivery.py) | Selecting a Stock Entry on a Crate Delivery now fetches its crate count (Stock Entry Detail rows with `uom = crate_uom` received into a transit `t_warehouse`) into `invoice_crate_qty` — same as Sales Invoice does. New JS `stock_entry` handler calls it; server-side setter runs in `validate`. Same "delivered ≥ expected" validation applies. |
+| Crate Settings → `allow_otp_bypass` | New Check (default off). Master switch to allow confirming a delivery without OTP. **Auto-migrated (JSON).** |
+| Crate Delivery → `otp_bypassed`, `otp_bypass_reason` | New audit fields (read-only). Record that a delivery skipped OTP and why. **Auto-migrated (JSON).** |
+| `bypass_delivery_otp` (crate_delivery.py) | Whitelisted. Gated by `allow_otp_bypass` + requires a reason (both enforced server-side). Sets `customer_confirmed`, `otp_bypassed`, reason; runs the same ledger flow as `verify_delivery_otp`. |
+| ERP "Bypass OTP" button (crate_delivery.js) | Red button on submitted, unconfirmed deliveries — shown only when `allow_otp_bypass` is on. Prompts for reason → confirm → calls `bypass_delivery_otp`. **ERPNext only — not in the mobile app.** |
+
+### Order / Invoice item display (image + UOM)
+
+| Change | Detail |
+|---|---|
+| `get_order_details` (mobile API) | Item rows now include `uom`. |
+| `get_invoice_details` (mobile API) | Item rows now include `uom` **and** `image` (invoice items had no image before). |
+| Review Order, Order Details, Invoice Details (Flutter) | Show item image + UOM in the qty line (e.g. `6 Crate × ₹600`). |
+
+### Flutter — file structure & login/order screens
+
+| Change | Detail |
+|---|---|
+| `lib/screens/` reorganized | 24 flat screen files moved into domain folders: `auth/`, `customer/`, `driver/`, `dispatch/`, `production/`, `master/`, `hr/`. All intra-app imports normalized to `package:bastar_dairy_farm/...` (location-independent). |
+| `login_screen.dart` | Redesigned — animated gradient bg + floating glass orbs, glassmorphism form, staggered entrance, focus-aware inputs, gradient button, validators. |
+| `order_placing_screen.dart` (Review Order) | Redesigned with `CustomAppBar` (app theme), delivery-preference cards, item cards with image + UOM, bill details, gradient place-order button with MOQ guard. |
+
+---
+
 ## Fields Added via Code (auto-migrated — no manual step on prod)
 
 These were added to doctype JSON files and will apply automatically on `bench migrate`:
@@ -827,3 +974,11 @@ These were added to doctype JSON files and will apply automatically on `bench mi
 | Crate Delivery | `otp_phone_override` | Data (Phone) | Allow on submit. Override number for OTP sending. |
 | Vehicle Invoice Crate Detail | `balance_crate` label changed | — | Label changed to "Customer Balance"; now read_only; shows customer's current crate balance |
 | Customer Crate Ledger | `entry_type` options | — | Added "Opening" and "Adjustment" options |
+| Customer Crate Ledger | `crate_balance_adjustment` | Link (Crate Balance Adjustment) | Links ledger entry to its adjustment doc |
+| Customer Crate Ledger | `warehouse` | Link (Warehouse) | Warehouse party on the ledger |
+| Customer Crate Ledger | `ledger_type` options | — | Added "Warehouse" |
+| Customer Crate Ledger | `crate_category` options | — | Added "Opening", "Adjustment" |
+| Crate Settings | `allow_negative_crate` | Check | Allow adjustments below zero |
+| Crate Balance Adjustment | `warehouse`, `driver_balance_type`, `crate_type`, balance HTML | mixed | Warehouse + loose crate support |
+| Crate Delivery | `location_source`, `delivery_latitude`, `delivery_longitude`, `location_captured_at`, `location_map_html` | mixed | Delivery GPS capture |
+| Material Gate Pass + Material Gate Pass Item | (new doctypes) | — | Material/transfer gate pass with one-way/return trips |

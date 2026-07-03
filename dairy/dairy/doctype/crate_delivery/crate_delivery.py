@@ -16,11 +16,20 @@ class CrateDelivery(Document):
 
         self._set_customer_from_invoice()
 
+        self._set_crates_from_stock_entry()
+
         self._refresh_customer_balance()
 
         self._validate_crates_delivered()
 
         self._validate_crates_returned()
+
+        self._set_location_source()
+
+    def _set_location_source(self):
+        """Default location source to ERP Manual when not captured from mobile GPS."""
+        if not self.location_source:
+            self.location_source = "ERP Manual"
 
     # =========================================================
     # ON SUBMIT
@@ -105,24 +114,18 @@ class CrateDelivery(Document):
         if not self.actual_customer:
             self.actual_customer = customer
 
-        crate_uom = (
-            frappe.db.get_single_value("Crate Settings", "crate_uom")
-            or "Crate"
-        )
+        self.invoice_crate_qty = flt(get_invoice_crate_qty(self.sales_invoice))
 
-        result = frappe.db.sql(
-            """
-                SELECT COALESCE(SUM(qty), 0)
-                FROM `tabSales Invoice Item`
-                WHERE parent = %s
-                  AND uom = %s
-            """,
-            (self.sales_invoice, crate_uom)
-        )
+    def _set_crates_from_stock_entry(self):
+        """
+        For stock-entry deliveries, set invoice_crate_qty = whole crates received
+        into transit on the Stock Entry (same count the VML uses).
+        """
 
-        self.invoice_crate_qty = flt(
-            result[0][0] if result else 0
-        )
+        if not self.stock_entry:
+            return
+
+        self.invoice_crate_qty = flt(get_stock_entry_crate_qty(self.stock_entry))
 
     def _validate_crates_delivered(self):
         """
@@ -206,60 +209,68 @@ class CrateDelivery(Document):
         Flaw 5: uses actual_customer, not customer — handles redirect case.
         """
 
-        # Idempotency guard
+        # Idempotency guard — any OUT row already created for this delivery
         if frappe.db.exists(
             "Customer Crate Ledger",
             {
                 "crate_delivery": self.name,
-                "entry_type": "OUT",
-                "ledger_type": "Customer"
+                "entry_type": "OUT"
             }
         ):
             return
 
-        current_balance = flt(
-            frappe.db.get_value(
+        # Customer ledger + balance — ONLY for customer (invoice) deliveries.
+        # Stock-entry deliveries have no customer; those crates are tracked via
+        # the Driver + Warehouse movements below, not a Customer ledger row.
+        if self.actual_customer:
+
+            current_balance = flt(
+                frappe.db.get_value(
+                    "Customer",
+                    self.actual_customer,
+                    "custom_current_crate_balance"
+                )
+            )
+
+            new_customer_balance = current_balance + self.crates_delivered
+
+            ledger = frappe.new_doc("Customer Crate Ledger")
+
+            ledger.posting_date = self.date
+
+            ledger.ledger_type = "Customer"
+
+            ledger.driver = self.driver
+
+            ledger.customer = self.actual_customer
+
+            ledger.sales_invoice = self.sales_invoice
+
+            ledger.stock_entry = self.stock_entry
+
+            ledger.crate_category = "Stock Entry" if self.stock_entry else "Sales Invoice"
+
+            ledger.vehicle_movement_log = self.vehicle_movement_log
+
+            ledger.crate_delivery = self.name
+
+            ledger.crates_out = self.crates_delivered
+
+            ledger.crates_in = 0
+
+            ledger.balance_crates = new_customer_balance
+
+            ledger.entry_type = "OUT"
+
+            ledger.insert(ignore_permissions=True)
+
+            # Customer balance UP
+            frappe.db.set_value(
                 "Customer",
                 self.actual_customer,
-                "custom_current_crate_balance"
+                "custom_current_crate_balance",
+                new_customer_balance
             )
-        )
-
-        new_customer_balance = current_balance + self.crates_delivered
-
-        ledger = frappe.new_doc("Customer Crate Ledger")
-
-        ledger.posting_date = self.date
-
-        ledger.ledger_type = "Customer"
-
-        ledger.driver = self.driver
-
-        ledger.customer = self.actual_customer
-
-        ledger.sales_invoice = self.sales_invoice
-
-        ledger.vehicle_movement_log = self.vehicle_movement_log
-
-        ledger.crate_delivery = self.name
-
-        ledger.crates_out = self.crates_delivered
-
-        ledger.crates_in = 0
-
-        ledger.balance_crates = new_customer_balance
-
-        ledger.entry_type = "OUT"
-
-        ledger.insert(ignore_permissions=True)
-
-        # Customer balance UP
-        frappe.db.set_value(
-            "Customer",
-            self.actual_customer,
-            "custom_current_crate_balance",
-            new_customer_balance
-        )
 
         # Driver invoice balance DOWN
         current_driver_balance = flt(
@@ -276,6 +287,9 @@ class CrateDelivery(Document):
             "custom_invoice_crate_balance",
             max(0, current_driver_balance - self.crates_delivered)
         )
+
+        # Warehouse balance DOWN by crates delivered
+        self._warehouse_movement(out_qty=self.crates_delivered, entry_type="OUT")
 
     # =========================================================
     # SUBMIT — RETURN LEDGER (Customer → Driver)
@@ -296,60 +310,66 @@ class CrateDelivery(Document):
         if not self.crates_returned:
             return
 
-        # Idempotency guard
+        # Idempotency guard — any IN row already created for this delivery
         if frappe.db.exists(
             "Customer Crate Ledger",
             {
                 "crate_delivery": self.name,
-                "entry_type": "IN",
-                "ledger_type": "Customer"
+                "entry_type": "IN"
             }
         ):
             return
 
-        current_balance = flt(
-            frappe.db.get_value(
+        # Customer ledger + balance — ONLY for customer (invoice) deliveries.
+        if self.actual_customer:
+
+            current_balance = flt(
+                frappe.db.get_value(
+                    "Customer",
+                    self.actual_customer,
+                    "custom_current_crate_balance"
+                )
+            )
+
+            new_customer_balance = current_balance - self.crates_returned
+
+            ledger = frappe.new_doc("Customer Crate Ledger")
+
+            ledger.posting_date = self.date
+
+            ledger.ledger_type = "Customer"
+
+            ledger.driver = self.driver
+
+            ledger.customer = self.actual_customer
+
+            ledger.sales_invoice = self.sales_invoice
+
+            ledger.stock_entry = self.stock_entry
+
+            ledger.crate_category = "Stock Entry" if self.stock_entry else "Sales Invoice"
+
+            ledger.vehicle_movement_log = self.vehicle_movement_log
+
+            ledger.crate_delivery = self.name
+
+            ledger.crates_out = 0
+
+            ledger.crates_in = self.crates_returned
+
+            ledger.balance_crates = new_customer_balance
+
+            ledger.entry_type = "IN"
+
+            ledger.insert(ignore_permissions=True)
+
+            # Customer balance DOWN
+            frappe.db.set_value(
                 "Customer",
                 self.actual_customer,
-                "custom_current_crate_balance"
+                "custom_current_crate_balance",
+                new_customer_balance
             )
-        )
-
-        new_customer_balance = current_balance - self.crates_returned
-
-        ledger = frappe.new_doc("Customer Crate Ledger")
-
-        ledger.posting_date = self.date
-
-        ledger.ledger_type = "Customer"
-
-        ledger.driver = self.driver
-
-        ledger.customer = self.actual_customer
-
-        ledger.sales_invoice = self.sales_invoice
-
-        ledger.vehicle_movement_log = self.vehicle_movement_log
-
-        ledger.crate_delivery = self.name
-
-        ledger.crates_out = 0
-
-        ledger.crates_in = self.crates_returned
-
-        ledger.balance_crates = new_customer_balance
-
-        ledger.entry_type = "IN"
-
-        ledger.insert(ignore_permissions=True)
-
-        # Customer balance DOWN
-        frappe.db.set_value(
-            "Customer",
-            self.actual_customer,
-            "custom_current_crate_balance",
-            new_customer_balance
-        )
 
         # Driver invoice balance UP (driver holds these crates until back at plant)
         current_driver_balance = flt(
@@ -367,6 +387,9 @@ class CrateDelivery(Document):
             current_driver_balance + self.crates_returned
         )
 
+        # Warehouse balance UP by crates returned
+        self._warehouse_movement(in_qty=self.crates_returned, entry_type="IN")
+
     # =========================================================
     # CANCEL — REVERSE DELIVERY
     # =========================================================
@@ -378,20 +401,21 @@ class CrateDelivery(Document):
           Driver.custom_invoice_crate_balance    UP by crates_delivered
         """
 
-        current_balance = flt(
-            frappe.db.get_value(
+        if self.actual_customer:
+            current_balance = flt(
+                frappe.db.get_value(
+                    "Customer",
+                    self.actual_customer,
+                    "custom_current_crate_balance"
+                )
+            )
+
+            frappe.db.set_value(
                 "Customer",
                 self.actual_customer,
-                "custom_current_crate_balance"
+                "custom_current_crate_balance",
+                current_balance - self.crates_delivered
             )
-        )
-
-        frappe.db.set_value(
-            "Customer",
-            self.actual_customer,
-            "custom_current_crate_balance",
-            current_balance - self.crates_delivered
-        )
 
         current_driver_balance = flt(
             frappe.db.get_value(
@@ -408,6 +432,9 @@ class CrateDelivery(Document):
             current_driver_balance + self.crates_delivered
         )
 
+        # Warehouse balance back UP by crates delivered
+        self._reverse_warehouse_movement(out_qty=self.crates_delivered)
+
     # =========================================================
     # CANCEL — REVERSE RETURN
     # =========================================================
@@ -422,20 +449,21 @@ class CrateDelivery(Document):
         if not self.crates_returned:
             return
 
-        current_balance = flt(
-            frappe.db.get_value(
+        if self.actual_customer:
+            current_balance = flt(
+                frappe.db.get_value(
+                    "Customer",
+                    self.actual_customer,
+                    "custom_current_crate_balance"
+                )
+            )
+
+            frappe.db.set_value(
                 "Customer",
                 self.actual_customer,
-                "custom_current_crate_balance"
+                "custom_current_crate_balance",
+                current_balance + self.crates_returned
             )
-        )
-
-        frappe.db.set_value(
-            "Customer",
-            self.actual_customer,
-            "custom_current_crate_balance",
-            current_balance + self.crates_returned
-        )
 
         current_driver_balance = flt(
             frappe.db.get_value(
@@ -451,6 +479,104 @@ class CrateDelivery(Document):
             "custom_invoice_crate_balance",
             max(0, current_driver_balance - self.crates_returned)
         )
+
+        # Warehouse balance back DOWN by crates returned
+        self._reverse_warehouse_movement(in_qty=self.crates_returned)
+
+    # =========================================================
+    # WAREHOUSE CRATE BALANCE
+    # =========================================================
+
+    def _get_mapped_warehouse(self):
+        """
+        Resolve the warehouse whose crate balance this delivery affects.
+
+          1. Read the TRANSIT warehouse from the delivery's own document:
+               - Stock Entry  → to_warehouse (else first item's t_warehouse)
+               - Sales Invoice → set_warehouse
+          2. Look that transit warehouse up in
+             Crate Settings → Transit → Warehouse Mapping.
+             If a row maps it, use the LINKED warehouse.
+          3. If no mapping exists, fall back to the transit warehouse itself.
+
+        Returns None if no warehouse can be determined.
+        """
+        transit = None
+
+        if self.stock_entry:
+            transit = frappe.db.get_value("Stock Entry", self.stock_entry, "to_warehouse")
+            if not transit:
+                transit = frappe.db.get_value(
+                    "Stock Entry Detail",
+                    {"parent": self.stock_entry, "t_warehouse": ["is", "set"]},
+                    "t_warehouse"
+                )
+        elif self.sales_invoice:
+            transit = frappe.db.get_value("Sales Invoice", self.sales_invoice, "set_warehouse")
+
+        if not transit:
+            return None
+
+        # Look up the transit → warehouse mapping in Crate Settings
+        mapped = frappe.db.get_value(
+            "Crate Transit Warehouse Map",
+            {"parenttype": "Crate Settings", "transit_warehouse": transit},
+            "warehouse"
+        )
+
+        return mapped or transit
+
+    def _warehouse_movement(self, out_qty=0, in_qty=0, entry_type="OUT"):
+        """
+        Apply a crate movement to the mapped warehouse and log it.
+          OUT (delivery) → warehouse balance DOWN
+          IN  (return)   → warehouse balance UP
+        Writes a Warehouse-type Customer Crate Ledger row for traceability.
+        Skipped silently if no warehouse can be resolved or qty is zero.
+        """
+        if not (flt(out_qty) or flt(in_qty)):
+            return
+
+        warehouse = self._get_mapped_warehouse()
+        if not warehouse:
+            return
+
+        delta = flt(out_qty) - flt(in_qty)   # positive = leaving the warehouse
+        current = flt(frappe.db.get_value("Warehouse", warehouse, "custom_crate_balance"))
+        new_balance = current - delta
+
+        ledger = frappe.new_doc("Customer Crate Ledger")
+        ledger.posting_date         = self.date
+        ledger.ledger_type          = "Warehouse"
+        ledger.warehouse            = warehouse
+        ledger.driver               = self.driver
+        ledger.customer             = self.actual_customer
+        ledger.sales_invoice        = self.sales_invoice
+        ledger.stock_entry          = self.stock_entry
+        ledger.vehicle_movement_log = self.vehicle_movement_log
+        ledger.crate_delivery       = self.name
+        ledger.crate_category       = "Stock Entry" if self.stock_entry else "Sales Invoice"
+        ledger.crates_out           = flt(out_qty)
+        ledger.crates_in            = flt(in_qty)
+        ledger.balance_crates       = new_balance
+        ledger.entry_type           = entry_type
+        ledger.insert(ignore_permissions=True)
+
+        frappe.db.set_value("Warehouse", warehouse, "custom_crate_balance", new_balance)
+
+    def _reverse_warehouse_movement(self, out_qty=0, in_qty=0):
+        """Reverse the balance effect on the mapped warehouse (on cancel).
+        Ledger rows are deleted separately in on_cancel (by crate_delivery)."""
+        if not (flt(out_qty) or flt(in_qty)):
+            return
+
+        warehouse = self._get_mapped_warehouse()
+        if not warehouse:
+            return
+
+        delta = flt(out_qty) - flt(in_qty)   # was subtracted on create → add back
+        current = flt(frappe.db.get_value("Warehouse", warehouse, "custom_crate_balance"))
+        frappe.db.set_value("Warehouse", warehouse, "custom_crate_balance", current + delta)
 
 
 # =============================================================
@@ -507,24 +633,58 @@ def get_available_stock_entries_for_cd(doctype, txt, searchfield, start, page_le
 
 @frappe.whitelist()
 def get_invoice_crate_qty(sales_invoice):
-    """Return total crate qty from a Sales Invoice (uses Crate Settings UOM)."""
+    """Whole crates on a Sales Invoice for Crate-items (floor of nos / crate factor)."""
+
+    from dairy.dairy.doctype.vehicle_movement_log.vehicle_movement_log import (
+        whole_crates_for_item,
+    )
 
     crate_uom = (
         frappe.db.get_single_value("Crate Settings", "crate_uom")
         or "Crate"
     )
 
-    result = frappe.db.sql(
+    rows = frappe.db.sql(
         """
-            SELECT COALESCE(SUM(qty), 0)
+            SELECT item_code, SUM(qty * conversion_factor) AS nos
             FROM `tabSales Invoice Item`
             WHERE parent = %s
-              AND uom = %s
+            GROUP BY item_code
         """,
-        (sales_invoice, crate_uom)
+        (sales_invoice,),
+        as_dict=True
     )
 
-    return flt(result[0][0]) if result else 0
+    return sum(whole_crates_for_item(r.item_code, r.nos, crate_uom) for r in rows)
+
+
+@frappe.whitelist()
+def get_stock_entry_crate_qty(stock_entry):
+    """Whole crates on a Stock Entry for Crate-items received into a transit
+    warehouse (floor of nos / crate factor)."""
+
+    from dairy.dairy.doctype.vehicle_movement_log.vehicle_movement_log import (
+        whole_crates_for_item,
+    )
+
+    crate_uom = (
+        frappe.db.get_single_value("Crate Settings", "crate_uom")
+        or "Crate"
+    )
+
+    rows = frappe.db.sql(
+        """
+            SELECT item_code, SUM(qty * conversion_factor) AS nos
+            FROM `tabStock Entry Detail`
+            WHERE parent = %s
+              AND IFNULL(t_warehouse, '') != ''
+            GROUP BY item_code
+        """,
+        (stock_entry,),
+        as_dict=True
+    )
+
+    return sum(whole_crates_for_item(r.item_code, r.nos, crate_uom) for r in rows)
 
 
 # =============================================================
@@ -674,6 +834,40 @@ def verify_delivery_otp(crate_delivery_name, otp):
         cd._create_return_ledger()
 
     return {"confirmed": 1}
+
+
+@frappe.whitelist()
+def bypass_delivery_otp(crate_delivery_name, reason=None):
+    """
+    Confirm a delivery WITHOUT OTP (e.g. customer unreachable).
+    Gated by Crate Settings → Allow OTP Bypass. A reason is required and recorded.
+    Triggers the same ledger flow as verify_delivery_otp.
+    """
+
+    if not frappe.db.get_single_value("Crate Settings", "allow_otp_bypass"):
+        frappe.throw("OTP bypass is not enabled. Enable it in Crate Settings.")
+
+    reason = (reason or "").strip()
+    if not reason:
+        frappe.throw("A reason is required to bypass OTP.")
+
+    frappe.db.set_value("Crate Delivery", crate_delivery_name, {
+        "customer_confirmed": 1,
+        "otp_bypassed": 1,
+        "otp_bypass_reason": reason,
+        "otp": "",
+        "otp_expiry": None,
+    })
+    frappe.db.commit()
+
+    cd = frappe.get_doc("Crate Delivery", crate_delivery_name)
+    if cd.docstatus == 0:
+        cd.submit()
+    elif cd.docstatus == 1:
+        cd._create_delivery_ledger()
+        cd._create_return_ledger()
+
+    return {"confirmed": 1, "bypassed": 1}
 
 
 # =============================================================

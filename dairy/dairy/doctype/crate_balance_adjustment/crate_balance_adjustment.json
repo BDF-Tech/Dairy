@@ -9,6 +9,7 @@
   "party_type",
   "customer",
   "driver",
+  "warehouse",
   "date",
   "col_break_1",
   "entry_type",
@@ -32,7 +33,7 @@
    "fieldname": "party_type",
    "fieldtype": "Select",
    "label": "Party Type",
-   "options": "\nCustomer\nDriver",
+   "options": "\nCustomer\nDriver\nWarehouse",
    "reqd": 1,
    "in_list_view": 1
   },
@@ -52,6 +53,15 @@
    "options": "Driver",
    "depends_on": "eval:doc.party_type=='Driver'",
    "mandatory_depends_on": "eval:doc.party_type=='Driver'",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "depends_on": "eval:doc.party_type=='Warehouse'",
+   "mandatory_depends_on": "eval:doc.party_type=='Warehouse'",
    "in_list_view": 1
   },
   {
@@ -79,8 +89,8 @@
    "fieldtype": "Select",
    "label": "Balance Type",
    "options": "\nInvoice Crates\nLoose Crate",
-   "depends_on": "eval:doc.party_type=='Driver'",
-   "mandatory_depends_on": "eval:doc.party_type=='Driver'",
+   "depends_on": "eval:['Driver','Warehouse'].includes(doc.party_type)",
+   "mandatory_depends_on": "eval:['Driver','Warehouse'].includes(doc.party_type)",
    "description": "Invoice Crates = crates assigned via invoices/stock entries. Loose Crate = per crate type balance."
   },
   {
@@ -88,8 +98,8 @@
    "fieldtype": "Link",
    "label": "Crate Type",
    "options": "Crate Type",
-   "depends_on": "eval:doc.party_type=='Driver' && doc.driver_balance_type=='Loose Crate'",
-   "mandatory_depends_on": "eval:doc.party_type=='Driver' && doc.driver_balance_type=='Loose Crate'"
+   "depends_on": "eval:['Driver','Warehouse'].includes(doc.party_type) && doc.driver_balance_type=='Loose Crate'",
+   "mandatory_depends_on": "eval:['Driver','Warehouse'].includes(doc.party_type) && doc.driver_balance_type=='Loose Crate'"
   },
   {
    "fieldname": "crates",
@@ -108,7 +118,7 @@
    "fieldname": "balance_section",
    "fieldtype": "Section Break",
    "label": "Current Balance",
-   "depends_on": "eval:doc.party_type && (doc.customer || doc.driver)"
+   "depends_on": "eval:doc.party_type && (doc.customer || doc.driver || doc.warehouse)"
   },
   {
    "fieldname": "current_balance_html",

@@ -8,6 +8,7 @@
  "field_order": [
   "identity_section",
   "date_and_time",
+  "shift",
   "vehicle",
   "column_break_foxt",
   "route",
@@ -76,6 +77,14 @@
    "fieldtype": "Data",
    "label": "Purpose",
    "read_only": 1
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "label": "Shift",
+   "options": "\nMorning\nEvening",
+   "in_list_view": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "crew_assignment_section",

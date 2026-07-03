@@ -2,6 +2,11 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
     refresh(frm) {
 
+        // Only allow Active drivers to be selected
+        frm.set_query("driver", function() {
+            return { filters: { status: "Active" } };
+        });
+
         const isVehicleReturned =
             frm.doc.workflow_state === "Vehicle Returned";
 
@@ -347,7 +352,9 @@ frappe.ui.form.on("Vehicle Movement Log", {
 
                         "posting_date",
 
-                        "stock_entry_type"
+                        "posting_time",
+
+                        "to_warehouse"
                     ],
 
                     get_query() {
