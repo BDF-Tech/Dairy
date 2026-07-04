@@ -34,6 +34,28 @@ frappe.ui.form.on('Crate Delivery', {
             };
         });
 
+        // Recovery: confirmed delivery whose ledger is missing → offer regenerate
+        if (frm.doc.docstatus === 1 && frm.doc.customer_confirmed) {
+            frappe.db.count('Customer Crate Ledger', {
+                filters: { crate_delivery: frm.doc.name, entry_type: 'OUT' }
+            }).then(function(count) {
+                if (count > 0) return;   // ledger already present
+                frm.add_custom_button(__('Generate Crate Ledger'), function() {
+                    frappe.call({
+                        method: 'dairy.dairy.doctype.crate_delivery.crate_delivery.regenerate_delivery_ledger',
+                        args: { crate_delivery_name: frm.doc.name },
+                        freeze: true,
+                        callback: function(r) {
+                            if (r.message && r.message.created) {
+                                frappe.show_alert({ message: __('Crate ledger generated'), indicator: 'green' });
+                                frm.reload_doc();
+                            }
+                        }
+                    });
+                }).addClass('btn-warning');
+            });
+        }
+
         // OTP flow — only on submitted, unconfirmed docs
         if (frm.doc.docstatus === 1 && !frm.doc.customer_confirmed) {
 

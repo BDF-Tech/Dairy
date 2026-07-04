@@ -196,6 +196,7 @@ doc_events = {
         # "after_insert": "dairy.milk_entry.custom_sales_invoice.calculate_crate"
     },
     "Stock Entry":{
+        "before_validate": "dairy.milk_entry.custom_stock_entry.clear_inherited_transit_links",
         "after_insert": ["dairy.milk_entry.doctype.van_collection.van_collection.change_van_collection_status",
                          "dairy.milk_entry.custom_stock_entry.milk_ledger_stock_entry"],
         "before_save":[ "dairy.milk_entry.custom_stock_entry.milk_ledger_stock_entry"

@@ -489,42 +489,34 @@ class CrateDelivery(Document):
 
     def _get_mapped_warehouse(self):
         """
-        Resolve the warehouse whose crate balance this delivery affects.
+        Warehouse crate movement applies ONLY to stock-entry deliveries, and
+        ONLY when the stock entry's transit (target) warehouse is explicitly
+        mapped in Crate Settings → Transit → Warehouse Mapping.
 
-          1. Read the TRANSIT warehouse from the delivery's own document:
-               - Stock Entry  → to_warehouse (else first item's t_warehouse)
-               - Sales Invoice → set_warehouse
-          2. Look that transit warehouse up in
-             Crate Settings → Transit → Warehouse Mapping.
-             If a row maps it, use the LINKED warehouse.
-          3. If no mapping exists, fall back to the transit warehouse itself.
-
-        Returns None if no warehouse can be determined.
+          - Invoice deliveries        → None (no warehouse movement).
+          - Stock entry, no mapping   → None (no warehouse movement).
+          - Stock entry, mapped       → the LINKED warehouse.
         """
-        transit = None
+        if not self.stock_entry:
+            return None
 
-        if self.stock_entry:
-            transit = frappe.db.get_value("Stock Entry", self.stock_entry, "to_warehouse")
-            if not transit:
-                transit = frappe.db.get_value(
-                    "Stock Entry Detail",
-                    {"parent": self.stock_entry, "t_warehouse": ["is", "set"]},
-                    "t_warehouse"
-                )
-        elif self.sales_invoice:
-            transit = frappe.db.get_value("Sales Invoice", self.sales_invoice, "set_warehouse")
+        transit = frappe.db.get_value("Stock Entry", self.stock_entry, "to_warehouse")
+        if not transit:
+            transit = frappe.db.get_value(
+                "Stock Entry Detail",
+                {"parent": self.stock_entry, "t_warehouse": ["is", "set"]},
+                "t_warehouse"
+            )
 
         if not transit:
             return None
 
-        # Look up the transit → warehouse mapping in Crate Settings
-        mapped = frappe.db.get_value(
+        # Only act if this transit warehouse is explicitly mapped. No fallback.
+        return frappe.db.get_value(
             "Crate Transit Warehouse Map",
             {"parenttype": "Crate Settings", "transit_warehouse": transit},
             "warehouse"
         )
-
-        return mapped or transit
 
     def _warehouse_movement(self, out_qty=0, in_qty=0, entry_type="OUT"):
         """
@@ -817,23 +809,48 @@ def verify_delivery_otp(crate_delivery_name, otp):
     if str(otp).strip() != str(doc.otp).strip():
         frappe.throw("Incorrect OTP. Please try again.")
 
-    frappe.db.set_value("Crate Delivery", crate_delivery_name, {
-        "customer_confirmed": 1,
-        "otp": "",
-        "otp_expiry": None,
-    })
-    frappe.db.commit()
-
     cd = frappe.get_doc("Crate Delivery", crate_delivery_name)
+
     if cd.docstatus == 0:
-        # Mobile flow: draft → submit now, on_submit will create ledger
+        # Mobile flow: mark confirmed + submit in ONE transaction. on_submit
+        # creates the ledger; if it fails, everything (incl. confirmation)
+        # rolls back so the OTP can be retried.
+        cd.customer_confirmed = 1
+        cd.otp = ""
+        cd.otp_expiry = None
         cd.submit()
-    elif cd.docstatus == 1:
-        # ERP flow: already submitted before OTP, create ledger now
+    else:
+        # ERP flow: already submitted. Create the ledger FIRST — only mark
+        # confirmed once it succeeds, so a failure leaves it retryable.
         cd._create_delivery_ledger()
         cd._create_return_ledger()
+        frappe.db.set_value("Crate Delivery", crate_delivery_name, {
+            "customer_confirmed": 1,
+            "otp": "",
+            "otp_expiry": None,
+        })
 
     return {"confirmed": 1}
+
+
+@frappe.whitelist()
+def regenerate_delivery_ledger(crate_delivery_name):
+    """
+    Recovery for deliveries that were confirmed but whose ledger failed to
+    create (e.g. an earlier error after customer_confirmed was already set).
+    Idempotent — the ledger methods skip if rows already exist.
+    """
+    cd = frappe.get_doc("Crate Delivery", crate_delivery_name)
+
+    if cd.docstatus != 1:
+        frappe.throw("Delivery must be submitted to (re)generate its ledger.")
+    if not cd.customer_confirmed:
+        frappe.throw("Delivery is not confirmed yet.")
+
+    cd._create_delivery_ledger()
+    cd._create_return_ledger()
+
+    return {"created": 1}
 
 
 @frappe.whitelist()
@@ -851,21 +868,27 @@ def bypass_delivery_otp(crate_delivery_name, reason=None):
     if not reason:
         frappe.throw("A reason is required to bypass OTP.")
 
-    frappe.db.set_value("Crate Delivery", crate_delivery_name, {
-        "customer_confirmed": 1,
-        "otp_bypassed": 1,
-        "otp_bypass_reason": reason,
-        "otp": "",
-        "otp_expiry": None,
-    })
-    frappe.db.commit()
-
     cd = frappe.get_doc("Crate Delivery", crate_delivery_name)
+
     if cd.docstatus == 0:
+        # Mark confirmed + submit in one transaction (rolls back on failure)
+        cd.customer_confirmed = 1
+        cd.otp_bypassed = 1
+        cd.otp_bypass_reason = reason
+        cd.otp = ""
+        cd.otp_expiry = None
         cd.submit()
-    elif cd.docstatus == 1:
+    else:
+        # Already submitted: create ledger first, confirm only on success
         cd._create_delivery_ledger()
         cd._create_return_ledger()
+        frappe.db.set_value("Crate Delivery", crate_delivery_name, {
+            "customer_confirmed": 1,
+            "otp_bypassed": 1,
+            "otp_bypass_reason": reason,
+            "otp": "",
+            "otp_expiry": None,
+        })
 
     return {"confirmed": 1, "bypassed": 1}
 
