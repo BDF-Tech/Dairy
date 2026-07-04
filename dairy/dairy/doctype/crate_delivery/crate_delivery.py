@@ -487,6 +487,19 @@ class CrateDelivery(Document):
     # WAREHOUSE CRATE BALANCE
     # =========================================================
 
+    def _get_stock_entry_transit_warehouse(self):
+        """Transit (target) warehouse of the delivery's Stock Entry, or None."""
+        if not self.stock_entry:
+            return None
+        transit = frappe.db.get_value("Stock Entry", self.stock_entry, "to_warehouse")
+        if not transit:
+            transit = frappe.db.get_value(
+                "Stock Entry Detail",
+                {"parent": self.stock_entry, "t_warehouse": ["is", "set"]},
+                "t_warehouse"
+            )
+        return transit
+
     def _get_mapped_warehouse(self):
         """
         Warehouse crate movement applies ONLY to stock-entry deliveries, and
@@ -497,17 +510,7 @@ class CrateDelivery(Document):
           - Stock entry, no mapping   → None (no warehouse movement).
           - Stock entry, mapped       → the LINKED warehouse.
         """
-        if not self.stock_entry:
-            return None
-
-        transit = frappe.db.get_value("Stock Entry", self.stock_entry, "to_warehouse")
-        if not transit:
-            transit = frappe.db.get_value(
-                "Stock Entry Detail",
-                {"parent": self.stock_entry, "t_warehouse": ["is", "set"]},
-                "t_warehouse"
-            )
-
+        transit = self._get_stock_entry_transit_warehouse()
         if not transit:
             return None
 
@@ -531,6 +534,16 @@ class CrateDelivery(Document):
 
         warehouse = self._get_mapped_warehouse()
         if not warehouse:
+            # Stock-entry delivery whose transit warehouse has no mapping →
+            # block the submit so it can't post crates against an unknown warehouse.
+            transit = self._get_stock_entry_transit_warehouse()
+            if transit:
+                frappe.throw(
+                    f"No mapped warehouse found in Crate Settings for transit "
+                    f"warehouse <b>{transit}</b>. Add a Transit → Warehouse mapping "
+                    f"in Crate Settings before submitting this delivery.",
+                    title="Mapped Warehouse Not Found",
+                )
             return
 
         delta = flt(out_qty) - flt(in_qty)   # positive = leaving the warehouse
