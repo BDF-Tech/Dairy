@@ -546,9 +546,11 @@ class CrateDelivery(Document):
                 )
             return
 
-        delta = flt(out_qty) - flt(in_qty)   # positive = leaving the warehouse
+        # Stock-entry delivery = crates ARRIVE at the mapped depot warehouse:
+        #   delivery → warehouse UP by out_qty ; return → warehouse DOWN by in_qty
+        delta = flt(out_qty) - flt(in_qty)
         current = flt(frappe.db.get_value("Warehouse", warehouse, "custom_crate_balance"))
-        new_balance = current - delta
+        new_balance = current + delta
 
         ledger = frappe.new_doc("Customer Crate Ledger")
         ledger.posting_date         = self.date
@@ -579,9 +581,9 @@ class CrateDelivery(Document):
         if not warehouse:
             return
 
-        delta = flt(out_qty) - flt(in_qty)   # was subtracted on create → add back
+        delta = flt(out_qty) - flt(in_qty)   # was ADDED on create → subtract back
         current = flt(frappe.db.get_value("Warehouse", warehouse, "custom_crate_balance"))
-        frappe.db.set_value("Warehouse", warehouse, "custom_crate_balance", current + delta)
+        frappe.db.set_value("Warehouse", warehouse, "custom_crate_balance", current - delta)
 
 
 # =============================================================

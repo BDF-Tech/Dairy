@@ -297,11 +297,12 @@ class VehicleMovementLog(Document):
 
             elif e.ledger_type == "Warehouse" and e.warehouse:
 
-                # Warehouse balance was reduced by (out - in) on create,
-                # so the reversal ADDS (out - in) back — opposite sign to
-                # driver/customer entries. (Safety net: normal flow reverses
-                # these via the Crate Delivery cancel path in Step 0.)
-                change = (e.crates_out or 0) - (e.crates_in or 0)
+                # Warehouse balance was INCREASED by (out - in) on create
+                # (delivery adds, return subtracts), so the reversal SUBTRACTS
+                # (out - in) back — same sign as driver/customer entries.
+                # (Safety net: normal flow reverses these via the Crate
+                # Delivery cancel path in Step 0.)
+                change = (e.crates_in or 0) - (e.crates_out or 0)
 
                 warehouse_changes[e.warehouse] = (
                     warehouse_changes.get(e.warehouse, 0) + change
