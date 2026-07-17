@@ -5,6 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "item_source",
   "item_code",
   "item_name",
   "qty",
@@ -14,20 +15,33 @@
  ],
  "fields": [
   {
+   "fieldname": "item_source",
+   "fieldtype": "Select",
+   "label": "Item Source",
+   "options": "Item with ERP\nItem without ERP",
+   "default": "Item with ERP",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
    "fieldname": "item_code",
    "fieldtype": "Link",
    "label": "Item",
    "options": "Item",
-   "reqd": 1,
+   "depends_on": "eval:doc.item_source=='Item with ERP'",
+   "mandatory_depends_on": "eval:doc.item_source=='Item with ERP'",
+   "read_only_depends_on": "eval:doc.item_source=='Item without ERP'",
    "in_list_view": 1,
-   "columns": 3
+   "columns": 2
   },
   {
    "fetch_from": "item_code.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
    "label": "Item Name",
-   "read_only": 1,
+   "read_only_depends_on": "eval:doc.item_source=='Item with ERP'",
+   "mandatory_depends_on": "eval:doc.item_source=='Item without ERP'",
    "in_list_view": 1,
    "columns": 3
   },
@@ -37,7 +51,7 @@
    "label": "Qty",
    "reqd": 1,
    "in_list_view": 1,
-   "columns": 2
+   "columns": 1
   },
   {
    "fetch_from": "item_code.stock_uom",
@@ -46,14 +60,14 @@
    "label": "UOM",
    "options": "UOM",
    "in_list_view": 1,
-   "columns": 2
+   "columns": 1
   },
   {
    "fieldname": "received_qty",
    "fieldtype": "Float",
    "label": "Received Qty",
    "in_list_view": 1,
-   "columns": 2
+   "columns": 1
   },
   {
    "fieldname": "remarks",

@@ -333,6 +333,8 @@ class CrateDelivery(Document):
 
             new_customer_balance = current_balance - self.crates_returned
 
+            self._block_if_negative(new_customer_balance, "Customer")
+
             ledger = frappe.new_doc("Customer Crate Ledger")
 
             ledger.posting_date = self.date
@@ -487,6 +489,19 @@ class CrateDelivery(Document):
     # WAREHOUSE CRATE BALANCE
     # =========================================================
 
+    def _block_if_negative(self, new_balance, label):
+        """Block a balance from going below zero unless Crate Settings →
+        Allow Negative Crate Balance is enabled. Applies to the customer and
+        warehouse masters."""
+        if flt(new_balance) < 0 and not frappe.db.get_single_value(
+            "Crate Settings", "allow_negative_crate"
+        ):
+            frappe.throw(
+                f"This would reduce the {label} crate balance to "
+                f"{flt(new_balance):.0f} (below zero). Enable "
+                f"<b>Allow Negative Crate Balance</b> in Crate Settings to proceed."
+            )
+
     def _get_stock_entry_transit_warehouse(self):
         """Transit (target) warehouse of the delivery's Stock Entry, or None."""
         if not self.stock_entry:
@@ -551,6 +566,8 @@ class CrateDelivery(Document):
         delta = flt(out_qty) - flt(in_qty)
         current = flt(frappe.db.get_value("Warehouse", warehouse, "custom_crate_balance"))
         new_balance = current + delta
+
+        self._block_if_negative(new_balance, f"Warehouse ({warehouse})")
 
         ledger = frappe.new_doc("Customer Crate Ledger")
         ledger.posting_date         = self.date
