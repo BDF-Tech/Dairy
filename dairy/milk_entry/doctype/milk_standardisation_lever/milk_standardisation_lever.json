@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-17 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "role",
+  "source_name",
+  "column_break_quality",
+  "fat",
+  "snf"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "description": "SNF Booster raises SNF (e.g. SMP). Diluent lowers FAT & SNF (e.g. RO Water). Fat Booster raises FAT (e.g. Cream).",
+   "fieldname": "role",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Role",
+   "options": "SNF Booster\nDiluent\nFat Booster\nMilk\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_name",
+   "fieldtype": "Data",
+   "label": "Default Source Label"
+  },
+  {
+   "fieldname": "column_break_quality",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 2,
+   "description": "FAT % this item contributes.",
+   "fieldname": "fat",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "FAT %"
+  },
+  {
+   "columns": 2,
+   "description": "SNF % this item contributes.",
+   "fieldname": "snf",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "SNF %"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Milk Standardisation Lever",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

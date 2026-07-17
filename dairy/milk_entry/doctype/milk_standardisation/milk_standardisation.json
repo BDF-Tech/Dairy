@@ -1,0 +1,299 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:MST-{#####}",
+ "creation": "2026-07-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "details_tab",
+  "company",
+  "finished_item",
+  "bom",
+  "calculation_mode",
+  "column_break_head",
+  "posting_datetime",
+  "source_warehouse",
+  "target_warehouse",
+  "target_section",
+  "target_fat",
+  "column_break_t1",
+  "target_snf",
+  "column_break_t2",
+  "fat_tolerance",
+  "snf_tolerance",
+  "blend_section",
+  "ingredients",
+  "result_section",
+  "total_qty",
+  "achieved_fat",
+  "achieved_snf",
+  "column_break_r1",
+  "total_kg_fat",
+  "total_kg_snf",
+  "column_break_r2",
+  "fat_deviation",
+  "snf_deviation",
+  "in_spec",
+  "reference_section",
+  "work_order",
+  "column_break_ref",
+  "stock_entry",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "description": "The milk base to produce (e.g. Regular Milk Base).",
+   "fieldname": "finished_item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Milk Base",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "description": "Used only to know which items may take part. BOM quantities and FAT/SNF are ignored.",
+   "fieldname": "bom",
+   "fieldtype": "Link",
+   "label": "BOM",
+   "options": "BOM",
+   "reqd": 1
+  },
+  {
+   "default": "Manual",
+   "description": "Manual: you enter quantities. Auto: use 'Suggest Quantities' to solve the additives.",
+   "fieldname": "calculation_mode",
+   "fieldtype": "Select",
+   "label": "Calculation Mode",
+   "options": "Manual\nAuto"
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Now",
+   "fieldname": "posting_datetime",
+   "fieldtype": "Datetime",
+   "label": "Posting Date & Time",
+   "reqd": 1
+  },
+  {
+   "description": "Default warehouse additives are drawn from. Individual rows may override it.",
+   "fieldname": "source_warehouse",
+   "fieldtype": "Link",
+   "label": "Source Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "description": "Production warehouse the standardised base is produced into.",
+   "fieldname": "target_warehouse",
+   "fieldtype": "Link",
+   "label": "Target Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "target_section",
+   "fieldtype": "Section Break",
+   "label": "Target Quality"
+  },
+  {
+   "fieldname": "target_fat",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Target FAT %",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_t1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_snf",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Target SNF %",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_t2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0.1",
+   "description": "Allowed +/- band on FAT for the batch to be in spec.",
+   "fieldname": "fat_tolerance",
+   "fieldtype": "Float",
+   "label": "FAT Tolerance +/-",
+   "non_negative": 1
+  },
+  {
+   "default": "0.2",
+   "description": "Allowed +/- band on SNF for the batch to be in spec.",
+   "fieldname": "snf_tolerance",
+   "fieldtype": "Float",
+   "label": "SNF Tolerance +/-",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "blend_section",
+   "fieldtype": "Section Break",
+   "label": "Blend Sheet"
+  },
+  {
+   "fieldname": "ingredients",
+   "fieldtype": "Table",
+   "label": "Ingredients",
+   "options": "Milk Standardisation Ingredient",
+   "reqd": 1
+  },
+  {
+   "fieldname": "result_section",
+   "fieldtype": "Section Break",
+   "label": "Batch Result"
+  },
+  {
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "label": "Total Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "achieved_fat",
+   "fieldtype": "Percent",
+   "label": "Achieved FAT %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "achieved_snf",
+   "fieldtype": "Percent",
+   "label": "Achieved SNF %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_r1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_kg_fat",
+   "fieldtype": "Float",
+   "label": "Total Kg Fat",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_kg_snf",
+   "fieldtype": "Float",
+   "label": "Total Kg SNF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_r2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fat_deviation",
+   "fieldtype": "Float",
+   "label": "FAT Deviation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snf_deviation",
+   "fieldtype": "Float",
+   "label": "SNF Deviation",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "in_spec",
+   "fieldtype": "Check",
+   "label": "In Spec",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "References"
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "label": "Work Order",
+   "no_copy": 1,
+   "options": "Work Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ref",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "no_copy": 1,
+   "options": "Stock Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Milk Standardisation",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Stock Entry",
+   "link_fieldname": "custom_milk_standardization"
+  }
+ ],
+ "modified": "2026-07-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Milk Entry",
+ "name": "Milk Standardisation",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
