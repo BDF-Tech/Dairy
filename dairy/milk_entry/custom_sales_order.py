@@ -215,22 +215,8 @@ def defsellinguom(doc_name=None):
 
 
 @frappe.whitelist()
-def get_party_bal(customer):
-    cust_name = customer
-    doctype = "Customer"
-    loyalty_program = None
-
-    party_bal = get_dashboard_info(doctype, cust_name, loyalty_program)
-    if cust_name and party_bal:
-        return party_bal[0]["total_unpaid"]
-
-
-@frappe.whitelist()
 def get_party_bal(self, method):
-    cust_name = self.customer
-    doctype = "Customer"
-    loyalty_program = None
-
-    party_bal = get_dashboard_info(doctype, cust_name, loyalty_program)
-    if cust_name and party_bal:
-        self.party_balance = party_bal[0]["total_unpaid"]
+    # Scoped, permission-free balance. See get_customer_company_balance for why we
+    # no longer go through erpnext's get_dashboard_info here.
+    from dairy.milk_entry.custom_sales_invoice import get_customer_company_balance
+    self.party_balance = get_customer_company_balance(self.customer, self.company)
