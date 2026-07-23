@@ -1,4 +1,4 @@
-frappe.query_reports["Assets Location Report"] = {
+frappe.query_reports["Assets location details"] = {
     "filters": [
         {
             "fieldname": "location",
