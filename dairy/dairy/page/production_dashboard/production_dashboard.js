@@ -68,6 +68,8 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 	}
 
 	const fmt = (v) => parseFloat((Number(v) || 0).toFixed(2)).toLocaleString('en-IN');
+	// Yield ratios are small (e.g. 0.149), so keep 3 decimals for those.
+	const fmt3 = (v) => parseFloat((Number(v) || 0).toFixed(3)).toLocaleString('en-IN', {maximumFractionDigits: 3});
 	const esc = frappe.utils.escape_html;
 
 	function show_loader() { $("#prod-dash-loader").css('display', 'flex'); }
@@ -76,34 +78,48 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 	// ======================
 	// FILTERS
 	// ======================
+	// Every filter reloads on change. Period/Year/Sub Period rewrite From/To,
+	// which would each queue a reload of their own, so the reload is debounced
+	// and collapses a cascade into a single call. `ready` keeps the cascade
+	// during initial setup from firing before the first explicit load.
+	let ready = false, reload_timer = null, request_seq = 0;
+
+	function reload_soon() {
+		if (!ready) return;
+		clearTimeout(reload_timer);
+		reload_timer = setTimeout(() => load_data(), 250);
+	}
+
 	let company = page.add_field({
 		label: 'Company', fieldtype: 'Link', options: 'Company',
-		default: frappe.defaults.get_user_default('Company')
+		default: frappe.defaults.get_user_default('Company'),
+		change() { reload_soon(); }
 	});
 
 	let period = page.add_field({
 		label: 'Period', fieldtype: 'Select',
 		options: ['Today', 'Weekly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'Custom'],
 		default: 'Today',
-		change() { on_period_change(); }
+		change() { on_period_change(); reload_soon(); }
 	});
 
 	// Dependent selectors that "extend" from Period (shown only when relevant).
-	let year_sel = page.add_field({ label: 'Year', fieldtype: 'Select', change() { apply_period(); } });
-	let sub_sel = page.add_field({ label: 'Sub Period', fieldtype: 'Select', change() { apply_period(); } });
+	let year_sel = page.add_field({ label: 'Year', fieldtype: 'Select', change() { apply_period(); reload_soon(); } });
+	let sub_sel = page.add_field({ label: 'Sub Period', fieldtype: 'Select', change() { apply_period(); reload_soon(); } });
 	$(year_sel.wrapper).hide();
 	$(sub_sel.wrapper).hide();
 
-	let from_date = page.add_field({ label: 'From Date', fieldtype: 'Date' });
-	let to_date = page.add_field({ label: 'To Date', fieldtype: 'Date' });
+	let from_date = page.add_field({ label: 'From Date', fieldtype: 'Date', change() { reload_soon(); } });
+	let to_date = page.add_field({ label: 'To Date', fieldtype: 'Date', change() { reload_soon(); } });
 
-	let item_group = page.add_field({ label: 'Item Group', fieldtype: 'Link', options: 'Item Group' });
+	let item_group = page.add_field({ label: 'Item Group', fieldtype: 'Link', options: 'Item Group', change() { reload_soon(); } });
 
-	let item_code = page.add_field({ label: 'Item', fieldtype: 'Link', options: 'Item' });
+	let item_code = page.add_field({ label: 'Item', fieldtype: 'Link', options: 'Item', change() { reload_soon(); } });
 
 	// Stock Entry picker limited to Manufacture entries inside the chosen date range.
 	let stock_entry = page.add_field({
 		label: 'Stock Entry', fieldtype: 'Link', options: 'Stock Entry',
+		change() { reload_soon(); },
 		get_query() {
 			return {
 				filters: {
@@ -117,12 +133,16 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 
 	let group_by = page.add_field({
 		label: 'Group By', fieldtype: 'Select',
-		options: ['Stock Entry', 'Item'], default: 'Stock Entry'
+		options: ['Stock Entry', 'Item'], default: 'Stock Entry',
+		change() { reload_soon(); }
 	});
 
+	// Caps how many cards are rendered only - the summary and chart always
+	// cover the full period regardless of what is selected here.
 	let show = page.add_field({
 		label: 'Show', fieldtype: 'Select',
-		options: ['50', '100', '250', 'All'], default: '50'
+		options: ['50', '100', '250', 'All'], default: '50',
+		change() { reload_soon(); }
 	});
 
 	const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -206,6 +226,13 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 	let chart_wrap = $(`
 		<div class="prod-chart-wrap" style="margin-top:20px; display:none;"><div id="prod-chart"></div></div>
 	`).appendTo(page.body);
+	let trunc_note = $(`
+		<div id="prod-trunc-note" style="display:none; margin-top:16px; padding:9px 13px;
+			border:1px solid var(--border-color); border-left:3px solid var(--orange-600, #ea580c);
+			border-radius:var(--border-radius-md, 8px); background:var(--subtle-fg, var(--control-bg));
+			font-size:12.5px; color:var(--text-muted);"></div>
+	`).appendTo(page.body);
+
 	let cards_wrap = $(`
 		<div id="prod-cards" style="margin-top:20px; display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 1fr)); gap:15px;"></div>
 	`).appendTo(page.body);
@@ -219,9 +246,17 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 	// ======================
 	// LOAD
 	// ======================
-	page.set_primary_action('Load Data', () => {
+	function load_data() {
 		let f = from_date.get_value(), t = to_date.get_value();
 		if (!f || !t) { frappe.msgprint('Please select From Date and To Date.'); return; }
+
+		clearTimeout(reload_timer);   // an explicit load supersedes a queued one
+
+		// A wide range can take several seconds while a narrow one returns
+		// almost at once, so responses can arrive out of order. Stamp each
+		// request and ignore anything that is no longer the latest, otherwise
+		// a slow earlier filter would overwrite the current one's results.
+		const token = ++request_seq;
 
 		show_loader();
 		frappe.call({
@@ -236,15 +271,18 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 				group_by: group_by.get_value()
 			},
 			callback: (r) => {
+				if (token !== request_seq) return;   // superseded by a newer filter change
 				let d = (r && r.message) || { summary: {}, chart: {}, cards: [] };
 				render_summary(d.summary || {});
 				render_chart(d.chart || {});
-				render_cards(d.cards || []);
+				render_cards(d.cards || [], d);
 				hide_loader();
 			},
-			error: () => hide_loader()
+			error: () => { if (token === request_seq) hide_loader(); }
 		});
-	}, 'refresh');
+	}
+
+	page.set_primary_action('Load Data', () => load_data(), 'refresh');
 
 	// ======================
 	// RENDERERS
@@ -280,6 +318,7 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 				${stat(fmt(s.distinct_items || 0), 'Distinct Items', 'prod-cyan')}
 				${produced_cell}
 				${wts.length ? `<div class="prod-stat"><div class="l">Total Weight</div>${wts.map(x => `<div class="v prod-blue" style="font-size:16px;">${fmt(x.qty)} <span class="prod-muted" style="font-size:11px; font-weight:600;">${esc(x.uom)}</span></div>`).join('')}</div>` : ''}
+				${s.total_milk_used ? `<div class="prod-stat"><div class="l">Raw Milk Used</div><div class="v prod-cyan" style="font-size:16px;">${fmt(s.total_milk_used)} <span class="prod-muted" style="font-size:11px; font-weight:600;">${esc(s.milk_uom || '')}</span></div><div class="prod-muted" style="font-size:11px;">avg ${fmt(s.avg_milk_per_run)} / run</div></div>` : ''}
 				${stat(fmt(s.total_handling_loss_qty || 0), 'Handling Loss', 'prod-red')}
 				${stat(fmt(s.runs_with_loss || 0), 'Runs With Loss', 'prod-orange')}
 			</div>
@@ -312,7 +351,21 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 		}
 	}
 
-	function render_cards(cards) {
+	function render_cards(cards, meta) {
+		meta = meta || {};
+		// The summary above always covers the whole period; the cards may be a
+		// capped subset. Say so explicitly rather than letting the two disagree
+		// silently.
+		if (meta.truncated) {
+			let unit = meta.unit || 'production runs';
+			trunc_note.html(
+				`Showing the top <b>${fmt(meta.shown_runs)}</b> of <b>${fmt(meta.total_runs)}</b> ${unit}. `
+				+ `Totals and chart above cover all ${fmt(meta.total_runs)} - set <b>Show</b> to <b>All</b> to list every one.`
+			).show();
+		} else {
+			trunc_note.hide();
+		}
+
 		if (!cards.length) {
 			cards_wrap.html(`<div class="text-muted" style="grid-column:1/-1; text-align:center; padding:40px;">No production entries found for the selected filters.</div>`);
 			return;
@@ -376,6 +429,19 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 						<span class="prod-strong">${esc(d.target_warehouse || '—')}</span>
 					</div>
 
+					${d.milk_used ? `
+					<div class="prod-loss-box" style="border-left:3px solid var(--cyan-600, #0891b2); display:flex; justify-content:space-between; align-items:center; gap:10px;">
+						<div>
+							<div class="prod-label" style="margin-bottom:0;">Raw Milk Used</div>
+							<div class="prod-cyan" style="font-weight:700;">${fmt(d.milk_used)} <span class="prod-muted" style="font-size:11px;">${esc(d.milk_uom || '')}</span></div>
+							${d.avg_milk_per_run != null && d.run_count > 1 ? `<div class="prod-muted" style="font-size:11px;">avg ${fmt(d.avg_milk_per_run)} ${esc(d.milk_uom || '')} / run</div>` : ''}
+						</div>
+						${d.milk_yield != null ? `<div style="text-align:right;">
+							<div class="prod-label" style="margin-bottom:0;">Yield</div>
+							<div class="prod-green" style="font-weight:700;">${fmt3(d.milk_yield)} <span class="prod-muted" style="font-size:11px;">${esc(d.uom || '')}/${esc(d.milk_uom || '')}</span></div>
+						</div>` : ''}
+					</div>` : ''}
+
 					<div class="prod-label" style="margin-top:12px;">Made From</div>
 					<table>
 						<thead><tr><th>Item</th><th style="text-align:right;">Qty</th><th>UOM</th><th>Source Warehouse</th></tr></thead>
@@ -395,6 +461,6 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 		cards_wrap.html(html);
 	}
 
-	// Auto-load on open.
-	setTimeout(() => { if (page.btn_primary) page.btn_primary.trigger('click'); }, 150);
+	// Auto-load on open, then let filter changes drive reloads themselves.
+	setTimeout(() => { load_data(); ready = true; }, 150);
 };
