@@ -141,6 +141,8 @@ def _totals_rows(from_date, to_date, company=None, item_group=None, item_code=No
 			fin.uom                            AS uom,
 			fin.item_code                      AS fin_item_code,
 			fin.item_name                      AS fin_item_name,
+			fin.item_group                     AS fin_item_group,
+			it.item_group                      AS fg_item_group,
 			it.weight_per_unit,
 			it.weight_uom
 		FROM `tabStock Entry` se
@@ -281,6 +283,7 @@ def get_dashboard_data(from_date, to_date, company=None, item_group=None, item_c
 		return {
 			"summary": _empty_summary(),
 			"chart": {"labels": [], "produced": [], "loss": []},
+			"item_summary": [],
 			"cards": [],
 			"unit": "items" if group_by == "Item" else "production runs",
 			"total_runs": 0,
@@ -291,6 +294,7 @@ def get_dashboard_data(from_date, to_date, company=None, item_group=None, item_c
 	loss_map = _loss_totals(from_date, to_date, company, item_group, item_code, stock_entry)
 	summary = _summary_from_rows(total_rows, loss_map)
 	chart = _chart_from_rows(total_rows, loss_map)
+	item_summary = _item_summary(total_rows, loss_map)
 
 	# Period-wide raw milk consumed + avg milk per run, added to the summary bar.
 	milk_qty, milk_uom = _milk_total(from_date, to_date, company, item_group, item_code, stock_entry)
@@ -412,6 +416,7 @@ def get_dashboard_data(from_date, to_date, company=None, item_group=None, item_c
 	return {
 		"summary": summary,
 		"chart": chart,
+		"item_summary": item_summary,
 		"cards": cards,
 		# Lets the UI say "showing 50 of 1,651 runs" instead of silently
 		# presenting a truncated page as if it were the whole period.
@@ -609,6 +614,60 @@ def _summary_from_rows(rows, loss_map):
 		"total_handling_loss_qty": round(sum(loss_map.values()), 2),
 		"runs_with_loss": len([1 for r in rows if loss_map.get(r.name)]),
 	}
+
+
+def _item_summary(rows, loss_map):
+	"""One row per produced item across the whole filtered period.
+
+	This is the dense "what did we make and how much" table shown above the
+	cards. Built off the same full-period rows as the summary bar, so it is
+	independent of the card `limit` (the "Show" selector).
+	"""
+	items = {}
+	for r in rows:
+		code = r.fg_item_code or r.fin_item_code
+		if not code:
+			continue
+		g = items.get(code)
+		if g is None:
+			g = items[code] = {
+				"item_code": code,
+				"item_name": r.custom_manufacturing_item_name or r.fin_item_name or code,
+				"item_group": r.fg_item_group or r.fin_item_group,
+				"uom": r.uom,
+				"produced_qty": 0.0,
+				"weight": 0.0,
+				"weight_uom": r.weight_uom,
+				"runs": 0,
+				"loss": 0.0,
+			}
+		qty = flt(r.produced_qty)
+		g["produced_qty"] += qty
+		g["runs"] += 1
+		g["uom"] = g["uom"] or r.uom
+		wpu = flt(r.weight_per_unit)
+		if wpu > 0 and r.weight_uom:
+			g["weight"] += qty * wpu
+			g["weight_uom"] = g["weight_uom"] or r.weight_uom
+		g["loss"] += loss_map.get(r.name, 0.0)
+
+	out = []
+	for g in items.values():
+		out.append(
+			{
+				"item_code": g["item_code"],
+				"item_name": g["item_name"],
+				"item_group": g["item_group"],
+				"runs": g["runs"],
+				"produced_qty": round(g["produced_qty"], 2),
+				"uom": g["uom"],
+				"weight": round(g["weight"], 2) if g["weight"] else None,
+				"weight_uom": g["weight_uom"] if g["weight"] else None,
+				"handling_loss_qty": round(g["loss"], 2),
+			}
+		)
+	out.sort(key=lambda x: x["produced_qty"], reverse=True)
+	return out
 
 
 def _chart_from_rows(rows, loss_map):

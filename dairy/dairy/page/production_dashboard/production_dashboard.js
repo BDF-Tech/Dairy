@@ -46,6 +46,28 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 		.prod-card td { font-size:12.5px; color:var(--text-color); padding:4px 6px; border-bottom:1px solid var(--border-color); }
 		.prod-card tr:last-child td { border-bottom:none; }
 
+		/* Item Summary block */
+		#prod-itemsum-head { display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:13px 16px; user-select:none; transition:background .12s ease; }
+		#prod-itemsum-head:hover { background:var(--subtle-fg, var(--control-bg)); }
+		#prod-itemsum.is-open #prod-itemsum-head { border-bottom:1px solid var(--border-color); }
+		.prod-itemsum-title { display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px; color:var(--heading-color, var(--text-color)); }
+		.prod-itemsum-icon { color:var(--text-muted); font-size:14px; }
+		.prod-itemsum-badge { font-weight:500; font-size:11px; color:var(--text-muted); background:var(--subtle-fg, var(--control-bg)); border:1px solid var(--border-color); border-radius:20px; padding:2px 9px; }
+		.prod-itemsum-btn { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-color); background:var(--control-bg); border:1px solid var(--border-color); border-radius:var(--border-radius-md, 8px); padding:5px 11px; cursor:pointer; }
+		.prod-itemsum-btn:hover { border-color:var(--primary, #2563eb); color:var(--primary, #2563eb); }
+		.prod-itemsum-chev { transition:transform .15s ease; font-size:10px; }
+		#prod-itemsum.is-open .prod-itemsum-chev { transform:rotate(180deg); }
+		#prod-itemsum-body { max-height:440px; overflow:auto; }
+		.prod-itemsum-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+		.prod-itemsum-table th { text-transform:uppercase; font-size:10.5px; letter-spacing:.4px; color:var(--text-muted); font-weight:600; text-align:left; padding:9px 12px; border-bottom:1px solid var(--border-color); position:sticky; top:0; background:var(--card-bg); z-index:1; }
+		.prod-itemsum-table td { color:var(--text-color); padding:8px 12px; border-bottom:1px solid var(--border-color); white-space:nowrap; }
+		.prod-itemsum-table tbody tr:nth-child(even) td { background:color-mix(in srgb, var(--subtle-fg, var(--control-bg)) 45%, transparent); }
+		.prod-itemsum-table tbody tr:hover td { background:var(--subtle-fg, var(--control-bg)); }
+		.prod-itemsum-table .num { text-align:right; font-variant-numeric:tabular-nums; }
+		.prod-itemsum-table .prod-code { font-family:var(--font-stack-monospace, monospace); font-size:11.5px; color:var(--text-muted); }
+		.prod-itemsum-table tfoot td { padding:10px 12px; border-top:2px solid var(--border-color); background:var(--card-bg); position:sticky; bottom:0; font-size:12.5px; }
+		.prod-itemsum-table tbody tr:last-child td { border-bottom:none; }
+
 		.prod-title { font-weight:600; font-size:15px; color:var(--heading-color, var(--text-color)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 		.prod-sub { font-size:12px; color:var(--text-muted); }
 		.prod-label { font-size:11px; text-transform:uppercase; color:var(--text-muted); font-weight:600; letter-spacing:.3px; }
@@ -226,6 +248,36 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 	let chart_wrap = $(`
 		<div class="prod-chart-wrap" style="margin-top:20px; display:none;"><div id="prod-chart"></div></div>
 	`).appendTo(page.body);
+
+	// Dense produced-item summary (full period, independent of the Show cap).
+	// Collapsed by default - the header row is a button that reveals the table.
+	let itemsum_open = false;
+	let item_summary_wrap = $(`
+		<div id="prod-itemsum" class="prod-chart-wrap" style="margin-top:20px; display:none; padding:0; overflow:hidden;">
+			<div id="prod-itemsum-head">
+				<div class="prod-itemsum-title">
+					<span class="prod-itemsum-icon">▤</span>
+					<span>Item Summary</span>
+					<span id="prod-itemsum-count" class="prod-itemsum-badge"></span>
+				</div>
+				<button type="button" id="prod-itemsum-toggle" class="prod-itemsum-btn">
+					<span class="prod-itemsum-btn-label">Show</span>
+					<span class="prod-itemsum-chev">▾</span>
+				</button>
+			</div>
+			<div id="prod-itemsum-body"></div>
+		</div>
+	`).appendTo(page.body);
+
+	function set_itemsum(open) {
+		itemsum_open = open;
+		$('#prod-itemsum-body').toggle(open);
+		$('#prod-itemsum').toggleClass('is-open', open);
+		$('#prod-itemsum-toggle .prod-itemsum-btn-label').text(open ? 'Hide' : 'Show');
+	}
+	$('#prod-itemsum-head').on('click', () => set_itemsum(!itemsum_open));
+	set_itemsum(false);   // collapsed by default
+
 	let trunc_note = $(`
 		<div id="prod-trunc-note" style="display:none; margin-top:16px; padding:9px 13px;
 			border:1px solid var(--border-color); border-left:3px solid var(--orange-600, #ea580c);
@@ -275,6 +327,7 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 				let d = (r && r.message) || { summary: {}, chart: {}, cards: [] };
 				render_summary(d.summary || {});
 				render_chart(d.chart || {});
+				render_item_summary(d.item_summary || []);
 				render_cards(d.cards || [], d);
 				hide_loader();
 			},
@@ -322,6 +375,68 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 				${stat(fmt(s.total_handling_loss_qty || 0), 'Handling Loss', 'prod-red')}
 				${stat(fmt(s.runs_with_loss || 0), 'Runs With Loss', 'prod-orange')}
 			</div>
+		`);
+	}
+
+	// Dense produced-item table. Full period, so it does not shrink with "Show".
+	function render_item_summary(items) {
+		if (!items.length) { item_summary_wrap.hide(); return; }
+		item_summary_wrap.show();
+		set_itemsum(itemsum_open);   // preserve the user's expand/collapse choice
+		$('#prod-itemsum-count').text(`${fmt(items.length)} item${items.length > 1 ? 's' : ''}`);
+
+		let total_runs = items.reduce((a, r) => a + (Number(r.runs) || 0), 0);
+		let total_loss = items.reduce((a, r) => a + (Number(r.handling_loss_qty) || 0), 0);
+		let show_loss = total_loss > 0;
+
+		// Produced qty mixes UOMs across items, so the footer sums per-UOM.
+		let qty_by_uom = {};
+		items.forEach(r => { let u = r.uom || '—'; qty_by_uom[u] = (qty_by_uom[u] || 0) + (Number(r.produced_qty) || 0); });
+		let qty_total_html = Object.entries(qty_by_uom)
+			.sort((a, b) => b[1] - a[1])
+			.map(([u, q]) => `${fmt(q)} <span class="prod-muted">${esc(u)}</span>`)
+			.join('<span class="prod-muted"> · </span>');
+
+		let rows = items.map((r, i) => `
+			<tr>
+				<td class="prod-muted num">${i + 1}</td>
+				<td class="prod-strong">${esc(r.item_name || r.item_code || '')}</td>
+				<td class="prod-code">${esc(r.item_code || '')}</td>
+				<td class="prod-muted">${esc(r.item_group || '—')}</td>
+				<td class="num">${fmt(r.runs)}</td>
+				<td class="num"><b class="prod-green">${fmt(r.produced_qty)}</b> <span class="prod-muted">${esc(r.uom || '')}</span></td>
+				<td class="num">${r.weight ? fmt(r.weight) + ' <span class="prod-muted">' + esc(r.weight_uom || '') + '</span>' : '<span class="prod-muted">—</span>'}</td>
+				${show_loss ? `<td class="num">${Number(r.handling_loss_qty) ? '<span class="prod-red">' + fmt(r.handling_loss_qty) + '</span>' : '<span class="prod-muted">—</span>'}</td>` : ''}
+			</tr>`).join('');
+
+		$('#prod-itemsum-body').html(`
+			<table class="prod-itemsum-table">
+				<thead>
+					<tr>
+						<th class="num" style="width:38px;">#</th>
+						<th>Item</th>
+						<th>Code</th>
+						<th>Group</th>
+						<th class="num">Runs</th>
+						<th class="num">Produced Qty</th>
+						<th class="num">Weight</th>
+						${show_loss ? '<th class="num">Handling Loss</th>' : ''}
+					</tr>
+				</thead>
+				<tbody>${rows}</tbody>
+				<tfoot>
+					<tr>
+						<td></td>
+						<td class="prod-strong">Total</td>
+						<td class="prod-muted">${fmt(items.length)} items</td>
+						<td></td>
+						<td class="num prod-strong">${fmt(total_runs)}</td>
+						<td class="num prod-strong">${qty_total_html}</td>
+						<td></td>
+						${show_loss ? `<td class="num">${total_loss ? '<span class="prod-red">' + fmt(total_loss) + '</span>' : '—'}</td>` : ''}
+					</tr>
+				</tfoot>
+			</table>
 		`);
 	}
 
