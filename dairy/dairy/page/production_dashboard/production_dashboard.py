@@ -48,7 +48,17 @@ def _run_filter(
 		values["stock_entry"] = stock_entry
 
 	if item_code:
-		conditions.append("se.item = %(item_code)s")
+		# Match the item whether it is the run's primary finished good (se.item)
+		# OR one of its outputs on a child row - a co-product (is_scrap_item) or a
+		# secondary finished item. This lets a search for a co-product like Cream
+		# Base surface the skim runs that produced it; runs whose finished item is
+		# the searched code are unaffected, so finished-item views do not change.
+		conditions.append(
+			"(se.item = %(item_code)s OR EXISTS ("
+			"  SELECT 1 FROM `tabStock Entry Detail` sed_out"
+			"  WHERE sed_out.parent = se.name AND sed_out.item_code = %(item_code)s"
+			"    AND (sed_out.is_finished_item = 1 OR sed_out.is_scrap_item = 1)))"
+		)
 		values["item_code"] = item_code
 
 	if item_codes:
@@ -216,6 +226,36 @@ def _milk_total(from_date, to_date, company=None, item_group=None, item_code=Non
 	return (flt(row[0].qty), row[0].uom) if row and row[0].qty else (0.0, None)
 
 
+def _scrap_outputs(from_date, to_date, company=None, item_group=None, item_code=None, stock_entry=None):
+	"""Co-product (is_scrap_item) outputs per item across the whole filtered set.
+
+	These are real produced outputs of a run that are tagged as scrap - e.g.
+	Cream Base from skimming. Returned one row per co-product item so they can
+	be folded into the Produced totals and the Item Summary in their own UOM.
+	"""
+	join, where, values = _run_filter(from_date, to_date, company, item_group, item_code, stock_entry)
+
+	return frappe.db.sql(
+		f"""
+		SELECT
+			sed.item_code,
+			MAX(sed.item_name)          AS item_name,
+			MAX(sed.item_group)         AS item_group,
+			MAX(sed.uom)                AS uom,
+			SUM(sed.qty)                AS qty,
+			COUNT(DISTINCT sed.parent)  AS runs
+		FROM `tabStock Entry Detail` sed
+		WHERE sed.is_scrap_item = 1
+		  AND sed.parent IN (
+			SELECT se.name FROM `tabStock Entry` se {join} WHERE {where}
+		  )
+		GROUP BY sed.item_code
+		""",
+		values,
+		as_dict=True,
+	)
+
+
 def _lines_for(run_names):
 	"""Query B - every child row for the matched runs, in one shot."""
 	placeholders = ", ".join(["%s"] * len(run_names))
@@ -292,9 +332,12 @@ def get_dashboard_data(from_date, to_date, company=None, item_group=None, item_c
 		}
 
 	loss_map = _loss_totals(from_date, to_date, company, item_group, item_code, stock_entry)
-	summary = _summary_from_rows(total_rows, loss_map)
+	# Co-product (scrap) outputs, folded into the Produced totals and Item
+	# Summary so an output like Cream Base is counted, in its own UOM.
+	scrap_outputs = _scrap_outputs(from_date, to_date, company, item_group, item_code, stock_entry)
+	summary = _summary_from_rows(total_rows, loss_map, scrap_outputs)
 	chart = _chart_from_rows(total_rows, loss_map)
-	item_summary = _item_summary(total_rows, loss_map)
+	item_summary = _item_summary(total_rows, loss_map, scrap_outputs)
 
 	# Period-wide raw milk consumed + avg milk per run, added to the summary bar.
 	milk_qty, milk_uom = _milk_total(from_date, to_date, company, item_group, item_code, stock_entry)
@@ -330,11 +373,17 @@ def get_dashboard_data(from_date, to_date, company=None, item_group=None, item_c
 
 	run_names = [r.name for r in runs]
 
-	finished_by_run, inputs_by_run = {}, {}
+	# Scrap rows are the run's co-products (e.g. skimming yields Skim Milk as the
+	# finished item plus Cream Base tagged is_scrap_item). They are surfaced on
+	# the card for visibility but deliberately kept OUT of produced_qty, the
+	# summary, the item table and the yield - those numbers stay unchanged.
+	finished_by_run, inputs_by_run, scrap_by_run = {}, {}, {}
 	for row in _lines_for(run_names):
 		if row.is_finished_item:
 			finished_by_run.setdefault(row.parent, []).append(row)
-		elif not row.is_scrap_item:
+		elif row.is_scrap_item:
+			scrap_by_run.setdefault(row.parent, []).append(row)
+		else:
 			inputs_by_run.setdefault(row.parent, []).append(row)
 
 	loss_by_run = {}
@@ -399,6 +448,15 @@ def get_dashboard_data(from_date, to_date, company=None, item_group=None, item_c
 				],
 				"handling_loss_qty": flt(loss["qty"]),
 				"handling_loss_items": loss["items"],
+				"co_products": [
+					{
+						"item_code": r.item_code,
+						"item_name": r.item_name,
+						"qty": flt(r.qty),
+						"uom": r.uom,
+					}
+					for r in scrap_by_run.get(run.name, [])
+				],
 			}
 		)
 
@@ -450,6 +508,7 @@ def _aggregate_by_item(cards):
 				"tgt": set(),
 				"inputs": {},
 				"loss": {},
+				"co_products": {},
 				"handling_loss_qty": 0.0,
 				"entries": [],
 			}
@@ -505,6 +564,18 @@ def _aggregate_by_item(cards):
 					"uom": l["uom"],
 				}
 			e["qty"] += flt(l["qty"])
+
+		for cp in c.get("co_products", []):
+			k = (cp["item_code"], cp["uom"])
+			e = g["co_products"].get(k)
+			if e is None:
+				e = g["co_products"][k] = {
+					"item_code": cp["item_code"],
+					"item_name": cp["item_name"],
+					"qty": 0.0,
+					"uom": cp["uom"],
+				}
+			e["qty"] += flt(cp["qty"])
 
 	def _wh(values):
 		vals = sorted(v for v in values if v)
@@ -562,6 +633,7 @@ def _aggregate_by_item(cards):
 				"inputs": inputs,
 				"handling_loss_qty": round(g["handling_loss_qty"], 3),
 				"handling_loss_items": [{**l, "qty": round(l["qty"], 3)} for l in g["loss"].values()],
+				"co_products": [{**cp, "qty": round(cp["qty"], 3)} for cp in g["co_products"].values()],
 				"entries": sorted(g["entries"], key=lambda e: e["posting_date"] or "", reverse=True),
 			}
 		)
@@ -570,8 +642,13 @@ def _aggregate_by_item(cards):
 	return result
 
 
-def _summary_from_rows(rows, loss_map):
-	"""Totals over every matching run - deliberately independent of `limit`."""
+def _summary_from_rows(rows, loss_map, scrap_outputs=None):
+	"""Totals over every matching run - deliberately independent of `limit`.
+
+	Co-product (scrap) outputs are folded into the produced-qty breakdown and
+	distinct-item count in their own UOM, so an output like Cream Base is
+	counted; production_runs stays the count of runs, not outputs.
+	"""
 	# Produced qty mixes UOMs (Nos / Kg / Litre) across items, so a single sum
 	# is meaningless - bifurcate it per UOM instead.
 	produced_by_uom = {}
@@ -593,6 +670,14 @@ def _summary_from_rows(rows, loss_map):
 		wpu, wu = flt(r.weight_per_unit), r.weight_uom
 		if wpu > 0 and wu:
 			weight_by_uom[wu] = weight_by_uom.get(wu, 0) + qty * wpu
+
+	for cp in scrap_outputs or []:
+		qty = flt(cp.qty)
+		total_produced += qty
+		u = cp.uom or "—"
+		produced_by_uom[u] = produced_by_uom.get(u, 0) + qty
+		if cp.item_code:
+			codes.add(cp.item_code)
 
 	produced_list = sorted(
 		({"uom": u, "qty": round(q, 2)} for u, q in produced_by_uom.items()),
@@ -616,21 +701,24 @@ def _summary_from_rows(rows, loss_map):
 	}
 
 
-def _item_summary(rows, loss_map):
+def _item_summary(rows, loss_map, scrap_outputs=None):
 	"""One row per produced item across the whole filtered period.
 
 	This is the dense "what did we make and how much" table shown above the
 	cards. Built off the same full-period rows as the summary bar, so it is
-	independent of the card `limit` (the "Show" selector).
+	independent of the card `limit` (the "Show" selector). Co-product (scrap)
+	outputs get their own rows (flagged is_co_product), keyed by item+UOM so a
+	co-product never merges with an unrelated finished line.
 	"""
 	items = {}
 	for r in rows:
 		code = r.fg_item_code or r.fin_item_code
 		if not code:
 			continue
-		g = items.get(code)
+		key = (code, r.uom, False)
+		g = items.get(key)
 		if g is None:
-			g = items[code] = {
+			g = items[key] = {
 				"item_code": code,
 				"item_name": r.custom_manufacturing_item_name or r.fin_item_name or code,
 				"item_group": r.fg_item_group or r.fin_item_group,
@@ -640,6 +728,7 @@ def _item_summary(rows, loss_map):
 				"weight_uom": r.weight_uom,
 				"runs": 0,
 				"loss": 0.0,
+				"is_co_product": False,
 			}
 		qty = flt(r.produced_qty)
 		g["produced_qty"] += qty
@@ -650,6 +739,25 @@ def _item_summary(rows, loss_map):
 			g["weight"] += qty * wpu
 			g["weight_uom"] = g["weight_uom"] or r.weight_uom
 		g["loss"] += loss_map.get(r.name, 0.0)
+
+	for cp in scrap_outputs or []:
+		key = (cp.item_code, cp.uom, True)
+		g = items.get(key)
+		if g is None:
+			g = items[key] = {
+				"item_code": cp.item_code,
+				"item_name": cp.item_name or cp.item_code,
+				"item_group": cp.item_group,
+				"uom": cp.uom,
+				"produced_qty": 0.0,
+				"weight": 0.0,
+				"weight_uom": None,
+				"runs": 0,
+				"loss": 0.0,
+				"is_co_product": True,
+			}
+		g["produced_qty"] += flt(cp.qty)
+		g["runs"] += int(cp.runs or 0)
 
 	out = []
 	for g in items.values():
@@ -664,6 +772,7 @@ def _item_summary(rows, loss_map):
 				"weight": round(g["weight"], 2) if g["weight"] else None,
 				"weight_uom": g["weight_uom"] if g["weight"] else None,
 				"handling_loss_qty": round(g["loss"], 2),
+				"is_co_product": g["is_co_product"],
 			}
 		)
 	out.sort(key=lambda x: x["produced_qty"], reverse=True)

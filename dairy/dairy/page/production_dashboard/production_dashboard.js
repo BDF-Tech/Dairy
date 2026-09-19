@@ -53,6 +53,8 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 		.prod-itemsum-title { display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px; color:var(--heading-color, var(--text-color)); }
 		.prod-itemsum-icon { color:var(--text-muted); font-size:14px; }
 		.prod-itemsum-badge { font-weight:500; font-size:11px; color:var(--text-muted); background:var(--subtle-fg, var(--control-bg)); border:1px solid var(--border-color); border-radius:20px; padding:2px 9px; }
+		.prod-purple { color:var(--purple-600, #7c3aed); }
+		.prod-coprod-tag { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:var(--purple-700, #6d28d9); background:var(--purple-100, #ede9fe); border-radius:4px; padding:1px 5px; vertical-align:middle; }
 		.prod-itemsum-btn { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-color); background:var(--control-bg); border:1px solid var(--border-color); border-radius:var(--border-radius-md, 8px); padding:5px 11px; cursor:pointer; }
 		.prod-itemsum-btn:hover { border-color:var(--primary, #2563eb); color:var(--primary, #2563eb); }
 		.prod-itemsum-chev { transition:transform .15s ease; font-size:10px; }
@@ -400,11 +402,11 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 		let rows = items.map((r, i) => `
 			<tr>
 				<td class="prod-muted num">${i + 1}</td>
-				<td class="prod-strong">${esc(r.item_name || r.item_code || '')}</td>
+				<td class="prod-strong">${esc(r.item_name || r.item_code || '')}${r.is_co_product ? ' <span class="prod-coprod-tag">co-product</span>' : ''}</td>
 				<td class="prod-code">${esc(r.item_code || '')}</td>
 				<td class="prod-muted">${esc(r.item_group || '—')}</td>
 				<td class="num">${fmt(r.runs)}</td>
-				<td class="num"><b class="prod-green">${fmt(r.produced_qty)}</b> <span class="prod-muted">${esc(r.uom || '')}</span></td>
+				<td class="num"><b class="${r.is_co_product ? 'prod-purple' : 'prod-green'}">${fmt(r.produced_qty)}</b> <span class="prod-muted">${esc(r.uom || '')}</span></td>
 				<td class="num">${r.weight ? fmt(r.weight) + ' <span class="prod-muted">' + esc(r.weight_uom || '') + '</span>' : '<span class="prod-muted">—</span>'}</td>
 				${show_loss ? `<td class="num">${Number(r.handling_loss_qty) ? '<span class="prod-red">' + fmt(r.handling_loss_qty) + '</span>' : '<span class="prod-muted">—</span>'}</td>` : ''}
 			</tr>`).join('');
@@ -524,6 +526,19 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 				.map(l => `${esc(l.item_name || l.item_code)} <b>${fmt(l.qty)}</b> ${esc(l.uom || '')}`)
 				.join(' &nbsp;·&nbsp; ');
 
+			// Co-products (scrap-tagged outputs, e.g. Cream Base from skimming).
+			// Shown for visibility only - not part of produced qty, totals or yield.
+			// On a single-run card the name links to the stock entry so a search
+			// for the co-product can be clicked straight through to its run.
+			let co_products = (d.co_products || [])
+				.map(cp => {
+					let label = `${esc(cp.item_name || cp.item_code)} <b>${fmt(cp.qty)}</b> ${esc(cp.uom || '')}`;
+					return d.stock_entry
+						? `<a href="/app/stock-entry/${encodeURIComponent(d.stock_entry)}" target="_blank" class="prod-link">${label}</a>`
+						: label;
+				})
+				.join(' &nbsp;·&nbsp; ');
+
 			html += `
 				<div class="prod-card">
 					<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
@@ -567,6 +582,12 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 						<span class="indicator-pill ${has_loss ? 'red' : 'green'}">Handling Loss ${fmt(d.handling_loss_qty)}</span>
 						${loss_detail ? `<div class="prod-muted" style="font-size:11.5px; margin-top:6px;">${loss_detail}</div>` : ''}
 					</div>
+
+					${co_products ? `
+					<div class="prod-loss-box" style="border-left:3px solid var(--purple-600, #7c3aed);">
+						<span class="indicator-pill" style="background:var(--purple-100, #ede9fe); color:var(--purple-700, #6d28d9);">Co-products</span>
+						<div class="prod-muted" style="font-size:11.5px; margin-top:6px;">${co_products} <span style="font-style:italic;">· counted in Produced totals, separate from this run's yield</span></div>
+					</div>` : ''}
 
 					${entries_html}
 
