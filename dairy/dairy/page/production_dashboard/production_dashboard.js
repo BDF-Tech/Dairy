@@ -527,17 +527,22 @@ frappe.pages['production-dashboard'].on_page_load = function (wrapper) {
 				.join(' &nbsp;·&nbsp; ');
 
 			// Co-products (scrap-tagged outputs, e.g. Cream Base from skimming).
-			// Shown for visibility only - not part of produced qty, totals or yield.
 			// On a single-run card the name links to the stock entry so a search
-			// for the co-product can be clicked straight through to its run.
+			// for the co-product can be clicked straight through to its run. Each
+			// co-product also shows its own yield-from-milk (cp qty / raw milk),
+			// separate from the primary item's yield since the UOMs differ.
 			let co_products = (d.co_products || [])
 				.map(cp => {
 					let label = `${esc(cp.item_name || cp.item_code)} <b>${fmt(cp.qty)}</b> ${esc(cp.uom || '')}`;
-					return d.stock_entry
+					let linked = d.stock_entry
 						? `<a href="/app/stock-entry/${encodeURIComponent(d.stock_entry)}" target="_blank" class="prod-link">${label}</a>`
 						: label;
+					let y = (d.milk_used && Number(cp.qty))
+						? ` <span class="prod-purple">yield ${fmt3(Number(cp.qty) / d.milk_used)} <span class="prod-muted">${esc(cp.uom || '')}/${esc(d.milk_uom || '')}</span></span>`
+						: '';
+					return linked + y;
 				})
-				.join(' &nbsp;·&nbsp; ');
+				.join('<br>');
 
 			html += `
 				<div class="prod-card">
