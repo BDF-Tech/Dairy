@@ -9,11 +9,32 @@ from frappe.utils import flt
 # Quantity is used directly as the mass basis on the production blend sheet
 # (no litre->kg density conversion), matching how the team calculates today.
 
+MILK_BASE_ITEM_GROUP = "Semi-Finished Goods"
+
 
 class MilkStandardisation(Document):
 	def validate(self):
+		self._validate_item_and_bom()
 		self._apply_setting_defaults()
 		self.compute_batch()
+
+	def _validate_item_and_bom(self):
+		if self.finished_item:
+			item_group = frappe.db.get_value("Item", self.finished_item, "item_group")
+			if item_group != MILK_BASE_ITEM_GROUP:
+				frappe.throw(
+					_("Milk Base {0} must be in the {1} item group (it is in {2}).").format(
+						frappe.bold(self.finished_item), frappe.bold(MILK_BASE_ITEM_GROUP), item_group
+					)
+				)
+		if self.bom and self.finished_item:
+			bom_item = frappe.db.get_value("BOM", self.bom, "item")
+			if bom_item != self.finished_item:
+				frappe.throw(
+					_("BOM {0} belongs to {1}, not the selected Milk Base {2}.").format(
+						frappe.bold(self.bom), bom_item, frappe.bold(self.finished_item)
+					)
+				)
 
 	def before_submit(self):
 		if not self.in_spec:
@@ -121,6 +142,7 @@ class MilkStandardisation(Document):
 		se.use_multi_level_bom = 0
 		se.fg_completed_qty = flt(self.total_qty)
 		se.posting_date = frappe.utils.getdate(self.posting_datetime)
+		se.posting_time = frappe.utils.get_time(self.posting_datetime)
 		se.set_posting_time = 1
 		se.custom_milk_standardization = self.name
 		# Our quantities are computed on the blend sheet, not BOM ratios; keep the
@@ -150,6 +172,10 @@ class MilkStandardisation(Document):
 		})
 
 		se.insert(ignore_permissions=True)
+		# Reload so site Server Scripts see DB-normalised values (unset floats as 0, not
+		# None), as they would on a desk submit; "Process Loss Handling For Work Order"
+		# compares custom_handling_loss_qty > 0 and fails on None.
+		se.reload()
 		se.submit()
 
 		self.db_set("work_order", work_order.name)

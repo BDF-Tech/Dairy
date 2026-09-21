@@ -1,8 +1,14 @@
 // Copyright (c) 2026, BDF and contributors
 // For license information, please see license.txt
 
+const MILK_BASE_ITEM_GROUP = "Semi-Finished Goods";
+
 frappe.ui.form.on("Milk Standardisation", {
 	setup(frm) {
+		// Only semi-finished items (milk bases) can be standardised.
+		frm.set_query("finished_item", function () {
+			return { filters: { item_group: MILK_BASE_ITEM_GROUP, disabled: 0 } };
+		});
 		// Only show BOMs for the chosen finished item.
 		frm.set_query("bom", function () {
 			return { filters: { item: frm.doc.finished_item, is_active: 1, docstatus: 1 } };
@@ -17,6 +23,8 @@ frappe.ui.form.on("Milk Standardisation", {
 	},
 
 	finished_item(frm) {
+		// A BOM belongs to one item, so a BOM picked for the previous item no longer applies.
+		frm.set_value("bom", "");
 		if (!frm.doc.finished_item) return;
 		// Prefill the default BOM and the target FAT/SNF from the base's BOM standard.
 		frappe.db.get_value(

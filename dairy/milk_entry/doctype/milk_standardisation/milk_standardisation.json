@@ -60,7 +60,7 @@
    "reqd": 1
   },
   {
-   "description": "The milk base to produce (e.g. Regular Milk Base).",
+   "description": "The milk base to produce (e.g. Regular Milk Base). Only items in the Semi-Finished Goods group.",
    "fieldname": "finished_item",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -70,11 +70,12 @@
    "reqd": 1
   },
   {
-   "description": "Used only to know which items may take part. BOM quantities and FAT/SNF are ignored.",
+   "description": "Select the Milk Base first; only its active BOMs are listed. BOM quantities and FAT/SNF are ignored.",
    "fieldname": "bom",
    "fieldtype": "Link",
    "label": "BOM",
    "options": "BOM",
+   "read_only_depends_on": "eval:!doc.finished_item",
    "reqd": 1
   },
   {
@@ -299,7 +300,7 @@
    "link_fieldname": "custom_milk_standardization"
   }
  ],
- "modified": "2026-07-17 00:00:00.000000",
+ "modified": "2026-09-21 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Milk Entry",
  "name": "Milk Standardisation",
