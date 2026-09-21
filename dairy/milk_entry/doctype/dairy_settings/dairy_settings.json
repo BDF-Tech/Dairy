@@ -135,7 +135,14 @@
     "section_break_0cpzy",
     "loan_deduction_debit_account",
     "column_break_kai1g",
-    "loan_deduction_credit_account"
+    "loan_deduction_credit_account",
+    "milk_standardisation_tab",
+    "milk_std_intro",
+    "default_fat_tolerance",
+    "column_break_mstol",
+    "default_snf_tolerance",
+    "milk_std_levers_section",
+    "milk_standardisation_levers"
    ],
    "fields": [
     {
@@ -806,6 +813,47 @@
      "fieldtype": "Link",
      "label": "Loan Deduction Credit Account",
      "options": "Account"
+    },
+    {
+     "fieldname": "milk_standardisation_tab",
+     "fieldtype": "Tab Break",
+     "label": "Milk Standardisation"
+    },
+    {
+     "fieldname": "milk_std_intro",
+     "fieldtype": "HTML",
+     "options": "<p style='color:var(--text-muted)'>Configure the additive items used to standardise milk, and the FAT/SNF each one contributes. The Milk Standardisation form reads these to auto-suggest quantities. Roles: <b>SNF Booster</b> raises SNF (e.g. SMP), <b>Diluent</b> lowers FAT &amp; SNF (e.g. RO Water), <b>Fat Booster</b> raises FAT (e.g. Cream).</p>"
+    },
+    {
+     "default": "0.1",
+     "description": "Default allowed +/- band on FAT for a batch to be in spec.",
+     "fieldname": "default_fat_tolerance",
+     "fieldtype": "Float",
+     "label": "Default FAT Tolerance +/-",
+     "non_negative": 1
+    },
+    {
+     "fieldname": "column_break_mstol",
+     "fieldtype": "Column Break"
+    },
+    {
+     "default": "0.2",
+     "description": "Default allowed +/- band on SNF for a batch to be in spec.",
+     "fieldname": "default_snf_tolerance",
+     "fieldtype": "Float",
+     "label": "Default SNF Tolerance +/-",
+     "non_negative": 1
+    },
+    {
+     "fieldname": "milk_std_levers_section",
+     "fieldtype": "Section Break",
+     "label": "Standardisation Additives"
+    },
+    {
+     "fieldname": "milk_standardisation_levers",
+     "fieldtype": "Table",
+     "label": "Milk Standardisation Levers",
+     "options": "Milk Standardisation Lever"
     }
    ],
    "index_web_pages_for_search": 1,

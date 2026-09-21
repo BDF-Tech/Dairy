@@ -64,7 +64,9 @@ fixtures = fixtures = [
             "Sales Invoice-party_balance",
             "Sales Invoice-update_party_balance",
             "Item Tax Template-tax_rate",
-            "Address-fssai_lic_no"
+            "Address-fssai_lic_no",
+            "Stock Entry-custom_milk_standardization",
+            "Stock Entry-custom_bypass_validation"
         )]]},
     {"dt": "Dashboard Chart", "filters": [["name", "in", [
         "Crates Dispatched Daily",
