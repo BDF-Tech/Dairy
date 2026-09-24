@@ -66,7 +66,9 @@ fixtures = fixtures = [
             "Item Tax Template-tax_rate",
             "Address-fssai_lic_no",
             "Stock Entry-custom_milk_standardization",
-            "Stock Entry-custom_bypass_validation"
+            "Stock Entry-custom_bypass_validation",
+            "Warehouse-custom_is_milk_silo",
+            "Warehouse-custom_silo_capacity"
         )]]},
     {"dt": "Dashboard Chart", "filters": [["name", "in", [
         "Crates Dispatched Daily",
@@ -199,6 +201,8 @@ doc_events = {
     },
     "Stock Entry":{
         "before_validate": "dairy.milk_entry.custom_stock_entry.clear_inherited_transit_links",
+        # Milk leaving a silo carries that silo's FAT/SNF into the Milk Ledger.
+        "validate": "dairy.milk_standardisation.quality.stock_entry_quality",
         "after_insert": ["dairy.milk_entry.doctype.van_collection.van_collection.change_van_collection_status",
                          "dairy.milk_entry.custom_stock_entry.milk_ledger_stock_entry"],
         "before_save":[ "dairy.milk_entry.custom_stock_entry.milk_ledger_stock_entry"
@@ -211,6 +215,8 @@ doc_events = {
     },
     "Purchase Receipt":{
         "after_insert": "dairy.milk_entry.custom_purchase_receipt.change_milk_entry_status",
+        # Milk bought into a silo must state FAT/SNF; the kg follow from it.
+        "validate": "dairy.milk_standardisation.quality.purchase_receipt_quality",
         # "on_cancel": ["dairy.milk_entry.custom_purchase_receipt.cancel_create_milk_stock_ledger"],
         "on_submit": "dairy.milk_entry.custom_purchase_receipt.change_milk_status"
                     #   "dairy.milk_entry.custom_purchase_receipt.create_milk_stock_ledger",

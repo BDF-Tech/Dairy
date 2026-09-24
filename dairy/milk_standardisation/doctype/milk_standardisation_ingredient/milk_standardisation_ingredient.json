@@ -14,12 +14,16 @@
   "uom",
   "conversion_factor",
   "stock_qty",
+  "kg_per_stock_unit",
+  "qty_kg",
+  "available_qty_kg",
   "column_break_quality",
   "fat",
   "snf",
   "column_break_mass",
   "kg_fat",
-  "kg_snf"
+  "kg_snf",
+  "quality_source"
  ],
  "fields": [
   {
@@ -87,6 +91,30 @@
    "read_only": 1
   },
   {
+   "default": "1",
+   "description": "Kg in one stock unit of the item (from the item's Weight Per Unit).",
+   "fieldname": "kg_per_stock_unit",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Kg per Stock Unit",
+   "read_only": 1
+  },
+  {
+   "description": "Quantity in kg. All FAT/SNF maths use this.",
+   "fieldname": "qty_kg",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty (Kg)",
+   "read_only": 1
+  },
+  {
+   "description": "How much of this milk the silo holds right now, in kg.",
+   "fieldname": "available_qty_kg",
+   "fieldtype": "Float",
+   "label": "Available (Kg)",
+   "read_only": 1
+  },
+  {
    "fieldname": "column_break_quality",
    "fieldtype": "Column Break"
   },
@@ -123,15 +151,22 @@
    "in_list_view": 1,
    "label": "Kg SNF",
    "read_only": 1
+  },
+  {
+   "description": "Where the FAT/SNF came from: the lab's Silo Quality Test, or the Milk Ledger.",
+   "fieldname": "quality_source",
+   "fieldtype": "Data",
+   "label": "Quality From",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-07-17 12:30:00.000000",
+ "modified": "2026-09-24 17:02:44.000000",
  "modified_by": "Administrator",
- "module": "Milk Entry",
+ "module": "Milk Standardisation",
  "name": "Milk Standardisation Ingredient",
  "owner": "Administrator",
  "permissions": [],

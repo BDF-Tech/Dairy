@@ -4,12 +4,29 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt
+from frappe.utils import flt, now_datetime
 
-# Quantity is used directly as the mass basis on the production blend sheet
-# (no litre->kg density conversion), matching how the team calculates today.
+# The blend sheet works in kg: every row's quantity is converted to its item's stock
+# unit, then to kg with the item's Weight Per Unit (milk is 1.03 kg per litre). FAT/SNF
+# percentages are by weight, so the batch maths only add up on a kg basis.
 
 MILK_BASE_ITEM_GROUP = "Semi-Finished Goods"
+KG_UOMS = ("kg", "kgs", "kilogram", "kilograms")
+
+
+def kg_per_stock_unit(item_code):
+	"""Kg in one stock unit of the item: 1.03 for milk in litres, 1 for kg items."""
+	if not item_code:
+		return 1.0
+	item = frappe.db.get_value("Item", item_code, ["weight_per_unit", "weight_uom", "stock_uom"], as_dict=True)
+	if not item:
+		return 1.0
+	if flt(item.weight_per_unit) and (item.weight_uom or "").lower() in KG_UOMS:
+		return flt(item.weight_per_unit)
+	if (item.stock_uom or "").lower() in KG_UOMS:
+		return 1.0
+	# No weight on the item: treat one stock unit as one kg (true for water).
+	return 1.0
 
 
 class MilkStandardisation(Document):
@@ -17,6 +34,25 @@ class MilkStandardisation(Document):
 		self._validate_item_and_bom()
 		self._apply_setting_defaults()
 		self.compute_batch()
+		self.compute_lab_result()
+		self._validate_silo_availability()
+
+	def _validate_silo_availability(self):
+		"""A row cannot draw more milk than its silo holds."""
+		from dairy.milk_standardisation.silo import get_quality, is_silo
+
+		for row in self.ingredients:
+			source = row.warehouse or row.source_name
+			if not (source and is_silo(source)) or flt(row.qty_kg) <= 0:
+				continue
+			available = flt(get_quality(source, row.item).qty_kg)
+			row.available_qty_kg = available
+			if flt(row.qty_kg) > available + 1e-6:
+				frappe.throw(
+					_("Row {0}: {1} holds {2} kg of {3}, but the row draws {4} kg.").format(
+						row.idx, frappe.bold(source), flt(available, 3), row.item, flt(row.qty_kg, 3)
+					)
+				)
 
 	def _validate_item_and_bom(self):
 		if self.finished_item:
@@ -55,12 +91,30 @@ class MilkStandardisation(Document):
 			over = self.total_qty - target
 			frappe.throw(
 				_(
-					"Total batch quantity {0} exceeds the Target Batch Quantity {1} by {2} "
+					"Total batch quantity {0} kg exceeds the Target Batch Quantity {1} kg by {2} "
 					"(allowed +{3}).<br>The additives add volume on top of the milk. To land on "
 					"{1}, reduce the milk/ingredient quantities (or use Auto mode, which solves to "
 					"exactly {1}), or raise the Target Batch Quantity."
 				).format(
 					flt(self.total_qty, 3), flt(target, 3), flt(over, 3), flt(self.batch_qty_tolerance, 3),
+				)
+			)
+
+		if not (flt(self.tested_fat) and flt(self.tested_snf)):
+			frappe.throw(
+				_("Enter the batch lab result (Tested FAT % and Tested SNF %) before submitting.")
+			)
+
+		if not self.lab_in_spec:
+			frappe.throw(
+				_(
+					"Lab result is out of tolerance and the batch cannot be submitted.<br>"
+					"Tested FAT {0}% vs target {1}% (allowed &plusmn;{2}).<br>"
+					"Tested SNF {3}% vs target {4}% (allowed &plusmn;{5}).<br>"
+					"Adjust the quantities, mix and retest."
+				).format(
+					flt(self.tested_fat, 3), flt(self.target_fat, 3), flt(self.fat_tolerance, 3),
+					flt(self.tested_snf, 3), flt(self.target_snf, 3), flt(self.snf_tolerance, 3),
 				)
 			)
 
@@ -85,21 +139,28 @@ class MilkStandardisation(Document):
 	def compute_batch(self):
 		"""Per-row Kg Fat/SNF, then roll up the batch's achieved FAT/SNF.
 
-		Each row's quantity is converted to the item's stock unit first, so rows
-		entered in different units (kg / gm / litre) reconcile onto one basis.
+		Each row's quantity is converted to its item's stock unit and then to kg, so
+		rows entered in different units (kg / gm / litre) reconcile on one weight basis.
 		"""
 		total_qty = total_kg_fat = total_kg_snf = 0.0
 		for row in self.ingredients:
 			cf = flt(row.conversion_factor) or 1.0
 			row.conversion_factor = cf
 			row.stock_qty = flt(row.qty) * cf
-			row.kg_fat = row.stock_qty * flt(row.fat) / 100.0
-			row.kg_snf = row.stock_qty * flt(row.snf) / 100.0
-			total_qty += row.stock_qty
+			row.kg_per_stock_unit = kg_per_stock_unit(row.item)
+			row.qty_kg = row.stock_qty * row.kg_per_stock_unit
+			row.kg_fat = row.qty_kg * flt(row.fat) / 100.0
+			row.kg_snf = row.qty_kg * flt(row.snf) / 100.0
+			total_qty += row.qty_kg
 			total_kg_fat += row.kg_fat
 			total_kg_snf += row.kg_snf
 
 		self.total_qty = total_qty
+		# What actually gets posted to stock, in the milk base's own unit.
+		self.output_uom = frappe.db.get_value("Item", self.finished_item, "stock_uom") if self.finished_item else None
+		# Rounded, because the Work Order stores 9 decimals and Stock Entry refuses a
+		# finished quantity even a float's hair above it.
+		self.output_qty = flt(total_qty / (kg_per_stock_unit(self.finished_item) or 1.0), 3)
 		self.total_kg_fat = total_kg_fat
 		self.total_kg_snf = total_kg_snf
 
@@ -117,6 +178,24 @@ class MilkStandardisation(Document):
 			and abs(self.fat_deviation) <= flt(self.fat_tolerance) + 1e-9
 			and abs(self.snf_deviation) <= flt(self.snf_tolerance) + 1e-9
 		)
+
+	def compute_lab_result(self):
+		"""Compare the lab's FAT/SNF of the mixed batch with the target."""
+		if not (flt(self.tested_fat) and flt(self.tested_snf)):
+			self.tested_fat_deviation = self.tested_snf_deviation = 0.0
+			self.lab_in_spec = 0
+			return
+
+		self.tested_fat_deviation = flt(self.tested_fat) - flt(self.target_fat)
+		self.tested_snf_deviation = flt(self.tested_snf) - flt(self.target_snf)
+		self.lab_in_spec = int(
+			abs(self.tested_fat_deviation) <= flt(self.fat_tolerance) + 1e-9
+			and abs(self.tested_snf_deviation) <= flt(self.snf_tolerance) + 1e-9
+		)
+		if not self.tested_by:
+			self.tested_by = frappe.session.user
+		if not self.test_datetime:
+			self.test_datetime = now_datetime()
 
 	# ------------------------------------------------------- stock movement
 
@@ -140,7 +219,7 @@ class MilkStandardisation(Document):
 		# It does NOT auto-pull BOM items — that only happens on an explicit get_items().
 		se.from_bom = 1
 		se.use_multi_level_bom = 0
-		se.fg_completed_qty = flt(self.total_qty)
+		se.fg_completed_qty = flt(self.output_qty)
 		se.posting_date = frappe.utils.getdate(self.posting_datetime)
 		se.posting_time = frappe.utils.get_time(self.posting_datetime)
 		se.set_posting_time = 1
@@ -150,26 +229,48 @@ class MilkStandardisation(Document):
 		if se.meta.has_field("custom_bypass_validation"):
 			se.custom_bypass_validation = 1
 
+		# FAT/SNF on each line feed the Milk Ledger (custom_stock_ledger_entry), which
+		# reads Stock Entry Detail fat / fat_per / snf / snf_per.
+		track_quality = frappe.get_meta("Stock Entry Detail").has_field("fat_per")
+
 		for row in self.ingredients:
 			if flt(row.qty) <= 0:
 				continue
-			se.append("items", {
+			item = {
 				"item_code": row.item,
 				"qty": flt(row.qty),
 				"s_warehouse": row.warehouse or row.source_name or self.source_warehouse,
 				"uom": row.uom or frappe.db.get_value("Item", row.item, "stock_uom"),
 				"conversion_factor": flt(row.conversion_factor) or 1,
 				"is_finished_item": 0,
-			})
+			}
+			if track_quality:
+				item.update({
+					"fat_per": flt(row.fat),
+					"snf_per": flt(row.snf),
+					"fat": flt(row.kg_fat),
+					"snf": flt(row.kg_snf),
+				})
+			se.append("items", item)
 
-		se.append("items", {
+		finished = {
 			"item_code": self.finished_item,
-			"qty": flt(self.total_qty),
+			"qty": flt(self.output_qty),
 			"t_warehouse": self.target_warehouse,
 			"uom": frappe.db.get_value("Item", self.finished_item, "stock_uom"),
 			"conversion_factor": 1,
 			"is_finished_item": 1,
-		})
+		}
+		if track_quality:
+			# The batch carries its lab-tested quality, so any gap to the inputs' kg FAT/SNF
+			# shows in the Milk Ledger as a gain or loss.
+			finished.update({
+				"fat_per": flt(self.tested_fat),
+				"snf_per": flt(self.tested_snf),
+				"fat": flt(self.total_qty) * flt(self.tested_fat) / 100.0,  # total_qty is kg
+				"snf": flt(self.total_qty) * flt(self.tested_snf) / 100.0,
+			})
+		se.append("items", finished)
 
 		se.insert(ignore_permissions=True)
 		# Reload so site Server Scripts see DB-normalised values (unset floats as 0, not
@@ -193,7 +294,7 @@ class MilkStandardisation(Document):
 		wo.production_item = self.finished_item
 		wo.bom_no = self.bom
 		wo.company = self.company
-		wo.qty = flt(self.total_qty)
+		wo.qty = flt(self.output_qty)
 		wo.fg_warehouse = self.target_warehouse
 		wo.wip_warehouse = self.source_warehouse or self.target_warehouse
 		wo.skip_transfer = 1
@@ -219,7 +320,7 @@ class MilkStandardisation(Document):
 @frappe.whitelist()
 def suggest_quantities(doc):
 	"""Solve the whole recipe so the FINAL total equals the Target Batch Quantity
-	exactly, at the target FAT/SNF.
+	(kg) exactly, at the target FAT/SNF.
 
 	The milk rows define the blend (ratio + quality); their quantities are scaled so
 	that milk + additives = Target Batch Quantity. Three unknowns (milk, SNF booster,
@@ -242,15 +343,16 @@ def suggest_quantities(doc):
 	levers = _get_levers()
 	lever_items = {l["item"] for l in levers}
 
-	# Milk = every row whose item is not a configured additive; work in stock units.
+	# Milk = every row whose item is not a configured additive; work in kg.
 	milk_rows, milk_qty, mf, ms = [], 0.0, 0.0, 0.0
 	for row in doc.get("ingredients") or []:
 		if row.get("item") in lever_items:
 			continue
-		sq = flt(row.get("qty")) * (flt(row.get("conversion_factor")) or 1.0)
-		milk_qty += sq
-		mf += sq * flt(row.get("fat")) / 100.0
-		ms += sq * flt(row.get("snf")) / 100.0
+		kg = (flt(row.get("qty")) * (flt(row.get("conversion_factor")) or 1.0)
+			* kg_per_stock_unit(row.get("item")))
+		milk_qty += kg
+		mf += kg * flt(row.get("fat")) / 100.0
+		ms += kg * flt(row.get("snf")) / 100.0
 		milk_rows.append(row)
 
 	if milk_qty <= 0:
@@ -285,7 +387,7 @@ def suggest_quantities(doc):
 		_throw_infeasible(fr, sr, F, S, Q, snf_lever, diluent, booster, attempts)
 
 	fat_lever, m_qty, p, x = solution
-	factor = m_qty / milk_qty  # scale milk to the solved amount, preserving the blend
+	factor = m_qty / milk_qty  # scale milk (in kg) to the solved amount, preserving the blend
 	source_warehouse = doc.get("source_warehouse")
 
 	out = []
@@ -297,23 +399,40 @@ def suggest_quantities(doc):
 			"qty": flt(flt(row.get("qty")) * factor, 3),
 			"uom": row.get("uom"),
 			"conversion_factor": flt(row.get("conversion_factor")) or 1,
+			"kg_per_stock_unit": kg_per_stock_unit(row.get("item")),
+			"available_qty_kg": flt(row.get("available_qty_kg")),
+			"quality_source": row.get("quality_source"),
 			"fat": flt(row.get("fat")),
 			"snf": flt(row.get("snf")),
 		})
-	for lever, qty in ((snf_lever, p), (fat_lever, x)):
-		if qty <= 1e-6:
+	for lever, kg in ((snf_lever, p), (fat_lever, x)):
+		if kg <= 1e-6:
 			continue
+		uom = lever.get("default_uom") or frappe.db.get_value("Item", lever["item"], "stock_uom")
+		cf = _conversion_factor(lever["item"], uom)
+		# Solved in kg, entered in the additive's own unit.
+		kg_per_entered_unit = cf * kg_per_stock_unit(lever["item"])
 		out.append({
 			"source_name": source_warehouse,
 			"item": lever["item"],
 			"warehouse": source_warehouse,
-			"qty": flt(qty, 3),
-			"uom": frappe.db.get_value("Item", lever["item"], "stock_uom"),
-			"conversion_factor": 1,
+			"qty": flt(kg / (kg_per_entered_unit or 1.0), 3),
+			"uom": uom,
+			"conversion_factor": cf,
+			"kg_per_stock_unit": kg_per_stock_unit(lever["item"]),
 			"fat": lever["fat"],
 			"snf": lever["snf"],
 		})
 	return out
+
+
+def _conversion_factor(item_code, uom):
+	"""How many stock units one `uom` is, as the desk's item details would return."""
+	stock_uom = frappe.db.get_value("Item", item_code, "stock_uom")
+	if not uom or uom == stock_uom:
+		return 1.0
+	cf = frappe.db.get_value("UOM Conversion Detail", {"parent": item_code, "uom": uom}, "conversion_factor")
+	return flt(cf) or 1.0
 
 
 def _get_levers():
@@ -332,11 +451,54 @@ def _get_levers():
 
 
 @frappe.whitelist()
+def get_silo_milk_rows(company=None, item_code=None):
+	"""One blend-sheet row per silo holding milk, quantities and quality filled in.
+
+	Quantities are offered in kg — the silo's whole stock — for the operator to trim
+	to what they will actually draw.
+	"""
+	from dairy.milk_standardisation.silo import get_silo_milk
+
+	rows = []
+	for silo in get_silo_milk(company=company, item_code=item_code):
+		uom, cf = _entry_uom(silo["item_code"])
+		kg_per_unit = cf * kg_per_stock_unit(silo["item_code"])
+		rows.append({
+			"source_name": silo["warehouse"],
+			"warehouse": silo["warehouse"],
+			"item": silo["item_code"],
+			"qty": flt(silo["qty_kg"] / (kg_per_unit or 1.0), 3),
+			"uom": uom,
+			"conversion_factor": cf,
+			"kg_per_stock_unit": kg_per_stock_unit(silo["item_code"]),
+			"available_qty_kg": flt(silo["qty_kg"], 3),
+			"fat": flt(silo["fat"], 3),
+			"snf": flt(silo["snf"], 3),
+			"quality_source": silo["source"],
+		})
+	if not rows:
+		frappe.throw(
+			_("No milk silo is holding stock. Tick <b>Is Milk Silo</b> on the silo warehouses, "
+			  "or receive milk into one first.")
+		)
+	return rows
+
+
+def _entry_uom(item_code):
+	"""Enter milk in kg where the item allows it, since the batch is worked out by weight."""
+	stock_uom = frappe.db.get_value("Item", item_code, "stock_uom")
+	if (stock_uom or "").lower() in KG_UOMS:
+		return stock_uom, 1.0
+	cf = frappe.db.get_value("UOM Conversion Detail", {"parent": item_code, "uom": "Kg"}, "conversion_factor")
+	return ("Kg", flt(cf)) if cf else (stock_uom, 1.0)
+
+
+@frappe.whitelist()
 def get_item_row_defaults(item):
 	"""Defaults for a blend-sheet row: the item's stock UOM, and — if the item is a
 	configured additive lever — its FAT/SNF impact and preferred UOM from settings."""
 	stock_uom = frappe.db.get_value("Item", item, "stock_uom")
-	out = {"stock_uom": stock_uom, "is_lever": False}
+	out = {"stock_uom": stock_uom, "is_lever": False, "kg_per_stock_unit": kg_per_stock_unit(item)}
 	for lever in _get_levers():
 		if lever["item"] == item:
 			out.update({

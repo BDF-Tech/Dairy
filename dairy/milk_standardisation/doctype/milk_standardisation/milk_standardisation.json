@@ -31,6 +31,8 @@
   "total_qty",
   "achieved_fat",
   "achieved_snf",
+  "output_qty",
+  "output_uom",
   "column_break_r1",
   "total_kg_fat",
   "total_kg_snf",
@@ -39,6 +41,17 @@
   "fat_deviation",
   "snf_deviation",
   "in_spec",
+  "lab_section",
+  "tested_fat",
+  "tested_snf",
+  "column_break_lab1",
+  "tested_fat_deviation",
+  "tested_snf_deviation",
+  "lab_in_spec",
+  "column_break_lab2",
+  "tested_by",
+  "test_datetime",
+  "lab_remarks",
   "reference_section",
   "work_order",
   "column_break_ref",
@@ -118,10 +131,10 @@
    "label": "Target Quality"
   },
   {
-   "description": "The finished batch size you intend to produce. In Auto mode the recipe is solved to hit exactly this quantity; on submit, going over it (beyond tolerance) is blocked.",
+   "description": "The finished batch size in kg. In Auto mode the recipe is solved to hit exactly this; on submit, going over it (beyond tolerance) is blocked.",
    "fieldname": "target_batch_qty",
    "fieldtype": "Float",
-   "label": "Target Batch Quantity",
+   "label": "Target Batch Quantity (Kg)",
    "non_negative": 1
   },
   {
@@ -168,10 +181,10 @@
   },
   {
    "default": "1",
-   "description": "How far over the Target Batch Quantity the total may go before submit is blocked.",
+   "description": "How far over the target batch quantity the total may go before submit is blocked.",
    "fieldname": "batch_qty_tolerance",
    "fieldtype": "Float",
-   "label": "Batch Qty Tolerance +",
+   "label": "Batch Qty Tolerance + (Kg)",
    "non_negative": 1
   },
   {
@@ -194,8 +207,9 @@
   {
    "fieldname": "total_qty",
    "fieldtype": "Float",
-   "label": "Total Quantity",
-   "read_only": 1
+   "label": "Total Quantity (Kg)",
+   "read_only": 1,
+   "description": "Sum of all ingredient quantities in kg."
   },
   {
    "fieldname": "achieved_fat",
@@ -207,6 +221,21 @@
    "fieldname": "achieved_snf",
    "fieldtype": "Percent",
    "label": "Achieved SNF %",
+   "read_only": 1
+  },
+  {
+   "description": "Quantity of the milk base posted to stock, in its own unit (total kg / the item's kg per unit).",
+   "fieldname": "output_qty",
+   "fieldtype": "Float",
+   "label": "Milk Base Qty (Stock UOM)",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "finished_item.stock_uom",
+   "fieldname": "output_uom",
+   "fieldtype": "Link",
+   "label": "Milk Base UOM",
+   "options": "UOM",
    "read_only": 1
   },
   {
@@ -230,10 +259,10 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Total quantity minus the target batch quantity. Positive = over target.",
+   "description": "Total kg minus the target batch quantity. Positive = over target.",
    "fieldname": "batch_qty_deviation",
    "fieldtype": "Float",
-   "label": "Batch Qty Deviation",
+   "label": "Batch Qty Deviation (Kg)",
    "read_only": 1
   },
   {
@@ -250,10 +279,76 @@
   },
   {
    "default": "0",
+   "description": "Calculated from the blend sheet quantities and FAT/SNF.",
    "fieldname": "in_spec",
    "fieldtype": "Check",
    "label": "In Spec",
    "read_only": 1
+  },
+  {
+   "description": "After mixing, the lab tests the batch. Submit needs a lab result within tolerance.",
+   "fieldname": "lab_section",
+   "fieldtype": "Section Break",
+   "label": "Batch Lab Test"
+  },
+  {
+   "description": "FAT % of the mixed batch, from the lab.",
+   "fieldname": "tested_fat",
+   "fieldtype": "Percent",
+   "label": "Tested FAT %",
+   "non_negative": 1
+  },
+  {
+   "description": "SNF % of the mixed batch, from the lab.",
+   "fieldname": "tested_snf",
+   "fieldtype": "Percent",
+   "label": "Tested SNF %",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_lab1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Tested FAT minus Target FAT.",
+   "fieldname": "tested_fat_deviation",
+   "fieldtype": "Float",
+   "label": "Tested FAT Deviation",
+   "read_only": 1
+  },
+  {
+   "description": "Tested SNF minus Target SNF.",
+   "fieldname": "tested_snf_deviation",
+   "fieldtype": "Float",
+   "label": "Tested SNF Deviation",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "lab_in_spec",
+   "fieldtype": "Check",
+   "label": "Lab Result In Spec",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_lab2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tested_by",
+   "fieldtype": "Link",
+   "label": "Tested By",
+   "options": "User"
+  },
+  {
+   "fieldname": "test_datetime",
+   "fieldtype": "Datetime",
+   "label": "Tested On"
+  },
+  {
+   "fieldname": "lab_remarks",
+   "fieldtype": "Small Text",
+   "label": "Lab Remarks"
   },
   {
    "fieldname": "reference_section",
@@ -300,9 +395,9 @@
    "link_fieldname": "custom_milk_standardization"
   }
  ],
- "modified": "2026-09-21 18:00:00.000000",
+ "modified": "2026-09-24 13:38:10.000000",
  "modified_by": "Administrator",
- "module": "Milk Entry",
+ "module": "Milk Standardisation",
  "name": "Milk Standardisation",
  "naming_rule": "Expression",
  "owner": "Administrator",
@@ -326,5 +421,6 @@
  "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "track_changes": 1
 }

@@ -1,0 +1,255 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:SQT-{YY}{MM}-{#####}",
+ "creation": "2026-09-24 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "silo",
+  "item",
+  "column_break_head",
+  "posting_datetime",
+  "shift",
+  "tested_by",
+  "result_section",
+  "fat",
+  "snf",
+  "column_break_res1",
+  "clr",
+  "temperature",
+  "column_break_res2",
+  "acidity",
+  "tested_qty",
+  "book_section",
+  "book_qty",
+  "book_fat",
+  "book_snf",
+  "column_break_book",
+  "qty_difference",
+  "fat_difference",
+  "snf_difference",
+  "remarks_section",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "silo",
+   "fieldtype": "Link",
+   "options": "Warehouse",
+   "label": "Silo",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Only warehouses ticked as a milk silo."
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "options": "Item",
+   "label": "Milk Item",
+   "reqd": 1,
+   "description": "The milk in the silo, e.g. Raw Cow Milk."
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posting_datetime",
+   "fieldtype": "Datetime",
+   "label": "Tested On",
+   "reqd": 1,
+   "default": "Now",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "options": "\nMorning\nEvening",
+   "label": "Shift",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "tested_by",
+   "fieldtype": "Link",
+   "options": "User",
+   "label": "Tested By"
+  },
+  {
+   "fieldname": "result_section",
+   "fieldtype": "Section Break",
+   "label": "Lab Result"
+  },
+  {
+   "fieldname": "fat",
+   "fieldtype": "Percent",
+   "label": "FAT %",
+   "reqd": 1,
+   "in_list_view": 1,
+   "non_negative": 1
+  },
+  {
+   "fieldname": "snf",
+   "fieldtype": "Percent",
+   "label": "SNF %",
+   "reqd": 1,
+   "in_list_view": 1,
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_res1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "clr",
+   "fieldtype": "Float",
+   "label": "CLR",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "temperature",
+   "fieldtype": "Float",
+   "label": "Temperature (°C)"
+  },
+  {
+   "fieldname": "column_break_res2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "acidity",
+   "fieldtype": "Float",
+   "label": "Acidity (% LA)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "tested_qty",
+   "fieldtype": "Float",
+   "label": "Dip Quantity",
+   "non_negative": 1,
+   "description": "Quantity measured in the tank, in the item's stock unit. Optional."
+  },
+  {
+   "fieldname": "book_section",
+   "fieldtype": "Section Break",
+   "label": "Against the ERP's Figure"
+  },
+  {
+   "fieldname": "book_qty",
+   "fieldtype": "Float",
+   "label": "ERP Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "book_fat",
+   "fieldtype": "Percent",
+   "label": "ERP FAT %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "book_snf",
+   "fieldtype": "Percent",
+   "label": "ERP SNF %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_book",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "qty_difference",
+   "fieldtype": "Float",
+   "label": "Qty Difference",
+   "read_only": 1,
+   "description": "Dip quantity minus the ERP quantity."
+  },
+  {
+   "fieldname": "fat_difference",
+   "fieldtype": "Float",
+   "label": "FAT Difference",
+   "read_only": 1,
+   "description": "Tested FAT minus the ERP's FAT."
+  },
+  {
+   "fieldname": "snf_difference",
+   "fieldtype": "Float",
+   "label": "SNF Difference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks_section",
+   "fieldtype": "Section Break",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "options": "Silo Quality Test",
+   "label": "Amended From",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-09-24 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Milk Standardisation",
+ "name": "Silo Quality Test",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "posting_datetime",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "silo",
+ "track_changes": 1
+}
