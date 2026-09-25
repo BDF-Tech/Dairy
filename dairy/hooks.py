@@ -186,6 +186,9 @@ doc_events = {
     "Quotation": {
         "validate": "dairy.milk_entry.custom_delivery_note.route_validation",
     },
+    "Customer": {
+        "validate": "dairy.milk_entry.custom_customer.validate_food_license",
+    },
     "Sales Invoice": {
         "validate": "dairy.milk_entry.custom_delivery_note.route_validation",
         "before_submit": ["dairy.milk_entry.custom_sales_invoice.before_submit",
