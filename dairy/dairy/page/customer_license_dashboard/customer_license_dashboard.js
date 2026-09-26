@@ -102,7 +102,7 @@ frappe.pages['customer-license-dashboard'].on_page_load = function (wrapper) {
 			get_data: (txt) => frappe.db.get_link_options('Customer Group', txt),
 			change: () => render(),
 		}),
-		territory: page.add_field({ fieldname: 'territory', label: __('Territory'), fieldtype: 'Link', options: 'Territory', change: () => render() }),
+		route: page.add_field({ fieldname: 'route', label: __('Route'), fieldtype: 'Link', options: 'Route Master', change: () => render() }),
 		unlicensed: page.add_field({ fieldname: 'include_unlicensed', label: __('Include without licence'), fieldtype: 'Check', change: () => load() }),
 		disabled: page.add_field({ fieldname: 'include_disabled', label: __('Include disabled'), fieldtype: 'Check', change: () => load() }),
 	};
@@ -155,15 +155,15 @@ frappe.pages['customer-license-dashboard'].on_page_load = function (wrapper) {
 		});
 	}
 
-	// Search / group / territory narrow the set; KPIs count this set so they
+	// Search / group / route narrow the set; KPIs count this set so they
 	// always agree with the filters. Status is applied on top of it.
 	function base_rows() {
 		const q = (f.search.get_value() || '').toLowerCase().trim();
 		const groups = f.group.get_value() || [];
-		const ter = f.territory.get_value();
+		const route = f.route.get_value();
 		return (DATA.rows || []).filter((r) => {
 			if (groups.length && !groups.includes(r.customer_group)) return false;
-			if (ter && r.territory !== ter) return false;
+			if (route && r.route !== route) return false;
 			if (!q) return true;
 			return `${r.customer} ${r.customer_name || ''} ${r.food_license_number || ''}`.toLowerCase().includes(q);
 		});
@@ -241,7 +241,7 @@ frappe.pages['customer-license-dashboard'].on_page_load = function (wrapper) {
 						<div class="cld-field"><div class="k">${__('FSSAI Licence No')}</div><div class="v">${r.food_license_number ? esc(r.food_license_number) : '—'}${dup_flag(r)}</div></div>
 						<div class="cld-field"><div class="k">${__('Valid Till')}</div><div class="v">${r.food_license_validity ? frappe.datetime.str_to_user(r.food_license_validity) : '—'}</div></div>
 						<div class="cld-field"><div class="k">${__('Customer Group')}</div><div class="v">${esc(r.customer_group || '—')}</div></div>
-						<div class="cld-field"><div class="k">${__('Territory')}</div><div class="v">${esc(r.territory || '—')}</div></div>
+						<div class="cld-field"><div class="k">${__('Route')}</div><div class="v">${esc(r.route || '—')}</div></div>
 					</div>
 				</div>
 				<div class="cld-card-foot">
@@ -266,7 +266,7 @@ frappe.pages['customer-license-dashboard'].on_page_load = function (wrapper) {
 						<th class="num">${__('Days')}</th>
 						<th>${__('Status')}</th>
 						<th>${__('Customer Group')}</th>
-						<th>${__('Territory')}</th>
+						<th>${__('Route')}</th>
 					</tr></thead>
 					<tbody>${sorted.map((r) => {
 						const meta = STATUS[r.status];
@@ -278,7 +278,7 @@ frappe.pages['customer-license-dashboard'].on_page_load = function (wrapper) {
 							<td class="num"><span class="cld-days">${days}</span></td>
 							<td><span class="indicator-pill ${meta.color}">${__(r.status)}</span></td>
 							<td>${esc(r.customer_group || '—')}</td>
-							<td>${esc(r.territory || '—')}</td>
+							<td>${esc(r.route || '—')}</td>
 						</tr>`;
 					}).join('')}</tbody>
 				</table>

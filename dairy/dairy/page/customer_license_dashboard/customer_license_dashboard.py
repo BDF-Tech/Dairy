@@ -42,7 +42,7 @@ def get_license_overview(include_disabled=0, include_unlicensed=0):
 	where = ("where " + " and ".join(conditions)) if conditions else ""
 
 	rows = frappe.db.sql(
-		f"""select c.name as customer, c.customer_name, c.customer_group, c.territory,
+		f"""select c.name as customer, c.customer_name, c.customer_group, c.custom_route_master as route,
 		           c.disabled, c.food_license_number, c.food_license_validity
 		    from `tabCustomer` c
 		    {where}
@@ -71,5 +71,4 @@ def get_license_overview(include_disabled=0, include_unlicensed=0):
 		"today": str(now),
 		"cutoff": str(cutoff),
 		"customer_groups": sorted({r.customer_group for r in rows if r.customer_group}),
-		"territories": sorted({r.territory for r in rows if r.territory}),
 	}
