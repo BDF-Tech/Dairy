@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils.data import format_date, getdate
+from frappe.utils.data import flt, format_date, getdate
 
 @frappe.whitelist()
 def get_jinja_data(doc):
@@ -298,26 +298,101 @@ def warehouse_address(warehouse):
 		return lst
 
 
-@frappe.whitelist()
-def get_purchase(pr):
-	doc=frappe.get_doc("Purchase Invoice",pr)
-	dlst=[]
-	for j in doc.items:
-		if not j.purchase_receipt:
+def _get_purchase_rows(pi):
+	"""One row per Purchase Receipt on the invoice, with its Milk Entry joined in.
+
+	Bulk printing farmer bills renders this for every invoice, so it is a fixed
+	number of queries instead of loading each receipt and milk entry as a doc.
+	"""
+	receipts = frappe.db.sql(
+		"""
+		select pr.name as receipt, pr.posting_date, ifnull(pr.shift, '') as shift,
+			me.name as milk_entry, me.unit_price, me.snf_deduction_per, me.incentive
+		from `tabPurchase Invoice Item` pii
+		join `tabPurchase Receipt` pr on pr.name = pii.purchase_receipt
+		left join `tabMilk Entry` me on me.name = pr.milk_entry
+		where pii.parent = %s and pii.parenttype = 'Purchase Invoice'
+		order by pii.idx
+		""",
+		pi,
+		as_dict=True,
+	)
+	if not receipts:
+		return []
+
+	# The bill shows one line per receipt; when a receipt has several items the
+	# last one wins, as it always has.
+	receipt_items = {}
+	for item in frappe.db.sql(
+		"""
+		select parent, qty, fat_per_, snf_clr_per, rate, amount
+		from `tabPurchase Receipt Item`
+		where parent in %s
+		order by idx
+		""",
+		[tuple({r.receipt for r in receipts})],
+		as_dict=True,
+	):
+		receipt_items[item.parent] = item
+
+	rows = []
+	for r in receipts:
+		item = receipt_items.get(r.receipt)
+		if not item:
 			continue
-		h={}
-		pr_item=frappe.get_doc("Purchase Receipt",j.purchase_receipt)
 		# Receipts entered by hand have no Milk Entry behind them, so the rate on
 		# the receipt line is the only rate there is.
-		milk = frappe.get_doc('Milk Entry',pr_item.milk_entry) if pr_item.milk_entry else None
-		a = (milk.unit_price) - (milk.snf_deduction_per) if milk else None
-		for k in pr_item.items:
-			h.update({"ltr":k.qty,"fat":k.fat_per_,"snf":k.snf_clr_per,"rate":a if a is not None else k.rate,"amount":k.amount,"posting_date":format_date(pr_item.posting_date),"shift":pr_item.shift or ""})
-		if h:
-			dlst.append(h)
+		rate = flt(r.unit_price) - flt(r.snf_deduction_per) if r.milk_entry else item.rate
+		rows.append(
+			frappe._dict(
+				ltr=item.qty,
+				fat=item.fat_per_,
+				snf=item.snf_clr_per,
+				rate=rate,
+				amount=item.amount,
+				date=getdate(r.posting_date),
+				shift=r.shift,
+				milk_entry=r.milk_entry,
+				incentive=flt(r.incentive),
+			)
+		)
 
-	sorted_data = sorted(dlst, key=lambda x: (x["posting_date"], x["shift"].lower() != "morning"))
+	# Sort on the real date: the formatted dd-mm-yyyy string puts 01-10 before 26-09.
+	rows.sort(key=lambda x: (x.date, x.shift.lower() != "morning"))
+	for row in rows:
+		row.posting_date = format_date(row.date)
+	return rows
 
-	return sorted_data
+
+@frappe.whitelist()
+def get_purchase(pr):
+	return [
+		{k: row[k] for k in ("ltr", "fat", "snf", "rate", "amount", "posting_date", "shift")}
+		for row in _get_purchase_rows(pr)
+	]
+
+
+def get_farmer_bill(pi, supplier=None):
+	"""Everything the Farmer Bill print format needs, computed once per invoice."""
+	rows = _get_purchase_rows(pi)
+	milk_amount = sum(flt(r.rate) * flt(r.ltr) for r in rows)
+	incentive = sum(r.incentive for r in rows if r.milk_entry)
+
+	commission_type = frappe.db.get_value("Supplier", supplier, "commission_type") if supplier else None
+	is_bonus = commission_type == "Bonus"
+
+	return frappe._dict(
+		rows=rows,
+		from_date=rows[0].posting_date if rows else "",
+		to_date=rows[-1].posting_date if rows else "",
+		milk_amount=milk_amount,
+		commission=0 if is_bonus else incentive,
+		bonus=incentive if is_bonus else 0,
+		net_pay=milk_amount + incentive if supplier else 0,
+		supplier_name=frappe.db.get_value("Supplier", supplier, "supplier_name") if supplier else "",
+		bank=frappe.db.get_value("Bank Account", {"party_type": "Supplier", "party": supplier}, "bank")
+		if supplier
+		else "",
+	)
 
 
