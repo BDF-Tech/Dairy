@@ -1,13 +1,7 @@
 from __future__ import unicode_literals
-from frappe import _
+
 
 def get_data():
-    return {
-        'fieldname': 'crate_reconciliation',
-        'transactions': [
-            {
-                'label': _('Sales Invoice'),
-                'items': ['Sales Invoice']
-            },
-        ]
-    }
+    # Sales Invoice.crate_reconciliation was removed (never filled, and Sales Invoice is at the
+    # MariaDB row-size limit on v16), so there are no linked transactions to show.
+    return {"fieldname": "crate_reconciliation", "transactions": []}
