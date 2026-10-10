@@ -143,6 +143,34 @@ def cancel_create_milk_stock_ledger(self,method):
     
 
 
+def clear_inherited_transit_links(self, method=None):
+    """
+    When an end-transit Stock Entry is created by consuming a transit entry
+    (add_to_transit flow), ERPNext copies the source's custom fields into the
+    new entry — including `van_collection_item`. In crate stock entries that
+    field holds a Vehicle Movement Log id (set at Gate Check via db.set_value),
+    NOT a real "Van Collection Items". The inherited id then fails link
+    validation and blocks the save.
+
+    On end-transit entries (outgoing_stock_entry set), drop any inherited
+    van_collection / van_collection_item that doesn't resolve to a real record,
+    so the entry can save. Original crate/milk entries (no outgoing_stock_entry)
+    are untouched.
+    """
+    if not self.get("outgoing_stock_entry"):
+        return
+
+    if self.get("van_collection_item") and not frappe.db.exists(
+        "Van Collection Items", self.van_collection_item
+    ):
+        self.van_collection_item = ""
+
+    if self.get("van_collection") and not frappe.db.exists(
+        "Van Collection", self.van_collection
+    ):
+        self.van_collection = ""
+
+
 @frappe.whitelist()
 def get_item_weight(item_code):
     obj = frappe.get_doc("Item",item_code)

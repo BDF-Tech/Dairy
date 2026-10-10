@@ -1,0 +1,29 @@
+{
+ "content": null,
+ "creation": "2026-09-25 12:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-09-25 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "dairy",
+ "name": "customer-license-dashboard",
+ "owner": "Administrator",
+ "page_name": "customer-license-dashboard",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Sales User"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Customer License Dashboard"
+}

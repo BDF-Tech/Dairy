@@ -360,7 +360,7 @@ def create_milk_ledger_entry(self, method):
                                     "posting_time" : current_time,
                                     "actual_qty" : self.actual_qty,
                                     "fat" : i.fat,
-                                    "fat_per" : i.fat_per,
+                                    "fat_per" : i.fat_per_,
                                     "snf" : i.clr,
                                     "snf_per" : i.snf_clr_per,
                                     "stock_uom" : self.stock_uom,

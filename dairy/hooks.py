@@ -64,8 +64,27 @@ fixtures = fixtures = [
             "Sales Invoice-party_balance",
             "Sales Invoice-update_party_balance",
             "Item Tax Template-tax_rate",
-            "Address-fssai_lic_no"
-        )]]}
+            "Address-fssai_lic_no",
+            "Stock Entry-custom_milk_standardization",
+            "Stock Entry-custom_bypass_validation",
+            "Warehouse-custom_is_milk_silo",
+            "Warehouse-custom_silo_capacity"
+        )]]},
+    {"dt": "Dashboard Chart", "filters": [["name", "in", [
+        "Crates Dispatched Daily",
+        "Crates Returned Daily",
+        "VML Status Distribution",
+        "Crate Category Breakdown"
+    ]]]},
+    {"dt": "Number Card", "filters": [["name", "in", [
+        "VMls Today",
+        "Crates Out Today",
+        "Crates In Today",
+        "Active Trips"
+    ]]]},
+    {"dt": "Dashboard", "filters": [["name", "in", [
+        "Crate Tracking Dashboard"
+    ]]]}
 ]
 
 # include js, css files in header of web template
@@ -171,6 +190,9 @@ doc_events = {
     "Quotation": {
         "validate": "dairy.milk_entry.custom_delivery_note.route_validation",
     },
+    "Customer": {
+        "validate": "dairy.milk_entry.custom_customer.validate_food_license",
+    },
     "Sales Invoice": {
         "validate": "dairy.milk_entry.custom_delivery_note.route_validation",
         "before_submit": ["dairy.milk_entry.custom_sales_invoice.before_submit",
@@ -181,6 +203,9 @@ doc_events = {
         # "after_insert": "dairy.milk_entry.custom_sales_invoice.calculate_crate"
     },
     "Stock Entry":{
+        "before_validate": "dairy.milk_entry.custom_stock_entry.clear_inherited_transit_links",
+        # Milk leaving a silo carries that silo's FAT/SNF into the Milk Ledger.
+        "validate": "dairy.milk_standardisation.quality.stock_entry_quality",
         "after_insert": ["dairy.milk_entry.doctype.van_collection.van_collection.change_van_collection_status",
                          "dairy.milk_entry.custom_stock_entry.milk_ledger_stock_entry"],
         "before_save":[ "dairy.milk_entry.custom_stock_entry.milk_ledger_stock_entry"
@@ -193,6 +218,8 @@ doc_events = {
     },
     "Purchase Receipt":{
         "after_insert": "dairy.milk_entry.custom_purchase_receipt.change_milk_entry_status",
+        # Milk bought into a silo must state FAT/SNF; the kg follow from it.
+        "validate": "dairy.milk_standardisation.quality.purchase_receipt_quality",
         # "on_cancel": ["dairy.milk_entry.custom_purchase_receipt.cancel_create_milk_stock_ledger"],
         "on_submit": "dairy.milk_entry.custom_purchase_receipt.change_milk_status"
                     #   "dairy.milk_entry.custom_purchase_receipt.create_milk_stock_ledger",
@@ -247,6 +274,9 @@ scheduler_events = {
 	# "daily": [
 	# 	"dairy.milk_entry.doctype.milk_entry.milk_entry.sub"
 	# ],
+	"hourly": [
+		"dairy.dairy.doctype.crate_delivery.crate_delivery.clear_expired_otps",
+	],
 	"daily_long": [
 		"dairy.milk_entry.doctype.dairy_settings.dairy_settings.purchase_invoice",
 	],
@@ -259,6 +289,9 @@ scheduler_events = {
     "cron":{
         "10 0 * * *": [
         "dairy.milk_entry.custom_stock_entry.set_date"
+    ],
+        "*/10 * * * *": [
+        "dairy.dairy.page.accounts_dashboard.accounts_dashboard.warm_cache"
     ]}
  }
 

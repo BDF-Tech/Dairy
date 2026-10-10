@@ -14,11 +14,13 @@
   "milk_type",
   "effective_date",
   "snf_rate_in_kg",
+  "attach_file",
   "cl1",
   "dsc_name",
   "selling_rate",
   "simplified_milk_rate",
   "fat_rate_in_kg",
+  "upload_the_file",
   "sb1",
   "milk_rate_chart",
   "amended_from",
@@ -163,12 +165,23 @@
    "fieldname": "fat_rate_in_kg",
    "fieldtype": "Currency",
    "label": "FAT Rate (in kg)"
+  },
+  {
+   "fieldname": "attach_file",
+   "fieldtype": "Attach",
+   "label": "Attach file"
+  },
+  {
+   "fieldname": "upload_the_file",
+   "fieldtype": "Button",
+   "label": "Upload the file"
   }
  ],
+ "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-04-24 18:17:47.108737",
+ "modified": "2026-03-19 16:31:55.552405",
  "modified_by": "Administrator",
  "module": "Milk Entry",
  "name": "Milk Rate",
@@ -216,6 +229,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "search_fields": "milk_rate_name,milk_type,effective_date",
  "sort_field": "modified",
  "sort_order": "DESC",

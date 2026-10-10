@@ -312,29 +312,32 @@ def set_fat_and_snf_rate(obj,method):
                 if res.snf_clr and query[0].snf_clr_rate:
                     res.snf_clr_amount = res.snf_clr * query[0].snf_clr_rate
 
+def get_customer_company_balance(customer, company):
+    """Outstanding for one customer in one company.
+
+    This is the total_unpaid number erpnext's get_dashboard_info reports, but
+    scoped to a single company and read straight from the ledger. get_dashboard_info
+    walks every company the customer has billed under and permission-checks each
+    one's receivable account, so a user restricted to one company could not save a
+    document for a customer who also trades under another company.
+    """
+    if not customer or not company:
+        return 0.0
+
+    balance = frappe.db.sql("""
+        select sum(debit_in_account_currency) - sum(credit_in_account_currency)
+        from `tabGL Entry`
+        where party_type = 'Customer' and party = %s and company = %s and is_cancelled = 0
+    """, (customer, company))
+
+    return flt(balance[0][0]) if balance and balance[0][0] else 0.0
+
+
 @frappe.whitelist()
 def get_party_bal(customer,company):
-    cust_name =customer
-    doctype = "Customer"
-    loyalty_program = None
-
-    party_bal = get_dashboard_info(doctype, cust_name, loyalty_program)
-
-    if cust_name and party_bal:
-        for j in party_bal:
-            if company==j.get("company"):
-                return j.get("total_unpaid")
-
+    return get_customer_company_balance(customer, company)
 
 
 @frappe.whitelist()
 def get_party_bal_det(self,method):
-    cust_name =self.customer
-    doctype = "Customer"
-    loyalty_program = None
-
-    party_bal = get_dashboard_info(doctype, cust_name, loyalty_program)
-    if cust_name and party_bal:
-        for j in party_bal:
-            if self.company==j.get("company"):
-                self.party_balance=j.get("total_unpaid")
+    self.party_balance = get_customer_company_balance(self.customer, self.company)

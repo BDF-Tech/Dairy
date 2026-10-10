@@ -1,0 +1,5 @@
+[pre_model_sync]
+
+[post_model_sync]
+dairy.patches.v1_0.add_accounts_dashboard_indexes
+dairy.patches.v1_0.exempt_milk_standardisation_from_bom_lock

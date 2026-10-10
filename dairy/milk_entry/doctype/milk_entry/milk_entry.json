@@ -8,6 +8,7 @@
  "field_order": [
   "naming_series",
   "dcs_id",
+  "mpp_code",
   "column_break_cytfx",
   "station",
   "shift",
@@ -86,8 +87,7 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Total",
-   "options": "Currency",
-   "read_only": 1
+   "options": "Currency"
   },
   {
    "fieldname": "time",
@@ -202,8 +202,7 @@
    "fieldname": "unit_price",
    "fieldtype": "Currency",
    "label": "Unit Price",
-   "options": "Company:company:default_currency",
-   "read_only": 1
+   "options": "Company:company:default_currency"
   },
   {
    "fieldname": "amended_from",
@@ -393,8 +392,7 @@
    "fieldname": "unit_price_with_incentive",
    "fieldtype": "Currency",
    "label": "Rate",
-   "options": "Company:company:default_currency",
-   "read_only": 1
+   "options": "Company:company:default_currency"
   },
   {
    "fieldname": "extra_rate",
@@ -435,13 +433,18 @@
   {
    "fieldname": "column_break_cytfx",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mpp_code",
+   "fieldtype": "Int",
+   "label": "MPP Code"
   }
  ],
  "grid_page_length": 50,
  "is_submittable": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-04-18 12:29:52.584349",
+ "modified": "2026-03-14 15:58:13.977389",
  "modified_by": "Administrator",
  "module": "Milk Entry",
  "name": "Milk Entry",
@@ -479,6 +482,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "search_fields": "member,milk_rate,milk_type",
  "show_name_in_global_search": 1,
  "sort_field": "modified",

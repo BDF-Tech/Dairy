@@ -303,14 +303,19 @@ def get_purchase(pr):
 	doc=frappe.get_doc("Purchase Invoice",pr)
 	dlst=[]
 	for j in doc.items:
+		if not j.purchase_receipt:
+			continue
 		h={}
 		pr_item=frappe.get_doc("Purchase Receipt",j.purchase_receipt)
-		milk = frappe.get_doc('Milk Entry',pr_item.milk_entry)
-		a = (milk.unit_price) - (milk.snf_deduction_per)
-		for k in pr_item.items: 
-			h.update({"ltr":k.qty,"fat":k.fat_per_,"snf":k.snf_clr_per,"rate":a,"amount":k.amount,"posting_date":format_date(pr_item.posting_date),"shift":pr_item.shift})
-		dlst.append(h)
-		
+		# Receipts entered by hand have no Milk Entry behind them, so the rate on
+		# the receipt line is the only rate there is.
+		milk = frappe.get_doc('Milk Entry',pr_item.milk_entry) if pr_item.milk_entry else None
+		a = (milk.unit_price) - (milk.snf_deduction_per) if milk else None
+		for k in pr_item.items:
+			h.update({"ltr":k.qty,"fat":k.fat_per_,"snf":k.snf_clr_per,"rate":a if a is not None else k.rate,"amount":k.amount,"posting_date":format_date(pr_item.posting_date),"shift":pr_item.shift or ""})
+		if h:
+			dlst.append(h)
+
 	sorted_data = sorted(dlst, key=lambda x: (x["posting_date"], x["shift"].lower() != "morning"))
 
 	return sorted_data
