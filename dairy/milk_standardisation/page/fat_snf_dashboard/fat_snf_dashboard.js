@@ -226,7 +226,7 @@ frappe.pages["fat-snf-dashboard"].on_page_load = function (wrapper) {
 				<td class="num ${cls}">${num(s.gap_pct, 2)}%</td></tr>`);
 		});
 		$(`<div class="fsd-sub" style="margin-top:6px">${__(
-			"Fat that came in against fat that went out, within the period only. Opening and closing stock are not in these two columns, so read the gap beside the stage's own balance."
+			"Fat that came in against fat that went out, within the period only. Opening and closing stock are not in these two columns, so read the gap beside the stage's own balance. Milk collected for a chilling centre is left out — it travels in the same tanker but never reaches the plant."
 		)}</div>`).appendTo(el);
 	}
 
@@ -255,6 +255,11 @@ frappe.pages["fat-snf-dashboard"].on_page_load = function (wrapper) {
 		});
 
 		const rows = trail[stage] || [];
+		if (stage === "inward") {
+			$(`<div class="fsd-sub" style="margin-bottom:8px">${__(
+				"Plant inwards only. A CP collection inward is unloaded at its own chilling centre, so it is not listed here."
+			)}</div>`).appendTo(el);
+		}
 		const holder = $('<div class="fsd-scroll"></div>').appendTo(el);
 		if (!rows.length) {
 			$(`<div class="fsd-empty">${__("Nothing at this stage in the period.")}</div>`).appendTo(holder);

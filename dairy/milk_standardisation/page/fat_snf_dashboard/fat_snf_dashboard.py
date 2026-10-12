@@ -101,7 +101,27 @@ def get_silos(company=None):
 	return out
 
 
-def _ledger(from_date, to_date, company, conditions=None, values=None, joins=None):
+def _not_cp_collection():
+	"""SQL that keeps a CP inward's movement out of the plant's figures.
+
+	Milk collected for a chilling centre is unloaded at that centre, not at the plant,
+	but it travels in the same tanker warehouse. Counting it would show milk leaving the
+	tanker that the plant never received. Returns nothing where Tanker Inward is not
+	installed, since then there is no CP flow to exclude.
+	"""
+	if not frappe.db.exists("DocType", "Tanker Inward"):
+		return None
+	if not frappe.db.has_column("Stock Entry", "custom_tanker_inward"):
+		return None
+	return """not exists (
+		select 1 from `tabStock Entry` cp_se
+			join `tabTanker Inward` cp_ti on cp_ti.name = cp_se.custom_tanker_inward
+		where cp_se.name = mle.voucher_no and cp_ti.cp_collection = 1
+	)"""
+
+
+def _ledger(from_date, to_date, company, conditions=None, values=None, joins=None,
+	exclude_cp=False):
 	"""What actually moved, per item, so quantities can be converted to kg and litres.
 
 	A Milk Fat Reconciliation is a correction, not a movement -- it carries signed kg on
@@ -119,6 +139,8 @@ def _ledger(from_date, to_date, company, conditions=None, values=None, joins=Non
 		vals["company"] = company
 	if conditions:
 		where += conditions
+	if exclude_cp and _not_cp_collection():
+		where.append(_not_cp_collection())
 	if values:
 		vals.update(values)
 
@@ -336,14 +358,15 @@ def get_stage_gaps(from_date, to_date, company=None):
 	silos = [s.name for s in get_silo_warehouses(company)]
 	stages = []
 
-	collection = _ledger(from_date, to_date, company, ["mle.warehouse like 'DCS-%%'"])
+	collection = _ledger(from_date, to_date, company, ["mle.warehouse like 'DCS-%%'"], exclude_cp=True)
 	stages.append({"stage": _("Collection centres"), "data": collection})
 
-	tanker = _ledger(from_date, to_date, company, ["mle.warehouse like '%%Tanker%%'"])
+	tanker = _ledger(from_date, to_date, company, ["mle.warehouse like '%%Tanker%%'"], exclude_cp=True)
 	stages.append({"stage": _("Tanker"), "data": tanker})
 
 	if silos:
-		silo = _ledger(from_date, to_date, company, ["mle.warehouse in %(silos)s"], {"silos": silos})
+		silo = _ledger(from_date, to_date, company, ["mle.warehouse in %(silos)s"], {"silos": silos},
+			exclude_cp=True)
 		stages.append({"stage": _("Silos"), "data": silo})
 
 	out = []
@@ -408,9 +431,11 @@ def _trail_inward(from_date, to_date, company=None):
 	if not frappe.db.exists("DocType", "Tanker Inward"):
 		return []
 
-	# Tanker Inward carries no company field; its silo does, which the other stages
-	# already filter on.
-	filters = {"docstatus": 1, "tanker_inward_date": ["between", [from_date, to_date]]}
+	# A CP inward ends at its own chilling centre, not at the plant, so it is no part of
+	# the fat that reaches a silo. Tanker Inward carries no company field; its silo does,
+	# which the other stages already filter on.
+	filters = {"docstatus": 1, "cp_collection": 0,
+		"tanker_inward_date": ["between", [from_date, to_date]]}
 	if company:
 		silos = [w.name for w in frappe.get_all("Warehouse", {"company": company}, ["name"])]
 		filters["plant_warehouse"] = ["in", silos or [""]]
