@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "creation": "2026-10-12 12:00:00.000000",
+ "modified": "2026-10-12 12:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "issingle": 1,
+ "module": "dairy",
+ "name": "Logged In Details Settings",
+ "field_order": [
+  "user_type_section",
+  "user_type_rules",
+  "fallback_user_type"
+ ],
+ "fields": [
+  {
+   "fieldname": "user_type_section",
+   "fieldtype": "Section Break",
+   "label": "User Types",
+   "description": "Rules are checked from top to bottom; the first enabled rule that matches decides the user's type. Put specific rules (e.g. .driver@) above general ones (e.g. @bastardairyfarm.com)."
+  },
+  {
+   "fieldname": "user_type_rules",
+   "fieldtype": "Table",
+   "label": "User Type Rules",
+   "options": "Login User Type Rule"
+  },
+  {
+   "fieldname": "fallback_user_type",
+   "fieldtype": "Data",
+   "label": "Fallback User Type",
+   "default": "Other",
+   "description": "Used when no rule matches"
+  }
+ ],
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

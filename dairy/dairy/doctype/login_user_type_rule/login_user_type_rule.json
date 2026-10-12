@@ -1,0 +1,93 @@
+{
+ "actions": [],
+ "creation": "2026-10-12 12:00:00.000000",
+ "modified": "2026-10-12 12:00:00.000000",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "module": "dairy",
+ "name": "Login User Type Rule",
+ "field_order": [
+  "enabled",
+  "match_on",
+  "value",
+  "role",
+  "column_break_1",
+  "user_type",
+  "department",
+  "color"
+ ],
+ "fields": [
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "match_on",
+   "fieldtype": "Select",
+   "label": "Match On",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "options": "Email Ends With\nEmail Contains\nHas Role\nLinked Employee",
+   "default": "Email Ends With"
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Data",
+   "label": "Value",
+   "in_list_view": 1,
+   "columns": 3,
+   "depends_on": "eval:['Email Ends With','Email Contains'].includes(doc.match_on)",
+   "mandatory_depends_on": "eval:['Email Ends With','Email Contains'].includes(doc.match_on)",
+   "description": "e.g. .driver@bastardairyfarm.com or @bdf.com (not case-sensitive)"
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Link",
+   "label": "Role",
+   "options": "Role",
+   "in_list_view": 1,
+   "columns": 2,
+   "depends_on": "eval:doc.match_on=='Has Role'",
+   "mandatory_depends_on": "eval:doc.match_on=='Has Role'"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "user_type",
+   "fieldtype": "Data",
+   "label": "User Type",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Name shown on the dashboard, e.g. Employee, Driver, Security"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "description": "Used when the user has no linked Employee"
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Select",
+   "label": "Colour",
+   "options": "\nblue\npurple\norange\ngreen\nred\nyellow\ncyan\npink\ngray"
+  }
+ ],
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
