@@ -12,6 +12,8 @@ from frappe.utils import flt, now_datetime
 
 MILK_BASE_ITEM_GROUP = "Semi-Finished Goods"
 KG_UOMS = ("kg", "kgs", "kilogram", "kilograms")
+LITRE_UOMS = ("litre", "litres", "liter", "liters", "l", "ltr", "ltrs")
+MILK_DENSITY = 1.03  # kg in one litre of milk
 
 
 def kg_per_stock_unit(item_code):
@@ -21,12 +23,38 @@ def kg_per_stock_unit(item_code):
 	item = frappe.db.get_value("Item", item_code, ["weight_per_unit", "weight_uom", "stock_uom"], as_dict=True)
 	if not item:
 		return 1.0
-	if flt(item.weight_per_unit) and (item.weight_uom or "").lower() in KG_UOMS:
-		return flt(item.weight_per_unit)
-	if (item.stock_uom or "").lower() in KG_UOMS:
+	wpu, weight_uom = flt(item.weight_per_unit), (item.weight_uom or "").lower()
+	stock_uom = (item.stock_uom or "").lower()
+	if wpu and weight_uom in KG_UOMS:
+		return wpu
+	if wpu and weight_uom in LITRE_UOMS and stock_uom not in KG_UOMS + LITRE_UOMS:
+		# A packed unit measured in litres: one 500 ml pouch weighs 0.515 kg.
+		return wpu * MILK_DENSITY
+	if stock_uom in KG_UOMS:
 		return 1.0
 	# No weight on the item: treat one stock unit as one kg (true for water).
 	return 1.0
+
+
+def litres_per_stock_unit(item_code):
+	"""Litres in one stock unit of the item.
+
+	The plant floor counts milk in litres while FAT and SNF are percentages by weight,
+	so both figures are needed side by side. Where the item master gives only a weight,
+	litres come back from kg at the milk density.
+	"""
+	if not item_code:
+		return 1.0
+	item = frappe.db.get_value("Item", item_code, ["weight_per_unit", "weight_uom", "stock_uom"], as_dict=True)
+	if not item:
+		return 1.0
+	wpu, weight_uom = flt(item.weight_per_unit), (item.weight_uom or "").lower()
+	stock_uom = (item.stock_uom or "").lower()
+	if stock_uom in LITRE_UOMS:
+		return 1.0
+	if wpu and weight_uom in LITRE_UOMS:
+		return wpu
+	return kg_per_stock_unit(item_code) / MILK_DENSITY
 
 
 class MilkStandardisation(Document):
@@ -362,8 +390,6 @@ def suggest_quantities(doc):
 	sr = ms / milk_qty * 100.0
 
 	snf_lever = _pick(levers, "SNF Booster")
-	if not snf_lever:
-		frappe.throw(_("No 'SNF Booster' additive is configured in Dairy Settings &rarr; Milk Standardisation."))
 	diluent = _pick(levers, "Diluent")
 	booster = _pick(levers, "Fat Booster")
 
@@ -372,21 +398,32 @@ def suggest_quantities(doc):
 	primary = diluent if fr >= F else booster
 	secondary = booster if fr >= F else diluent
 
+	# Milk plus two additives, three balance equations. SMP only raises SNF, cream only
+	# raises FAT, water lowers both. So milk that is lean but SNF-rich has no answer with
+	# SMP in the mix: cream lifts the FAT and water brings the SNF down. Try the pairs in
+	# turn and take the first that needs none of them in negative quantity.
+	candidates = [(snf_lever, primary), (snf_lever, secondary), (booster, diluent)]
+
 	attempts = []
 	solution = None
-	for fat_lever in (primary, secondary):
-		if not fat_lever:
+	for lever_a, lever_b in candidates:
+		if not (lever_a and lever_b) or lever_a["item"] == lever_b["item"]:
 			continue
-		m_qty, p, x = _solve_three(fr, sr, F, S, Q, snf_lever, fat_lever)
-		attempts.append((fat_lever, m_qty, p, x))
+		m_qty, p, x = _solve_three(fr, sr, F, S, Q, lever_a, lever_b)
+		attempts.append((lever_a, lever_b, m_qty, p, x))
 		if m_qty >= -1e-6 and p >= -1e-6 and x >= -1e-6:
-			solution = (fat_lever, m_qty, p, x)
+			solution = (lever_a, lever_b, m_qty, p, x)
 			break
 
+	if not attempts:
+		frappe.throw(_(
+			"Configure at least two additives (SNF Booster, Diluent, Fat Booster) in "
+			"Dairy Settings &rarr; Milk Standardisation before using Auto mode."
+		))
 	if not solution:
 		_throw_infeasible(fr, sr, F, S, Q, snf_lever, diluent, booster, attempts)
 
-	fat_lever, m_qty, p, x = solution
+	snf_lever, fat_lever, m_qty, p, x = solution
 	factor = m_qty / milk_qty  # scale milk (in kg) to the solved amount, preserving the blend
 	source_warehouse = doc.get("source_warehouse")
 
@@ -558,37 +595,34 @@ def _solve_three(fr, sr, F, S, Q, snf_lever, fat_lever):
 
 def _throw_infeasible(fr, sr, F, S, Q, snf_lever, diluent, booster, attempts):
 	"""Raise a specific, numeric message for why no positive recipe hits the target."""
-	# Report the first attempt (the direction-appropriate lever) as the diagnosis.
-	fat_lever, m_qty, p, x = attempts[0]
-	role = fat_lever["role"]
-	lines = [_("The target cannot be reached with this milk and the configured additives:")]
+	lines = [
+		_("This milk cannot be brought to the target."),
+		_("Milk is FAT {0}% / SNF {1}%; the target is FAT {2}% / SNF {3}%.").format(
+			flt(fr, 2), flt(sr, 2), flt(F, 2), flt(S, 2)),
+		_("Every mix of the configured additives needs a negative quantity somewhere:"),
+	]
 
-	if m_qty < -1e-6:
-		lines.append(_(
-			"Milk would be negative ({0}) — the additives alone would exceed the Target Batch "
-			"Quantity {1}. Increase the Target Batch Quantity, or ease the FAT/SNF targets."
-		).format(flt(m_qty, 2), flt(Q, 2)))
-	if p < -1e-6:
-		lines.append(_(
-			"SNF booster ({0}) would be negative ({1} kg) — the milk's SNF {2}% is already high "
-			"for the {3}% target at this fat level. SMP can only raise SNF. Lower the target SNF, "
-			"or dilute with more water."
-		).format(snf_lever["item"], flt(p, 2), flt(sr, 2), flt(S, 2)))
-	if x < -1e-6:
-		if role == "Diluent":
-			lines.append(_(
-				"RO Water ({0}) would be negative ({1}) — water only lowers FAT, but the milk FAT "
-				"{2}% is already at/below the {3}% target. Use a Fat Booster (cream), or higher-fat milk."
-			).format(fat_lever["item"], flt(x, 2), flt(fr, 2), flt(F, 2)))
-		else:
-			lines.append(_(
-				"Cream ({0}) would be negative ({1}) — cream only raises FAT, but the milk FAT {2}% "
-				"already exceeds the {3}% target. Use a Diluent (water) instead."
-			).format(fat_lever["item"], flt(x, 2), flt(fr, 2), flt(F, 2)))
+	for lever_a, lever_b, m_qty, p, x in attempts:
+		short = []
+		if m_qty < -1e-6:
+			short.append(_("milk {0} kg").format(flt(m_qty, 2)))
+		for lever, qty in ((lever_a, p), (lever_b, x)):
+			if qty < -1e-6:
+				short.append(_("{0} {1} kg").format(lever["item"], flt(qty, 2)))
+		lines.append(_("- {0} + {1}: {2}").format(
+			lever_a["item"], lever_b["item"], ", ".join(short) or _("no positive answer")))
 
-	if not diluent and fr >= F:
-		lines.append(_("Tip: no 'Diluent' additive is configured to lower FAT."))
-	if not booster and fr < F:
-		lines.append(_("Tip: no 'Fat Booster' additive is configured to raise FAT."))
+	if any(m_qty < -1e-6 for _a, _b, m_qty, _p, _x in attempts):
+		lines.append(_(
+			"Milk going negative means the additives alone would exceed the Target Batch "
+			"Quantity {0}. Raise it, or ease the FAT/SNF targets."
+		).format(flt(Q, 2)))
+
+	if not booster:
+		lines.append(_("Tip: no 'Fat Booster' (cream) is configured — it is the only way to raise FAT."))
+	if not diluent:
+		lines.append(_("Tip: no 'Diluent' (water) is configured — it is the only way to lower SNF."))
+	if not snf_lever:
+		lines.append(_("Tip: no 'SNF Booster' (SMP) is configured — it is the only way to raise SNF."))
 
 	frappe.throw("<br>".join(lines))

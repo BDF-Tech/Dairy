@@ -1,0 +1,226 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:MFR-{#####}",
+ "creation": "2026-10-10 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "details_tab",
+  "company",
+  "posting_datetime",
+  "column_break_head",
+  "scope",
+  "warehouse",
+  "column_break_by",
+  "tested_by",
+  "intro_html",
+  "items_section",
+  "items",
+  "totals_section",
+  "total_qty_kg",
+  "total_qty_adjustment",
+  "total_tested_kg_fat",
+  "total_book_kg_fat",
+  "total_fat_adjustment",
+  "column_break_totals",
+  "total_tested_kg_snf",
+  "total_book_kg_snf",
+  "total_snf_adjustment",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Now",
+   "fieldname": "posting_datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Posting Date & Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "All Warehouses",
+   "description": "Which warehouses to pull when fetching stock.",
+   "fieldname": "scope",
+   "fieldtype": "Select",
+   "label": "Scope",
+   "options": "All Warehouses\nSilos Only\nOne Warehouse"
+  },
+  {
+   "depends_on": "eval:doc.scope=='One Warehouse'",
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_by",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tested_by",
+   "fieldtype": "Link",
+   "label": "Tested By",
+   "options": "User"
+  },
+  {
+   "fieldname": "intro_html",
+   "fieldtype": "HTML",
+   "options": "<p style='color:var(--text-muted)'>Fetch the milk stock, enter the laboratory's FAT/SNF for each warehouse, and submit. The difference against the Milk Ledger is posted as an adjustment, so each warehouse's fat balance becomes the tested figure. Use it once to set the opening, then every month for the physical dip check.</p>"
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break",
+   "label": "Stock and Tested Quality"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Lines",
+   "options": "Milk Fat Reconciliation Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "total_qty_kg",
+   "fieldtype": "Float",
+   "label": "Total Quantity (Kg)",
+   "read_only": 1
+  },
+  {
+   "description": "Correction posted so the ledger's quantity column agrees with actual stock.",
+   "fieldname": "total_qty_adjustment",
+   "fieldtype": "Float",
+   "label": "Qty Adjustment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_tested_kg_fat",
+   "fieldtype": "Float",
+   "label": "Tested Kg FAT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_book_kg_fat",
+   "fieldtype": "Float",
+   "label": "Book Kg FAT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_fat_adjustment",
+   "fieldtype": "Float",
+   "label": "FAT Adjustment (Kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_totals",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_tested_kg_snf",
+   "fieldtype": "Float",
+   "label": "Tested Kg SNF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_book_kg_snf",
+   "fieldtype": "Float",
+   "label": "Book Kg SNF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_snf_adjustment",
+   "fieldtype": "Float",
+   "label": "SNF Adjustment (Kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Milk Fat Reconciliation",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Milk Standardisation",
+ "name": "Milk Fat Reconciliation",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "company"
+}

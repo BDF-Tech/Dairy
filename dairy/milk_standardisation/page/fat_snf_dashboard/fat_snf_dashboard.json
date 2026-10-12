@@ -1,0 +1,35 @@
+{
+ "content": null,
+ "creation": "2026-10-10 00:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-10-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Milk Standardisation",
+ "name": "fat-snf-dashboard",
+ "owner": "Administrator",
+ "page_name": "fat-snf-dashboard",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Stock Manager"
+  },
+  {
+   "role": "Stock User"
+  },
+  {
+   "role": "Quality Manager"
+  },
+  {
+   "role": "Manufacturing Manager"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "FAT & SNF Dashboard"
+}

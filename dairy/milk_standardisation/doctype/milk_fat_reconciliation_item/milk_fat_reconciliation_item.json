@@ -1,0 +1,201 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-10-10 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "warehouse",
+  "item",
+  "column_break_qty",
+  "qty",
+  "uom",
+  "qty_kg",
+  "book_qty",
+  "qty_adjustment",
+  "column_break_tested",
+  "tested_fat",
+  "tested_snf",
+  "column_break_book",
+  "book_fat",
+  "book_snf",
+  "section_break_kg",
+  "tested_kg_fat",
+  "tested_kg_snf",
+  "column_break_adj",
+  "book_kg_fat",
+  "book_kg_snf",
+  "column_break_diff",
+  "fat_adjustment",
+  "snf_adjustment",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Milk Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_qty",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "description": "Stock held, in the item's own unit.",
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "description": "Quantity converted with the item's Weight Per Unit; FAT/SNF are by weight.",
+   "fieldname": "qty_kg",
+   "fieldtype": "Float",
+   "label": "Quantity (Kg)",
+   "read_only": 1
+  },
+  {
+   "description": "What the Milk Ledger's own quantity column adds up to. Real stock is the Quantity above.",
+   "fieldname": "book_qty",
+   "fieldtype": "Float",
+   "label": "Ledger Quantity",
+   "read_only": 1
+  },
+  {
+   "description": "Posted so the ledger's quantity column agrees with actual stock.",
+   "fieldname": "qty_adjustment",
+   "fieldtype": "Float",
+   "label": "Qty Adjustment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tested",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "description": "What the lab tested. This becomes the warehouse's opening quality.",
+   "fieldname": "tested_fat",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Tested FAT %",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "tested_snf",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Tested SNF %",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_book",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "What the Milk Ledger says today.",
+   "fieldname": "book_fat",
+   "fieldtype": "Percent",
+   "label": "Book FAT %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "book_snf",
+   "fieldtype": "Percent",
+   "label": "Book SNF %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_kg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "tested_kg_fat",
+   "fieldtype": "Float",
+   "label": "Tested Kg FAT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tested_kg_snf",
+   "fieldtype": "Float",
+   "label": "Tested Kg SNF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_adj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "book_kg_fat",
+   "fieldtype": "Float",
+   "label": "Book Kg FAT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "book_kg_snf",
+   "fieldtype": "Float",
+   "label": "Book Kg SNF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_diff",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "description": "Posted to the Milk Ledger so the balance becomes the tested figure.",
+   "fieldname": "fat_adjustment",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "FAT Adjustment (Kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snf_adjustment",
+   "fieldtype": "Float",
+   "label": "SNF Adjustment (Kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "label": "Remarks"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Milk Standardisation",
+ "name": "Milk Fat Reconciliation Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
