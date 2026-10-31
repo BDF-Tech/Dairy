@@ -202,7 +202,7 @@ function render_spec_banner(frm) {
 		frm.dashboard.set_headline(
 			__("Out of tolerance — achieved {0}% FAT / {1}% SNF vs target {2} / {3}. Adjust quantities.",
 				[format_number(frm.doc.achieved_fat, null, 3), format_number(frm.doc.achieved_snf, null, 3),
-					frm.doc.target_fat, frm.doc.target_snf]),
+					format_number(flt(frm.doc.target_fat), null, 2), format_number(flt(frm.doc.target_snf), null, 2)]),
 			"orange"
 		);
 	} else if (!(flt(frm.doc.tested_fat) && flt(frm.doc.tested_snf))) {
@@ -215,7 +215,7 @@ function render_spec_banner(frm) {
 		frm.dashboard.set_headline(
 			__("Lab result out of tolerance — tested {0}% FAT / {1}% SNF vs target {2} / {3}. Adjust quantities, mix and retest.",
 				[format_number(frm.doc.tested_fat, null, 3), format_number(frm.doc.tested_snf, null, 3),
-					frm.doc.target_fat, frm.doc.target_snf]),
+					format_number(flt(frm.doc.target_fat), null, 2), format_number(flt(frm.doc.target_snf), null, 2)]),
 			"red"
 		);
 	} else {
@@ -255,15 +255,26 @@ function get_silo_milk(frm) {
 	});
 }
 
+// The blend sheet's own fields. Everything else on a row — name, idx, parent,
+// docstatus, owner — belongs to the document, and copying those from another row
+// leaves the new row answering to a name it is not filed under: the grid can no
+// longer delete it, and its quantity stays in the totals.
+const ROW_FIELDS = [
+	"source_name", "warehouse", "item", "qty", "uom", "conversion_factor",
+	"kg_per_stock_unit", "available_qty_kg", "fat", "snf", "quality_source",
+];
+
 function add_row(frm, x) {
 	const row = frm.add_child("ingredients");
-	Object.assign(row, x);
-	const sq = flt(x.qty) * (flt(x.conversion_factor) || 1);
-	const kg = sq * (flt(x.kg_per_stock_unit) || 1);
+	ROW_FIELDS.forEach((f) => {
+		if (x[f] !== undefined && x[f] !== null) row[f] = x[f];
+	});
+	const sq = flt(row.qty) * (flt(row.conversion_factor) || 1);
+	const kg = sq * (flt(row.kg_per_stock_unit) || 1);
 	row.stock_qty = sq;
 	row.qty_kg = kg;
-	row.kg_fat = kg * flt(x.fat) / 100;
-	row.kg_snf = kg * flt(x.snf) / 100;
+	row.kg_fat = kg * flt(row.fat) / 100;
+	row.kg_snf = kg * flt(row.snf) / 100;
 	return row;
 }
 
