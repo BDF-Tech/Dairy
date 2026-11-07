@@ -118,16 +118,50 @@ frappe.ui.form.on("Milk Standardisation Ingredient", {
 				if (d.is_lever) {
 					frappe.model.set_value(cdt, cdn, "fat", d.fat);
 					frappe.model.set_value(cdt, cdn, "snf", d.snf);
+				} else {
+					// The silo may have been chosen before the item; its quality can
+					// only be read once we know which milk we are asking about.
+					fetch_silo_quality(cdt, cdn);
 				}
 				fetch_conversion(cdt, cdn);
 			},
 		});
+	},
+	source_name(frm, cdt, cdn) {
+		fetch_silo_quality(cdt, cdn);
+	},
+	warehouse(frm, cdt, cdn) {
+		fetch_silo_quality(cdt, cdn);
 	},
 	uom(frm, cdt, cdn) {
 		fetch_conversion(cdt, cdn);
 	},
 	ingredients_remove: recompute,
 });
+
+// A silo picked by hand should answer with its own FAT and SNF, exactly as it does
+// when Get Silo Milk fills the sheet — the alternative is an operator typing quality
+// from memory onto milk the system already knows about.
+function fetch_silo_quality(cdt, cdn) {
+	const row = locals[cdt][cdn];
+	const warehouse = row.warehouse || row.source_name;
+	if (!warehouse || !row.item) return;
+
+	frappe.call({
+		method: "dairy.milk_standardisation.doctype.milk_standardisation.milk_standardisation.get_silo_row_quality",
+		args: { warehouse: warehouse, item: row.item },
+		callback(r) {
+			const d = r.message || {};
+			// No quality source means the warehouse is not a silo, so the row keeps
+			// whatever it already holds.
+			if (!d.quality_source) return;
+			frappe.model.set_value(cdt, cdn, "available_qty_kg", d.available_qty_kg);
+			frappe.model.set_value(cdt, cdn, "quality_source", d.quality_source);
+			frappe.model.set_value(cdt, cdn, "fat", d.fat);
+			frappe.model.set_value(cdt, cdn, "snf", d.snf);
+		},
+	});
+}
 
 function fetch_conversion(cdt, cdn) {
 	const row = locals[cdt][cdn];

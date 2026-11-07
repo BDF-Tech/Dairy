@@ -64,6 +64,34 @@ class MilkStandardisation(Document):
 		self.compute_batch()
 		self.compute_lab_result()
 		self._validate_silo_availability()
+		self._warn_rows_without_quality()
+
+	def _warn_rows_without_quality(self):
+		"""Say so out loud when milk is going into the batch with no FAT on it.
+
+		Those kg still count towards the total, so the achieved FAT reads low and every
+		figure downstream inherits the error. It is a warning and not a refusal: there
+		are mornings when no reading exists yet, and the operator is the one who knows
+		whether that is the case.
+		"""
+		from dairy.milk_standardisation.quality import tracks_quality
+
+		blank = [
+			row for row in self.ingredients
+			if flt(row.qty_kg) > 0 and tracks_quality(row.item) and not flt(row.fat)
+		]
+		if not blank:
+			return
+
+		frappe.msgprint(
+			_("No FAT recorded on {0} {1}. Those kg still count towards the batch, so the "
+			  "achieved FAT reads lower than the milk really is.").format(
+				_("row") if len(blank) == 1 else _("rows"),
+				", ".join("{0} ({1})".format(row.idx, row.item) for row in blank),
+			),
+			title=_("Milk with no quality"),
+			indicator="orange",
+		)
 
 	def _validate_silo_availability(self):
 		"""A row cannot draw more milk than its silo holds."""
@@ -528,6 +556,40 @@ def _entry_uom(item_code):
 		return stock_uom, 1.0
 	cf = frappe.db.get_value("UOM Conversion Detail", {"parent": item_code, "uom": "Kg"}, "conversion_factor")
 	return ("Kg", flt(cf)) if cf else (stock_uom, 1.0)
+
+
+@frappe.whitelist()
+def get_silo_row_quality(warehouse, item):
+	"""The quality to use on one blend-sheet row whose silo was chosen by hand.
+
+	Get Silo Milk fills whole rows at once, but an operator who builds a row themselves
+	had to type FAT and SNF from memory -- and a row left at zero still counts its kg,
+	so the batch reads leaner than the tank really is and the solver answers with
+	additives nobody needed. This asks the same question for a single row and answers it
+	by the same rules: the lab's latest reading while it is fresh, otherwise the Milk
+	Ledger's running total. Both routes therefore always agree.
+
+	An empty dict means the warehouse is not a silo, which leaves the row's own figures
+	alone -- an additive keeps what Dairy Settings gave it.
+	"""
+	from dairy.milk_standardisation.silo import TEST_FRESH_HOURS, get_latest_test, get_quality, is_silo
+
+	if not (warehouse and item and is_silo(warehouse)):
+		return {}
+
+	quality = get_quality(warehouse, item)
+	fat, snf, source = flt(quality.fat), flt(quality.snf), quality.source
+
+	test = get_latest_test(warehouse, item, TEST_FRESH_HOURS)
+	if test and (flt(test.fat) or flt(test.snf)):
+		fat, snf, source = flt(test.fat), flt(test.snf), "Silo Quality Test"
+
+	return {
+		"fat": flt(fat, 3),
+		"snf": flt(snf, 3),
+		"available_qty_kg": flt(quality.qty_kg, 3),
+		"quality_source": source,
+	}
 
 
 @frappe.whitelist()

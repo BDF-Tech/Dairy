@@ -16,6 +16,11 @@ leaves it stale.
 import frappe
 from frappe.utils import flt
 
+# How long the lab's reading stands in for the book figure. Milk in a silo is topped
+# up, drawn off and left to settle, so a test older than this says less about what is
+# in the tank now than the running total does.
+TEST_FRESH_HOURS = 12
+
 
 def get_silo_warehouses(company=None):
 	filters = {"custom_is_milk_silo": 1, "is_group": 0, "disabled": 0}
@@ -88,7 +93,7 @@ def get_latest_test(warehouse, item_code=None, max_age_hours=None):
 
 
 @frappe.whitelist()
-def get_silo_milk(company=None, item_code=None, max_test_age_hours=12):
+def get_silo_milk(company=None, item_code=None, max_test_age_hours=TEST_FRESH_HOURS):
 	"""Every silo holding milk, with the quality to standardise from.
 
 	The lab's latest test wins while it is fresh; otherwise the Milk Ledger's figure
