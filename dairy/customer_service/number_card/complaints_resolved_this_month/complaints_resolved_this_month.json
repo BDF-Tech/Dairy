@@ -1,0 +1,22 @@
+{
+ "aggregate_function_based_on": "",
+ "color": "#2E9D5B",
+ "creation": "2026-11-11 18:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Number Card",
+ "document_type": "Customer Complaint",
+ "dynamic_filters_json": "[[\"Customer Complaint\", \"resolved_on\", \">=\", \"frappe.datetime.month_start()\"]]",
+ "filters_json": "[[\"Customer Complaint\", \"status\", \"in\", [\"Resolved\", \"Closed\"], false]]",
+ "function": "Count",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "label": "Complaints Resolved This Month",
+ "modified": "2026-11-11 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Customer Service",
+ "name": "Complaints Resolved This Month",
+ "owner": "Administrator",
+ "show_percentage_stats": 0,
+ "type": "Document Type"
+}

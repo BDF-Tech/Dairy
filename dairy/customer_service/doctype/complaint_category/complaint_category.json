@@ -1,0 +1,109 @@
+{
+ "actions": [],
+ "creation": "2026-11-10 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "category_name",
+  "category_group",
+  "enabled",
+  "cb1",
+  "default_department",
+  "default_assignee",
+  "resolution_days",
+  "escalate_to",
+  "sb_desc",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "category_name",
+   "fieldtype": "Data",
+   "label": "Category Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "category_group",
+   "fieldtype": "Select",
+   "label": "Complaint Type",
+   "options": "Quality Issue\nPackaging Issue\nDelivery Issue\nBilling Issue\nService Issue\nOther",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_department",
+   "fieldtype": "Link",
+   "label": "Default Department",
+   "options": "Department",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "default_assignee",
+   "fieldtype": "Link",
+   "label": "Default Assignee",
+   "options": "User"
+  },
+  {
+   "fieldname": "resolution_days",
+   "fieldtype": "Int",
+   "label": "Resolve Within (Days)",
+   "default": "2",
+   "description": "Due date = complaint date + these days"
+  },
+  {
+   "fieldname": "escalate_to",
+   "fieldtype": "Link",
+   "label": "Escalate To",
+   "options": "User",
+   "description": "Gets notified when a complaint passes its due date"
+  },
+  {
+   "fieldname": "sb_desc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-12 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Customer Service",
+ "name": "Complaint Category",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:category_name",
+ "naming_rule": "By fieldname",
+ "track_changes": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "print": 1,
+   "email": 1
+  }
+ ]
+}

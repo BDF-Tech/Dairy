@@ -1,0 +1,22 @@
+{
+ "aggregate_function_based_on": "",
+ "color": "#29CD42",
+ "creation": "2026-11-11 18:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Number Card",
+ "document_type": "Customer Complaint",
+ "dynamic_filters_json": "[[\"Customer Complaint\", \"assigned_user\", \"=\", \"frappe.session.user\"]]",
+ "filters_json": "[[\"Customer Complaint\", \"status\", \"in\", [\"Open\", \"Assigned\"], false]]",
+ "function": "Count",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "label": "Complaints Assigned to Me",
+ "modified": "2026-11-11 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Customer Service",
+ "name": "Complaints Assigned to Me",
+ "owner": "Administrator",
+ "show_percentage_stats": 0,
+ "type": "Document Type"
+}

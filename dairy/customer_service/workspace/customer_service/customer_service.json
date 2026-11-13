@@ -1,0 +1,136 @@
+{
+ "charts": [
+  {
+   "chart_name": "Complaints Trend",
+   "label": "Complaints Trend"
+  },
+  {
+   "chart_name": "Complaints by Status",
+   "label": "Complaints by Status"
+  },
+  {
+   "chart_name": "Complaints by Source",
+   "label": "Complaints by Source"
+  },
+  {
+   "chart_name": "Customer Complaints by Type",
+   "label": "Customer Complaints by Type"
+  },
+  {
+   "chart_name": "Employee Complaints by Type",
+   "label": "Employee Complaints by Type"
+  },
+  {
+   "chart_name": "Pending Complaints by Department",
+   "label": "Pending Complaints by Department"
+  },
+  {
+   "chart_name": "Customer Complaints by Route",
+   "label": "Customer Complaints by Route"
+  }
+ ],
+ "content": "[{\"id\":\"hdr\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Complaints</b></span>\",\"col\":12}},{\"id\":\"nc0\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Complaints Created Today\",\"col\":3}},{\"id\":\"nc1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Complaints\",\"col\":3}},{\"id\":\"nc2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Complaints In Process\",\"col\":3}},{\"id\":\"nc3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Complaints Pending Approval\",\"col\":3}},{\"id\":\"nc4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Overdue Complaints\",\"col\":3}},{\"id\":\"nc5\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Complaints Assigned to Me\",\"col\":3}},{\"id\":\"nc6\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Complaints Resolved This Month\",\"col\":3}},{\"id\":\"sc0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pending Complaints\",\"col\":3}},{\"id\":\"sp1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ch0\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Complaints Trend\",\"col\":12}},{\"id\":\"ch1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Complaints by Status\",\"col\":6}},{\"id\":\"ch2\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Complaints by Source\",\"col\":6}},{\"id\":\"ch3\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Customer Complaints by Type\",\"col\":6}},{\"id\":\"ch4\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Employee Complaints by Type\",\"col\":6}},{\"id\":\"ch5\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Pending Complaints by Department\",\"col\":6}},{\"id\":\"ch6\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Customer Complaints by Route\",\"col\":6}},{\"id\":\"ql1\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Pending Approval\",\"col\":6}},{\"id\":\"ql2\",\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Latest Complaints\",\"col\":6}},{\"id\":\"sp2\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"h2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Quick Access</b></span>\",\"col\":12}},{\"id\":\"sc1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Complaint\",\"col\":3}},{\"id\":\"sc2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Complaint Register\",\"col\":3}},{\"id\":\"sc3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Complaint Categories\",\"col\":3}},{\"id\":\"sc4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Complaint Workflow\",\"col\":3}}]",
+ "creation": "2026-11-11 15:00:00",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "icon": "support",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Customer Service",
+ "links": [],
+ "modified": "2026-11-11 13:49:19.632166",
+ "modified_by": "sanskar@bastardairyfarm.com",
+ "module": "Customer Service",
+ "name": "Customer Service",
+ "number_cards": [
+  {
+   "label": "Complaints Created Today",
+   "number_card_name": "Complaints Created Today"
+  },
+  {
+   "label": "Open Complaints",
+   "number_card_name": "Open Complaints"
+  },
+  {
+   "label": "Complaints In Process",
+   "number_card_name": "Complaints In Process"
+  },
+  {
+   "label": "Complaints Pending Approval",
+   "number_card_name": "Complaints Pending Approval"
+  },
+  {
+   "label": "Overdue Complaints",
+   "number_card_name": "Overdue Complaints"
+  },
+  {
+   "label": "Complaints Assigned to Me",
+   "number_card_name": "Complaints Assigned to Me"
+  },
+  {
+   "label": "Complaints Resolved This Month",
+   "number_card_name": "Complaints Resolved This Month"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [
+  {
+   "document_type": "Customer Complaint",
+   "label": "Pending Approval",
+   "quick_list_filter": "[[\"Customer Complaint\", \"status\", \"in\", [\"Pending Approval\", \"Accounts Approval\"], false]]"
+  },
+  {
+   "document_type": "Customer Complaint",
+   "label": "Latest Complaints",
+   "quick_list_filter": "[]"
+  }
+ ],
+ "roles": [],
+ "sequence_id": 9.0,
+ "shortcuts": [
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Pending Complaints",
+   "link_to": "Customer Complaint",
+   "stats_filter": "[[\"Customer Complaint\", \"status\", \"in\", [\"Open\", \"Assigned\", \"Pending Approval\", \"Accounts Approval\"], false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "New",
+   "label": "New Complaint",
+   "link_to": "Customer Complaint",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "Complaint Register",
+   "link_to": "Customer Complaint Register",
+   "report_ref_doctype": "Customer Complaint",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Complaint Categories",
+   "link_to": "Complaint Category",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Complaint Workflow",
+   "link_to": "Workflow",
+   "stats_filter": "[[\"Workflow\", \"document_type\", \"=\", \"Customer Complaint\", false]]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Customer Service"
+}

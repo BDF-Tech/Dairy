@@ -1,0 +1,751 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:CC-{MM}-{YYYY}-{####}",
+ "creation": "2024-05-30 12:21:39.038655",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "entry_type",
+  "complaint_from",
+  "customer_id",
+  "name_of_a_customer",
+  "contact_no",
+  "column_break_top",
+  "complaint_type",
+  "issue_type",
+  "category",
+  "severity_level",
+  "source",
+  "rating",
+  "issue_section",
+  "description_of_issue",
+  "attachment",
+  "supplier_section",
+  "supplier",
+  "supplier_name",
+  "column_break_supp",
+  "dcs",
+  "member_code",
+  "purchase_order",
+  "employee_section",
+  "employee",
+  "employee_name",
+  "employee_department",
+  "column_break_emp",
+  "internal_type",
+  "against_department",
+  "confidential",
+  "more_details_section",
+  "type_of_customer",
+  "route",
+  "address",
+  "sales_person",
+  "account_manager",
+  "email_address",
+  "column_break_more",
+  "complaint_id",
+  "date_of_complaint",
+  "time_of_complaint",
+  "raised_by_name",
+  "items_section",
+  "items",
+  "product_section",
+  "item_code",
+  "item_name",
+  "purchase_date",
+  "purchase_location",
+  "column_break_prod",
+  "data_kxgv",
+  "expiry_date",
+  "preferred_resolution",
+  "attachment_video",
+  "reference_section",
+  "reference_doctype",
+  "column_break_ref",
+  "reference_name",
+  "handling_and_resolution_section",
+  "status",
+  "department",
+  "assigned_user",
+  "assigned_on",
+  "due_date",
+  "escalated",
+  "escalated_to",
+  "column_break_pzqj",
+  "follow_up_required",
+  "follow_up_date",
+  "root_cause",
+  "action_taken",
+  "resolution_type",
+  "resolution_reference",
+  "resolved_by",
+  "resolved_on",
+  "resolution_hours",
+  "approval_section",
+  "approver_remarks",
+  "column_break_appr",
+  "approved_by",
+  "approved_on",
+  "accounts_approved_by",
+  "accounts_approved_on",
+  "closing_section",
+  "customer_satisfied",
+  "closing_remarks",
+  "column_break_close",
+  "closed_by",
+  "closed_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "entry_type",
+   "fieldtype": "Select",
+   "label": "Entry Type",
+   "options": "Complaint\nFeedback\nSuggestion",
+   "default": "Complaint",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "complaint_from",
+   "fieldtype": "Select",
+   "label": "Complaint From",
+   "options": "Customer\nEmployee\nFarmer\nVendor\nOther",
+   "default": "Customer",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "customer_id",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "in_standard_filter": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'",
+   "description": "Pick the customer: name, phone, route and address fill in. Unknown caller: leave empty, type name + phone."
+  },
+  {
+   "fieldname": "name_of_a_customer",
+   "fieldtype": "Data",
+   "label": "Name of a Customer",
+   "fetch_from": "customer_id.customer_name",
+   "fetch_if_empty": 1,
+   "in_list_view": 0,
+   "mandatory_depends_on": "eval:in_list(['Customer','Other'], doc.complaint_from)",
+   "depends_on": "eval:in_list(['Customer','Other'], doc.complaint_from)"
+  },
+  {
+   "fieldname": "contact_no",
+   "fieldtype": "Phone",
+   "label": "Contact No.",
+   "default": "+91",
+   "mandatory_depends_on": "eval:doc.complaint_from!='Employee' && !doc.customer_id && !in_list(['Mobile App','WhatsApp','Web Form'], doc.source)",
+   "depends_on": "eval:doc.complaint_from!='Employee'"
+  },
+  {
+   "fieldname": "column_break_top",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "complaint_type",
+   "fieldtype": "Select",
+   "label": "Complaint Type",
+   "options": "\nQuality Issue\nPackaging Issue\nDelivery Issue\nBilling Issue\nService Issue\nOther",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'",
+   "mandatory_depends_on": "eval:doc.entry_type=='Complaint' && doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "issue_type",
+   "fieldtype": "Select",
+   "label": "Issue Type",
+   "options": "\nPayment Pending\nWrong Fat / SNF\nWrong Quantity\nCollection Timing\nMilk Rate\nBonus / Incentive\nPayment Delay\nPurchase Order Issue\nReturns\nVehicle / Transport\nGeneral\nQuality\nService\nOther",
+   "depends_on": "eval:in_list(['Farmer','Vendor','Other'], doc.complaint_from)",
+   "mandatory_depends_on": "eval:doc.entry_type=='Complaint' && in_list(['Farmer','Vendor','Other'], doc.complaint_from)",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "label": "Category",
+   "options": "Complaint Category",
+   "description": "Exact problem — sets department, assignee and due date",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "severity_level",
+   "fieldtype": "Select",
+   "label": "Severity Level",
+   "options": "\nMajor\nMinor\nCritical",
+   "in_standard_filter": 1,
+   "default": "Major",
+   "depends_on": "eval:doc.entry_type=='Complaint'"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Phone Call\nWhatsApp\nCustomer Visit\nSales Person\nWeb Form\nMobile App\nERP\nEmail",
+   "default": "Phone Call",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "rating",
+   "fieldtype": "Rating",
+   "label": "Rating",
+   "depends_on": "eval:doc.entry_type=='Feedback'"
+  },
+  {
+   "fieldname": "issue_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "description_of_issue",
+   "fieldtype": "Small Text",
+   "label": "Description of Issue",
+   "mandatory_depends_on": "eval:!in_list(['Mobile App','WhatsApp'], doc.source)",
+   "description": "One line is enough, e.g. 12 pcs dahi leaking"
+  },
+  {
+   "fieldname": "attachment",
+   "fieldtype": "Attach Image",
+   "label": "Attachment"
+  },
+  {
+   "fieldname": "supplier_section",
+   "fieldtype": "Section Break",
+   "label": "Farmer / Vendor Details",
+   "depends_on": "eval:in_list(['Farmer','Vendor'], doc.complaint_from)"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Farmer / Supplier",
+   "options": "Supplier",
+   "mandatory_depends_on": "eval:in_list(['Farmer','Vendor'], doc.complaint_from)",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "supplier_name",
+   "fieldtype": "Data",
+   "label": "Supplier Name",
+   "fetch_from": "supplier.supplier_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_supp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "dcs",
+   "fieldtype": "Link",
+   "label": "DCS",
+   "options": "Warehouse",
+   "fetch_from": "supplier.dcs",
+   "read_only": 1,
+   "depends_on": "eval:doc.complaint_from=='Farmer'"
+  },
+  {
+   "fieldname": "member_code",
+   "fieldtype": "Data",
+   "label": "Member Code",
+   "fetch_from": "supplier.custom_member_code",
+   "read_only": 1,
+   "depends_on": "eval:doc.complaint_from=='Farmer'"
+  },
+  {
+   "fieldname": "purchase_order",
+   "fieldtype": "Link",
+   "label": "Purchase Order",
+   "options": "Purchase Order",
+   "depends_on": "eval:doc.complaint_from=='Vendor'"
+  },
+  {
+   "fieldname": "employee_section",
+   "fieldtype": "Section Break",
+   "label": "Employee Details",
+   "depends_on": "eval:doc.complaint_from=='Employee'"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "mandatory_depends_on": "eval:doc.complaint_from=='Employee'",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "fetch_from": "employee.employee_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "employee_department",
+   "fieldtype": "Link",
+   "label": "Employee's Department",
+   "options": "Department",
+   "fetch_from": "employee.department",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_emp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "internal_type",
+   "fieldtype": "Select",
+   "label": "Internal Complaint Type",
+   "options": "\nSalary / Payroll\nLeave / Attendance\nWorkplace Safety\nMachine / Plant Issue\nHygiene\nDepartment Coordination\nBehaviour / Harassment\nFacilities / Canteen\nOther",
+   "mandatory_depends_on": "eval:doc.entry_type=='Complaint' && doc.complaint_from=='Employee'",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "against_department",
+   "fieldtype": "Link",
+   "label": "Complaint Against Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "confidential",
+   "fieldtype": "Check",
+   "label": "Confidential",
+   "default": "0",
+   "description": "Marks a sensitive complaint. Who can see complaints is set in Role Permission Manager."
+  },
+  {
+   "fieldname": "more_details_section",
+   "fieldtype": "Section Break",
+   "label": "More Details",
+   "collapsible": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "type_of_customer",
+   "fieldtype": "Select",
+   "label": "Type of Customer ",
+   "options": "\nFranchise\nSub-Franchise\nLine Customer\nIndividual\nOther",
+   "in_list_view": 0,
+   "in_standard_filter": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'",
+   "description": "Auto from the customer's group"
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Link",
+   "label": "Route ",
+   "options": "Route Master",
+   "fetch_from": "customer_id.custom_route_master",
+   "fetch_if_empty": 1,
+   "in_standard_filter": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Data",
+   "label": "Address",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "label": "Sales Person",
+   "options": "Sales Person",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "account_manager",
+   "fieldtype": "Link",
+   "label": "Account Manager",
+   "options": "Contact Email",
+   "hidden": 1
+  },
+  {
+   "fieldname": "email_address",
+   "fieldtype": "Data",
+   "label": "Email Address",
+   "hidden": 1
+  },
+  {
+   "fieldname": "column_break_more",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "complaint_id",
+   "fieldtype": "Data",
+   "label": "Complaint ID",
+   "in_list_view": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'",
+   "read_only": 1,
+   "no_copy": 1,
+   "description": "Auto: CI-###"
+  },
+  {
+   "fieldname": "date_of_complaint",
+   "fieldtype": "Date",
+   "label": "Date of Complaint",
+   "reqd": 1,
+   "default": "Today",
+   "search_index": 1
+  },
+  {
+   "fieldname": "time_of_complaint",
+   "fieldtype": "Time",
+   "label": "Time of Complaint",
+   "reqd": 1,
+   "default": "Now"
+  },
+  {
+   "fieldname": "raised_by_name",
+   "fieldtype": "Data",
+   "label": "Raised By",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break",
+   "label": "Products",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Products",
+   "options": "Customer Complaint Item",
+   "depends_on": "eval:doc.complaint_from=='Customer'",
+   "description": "All products in this complaint. The first one is also copied to Item Code below."
+  },
+  {
+   "fieldname": "product_section",
+   "fieldtype": "Section Break",
+   "label": "Product",
+   "collapsible": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name",
+   "fetch_from": "item_code.item_name",
+   "fetch_if_empty": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "purchase_date",
+   "fieldtype": "Date",
+   "label": "Purchase Date",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "purchase_location",
+   "fieldtype": "Data",
+   "label": "Purchase Location ",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "column_break_prod",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "data_kxgv",
+   "fieldtype": "Data",
+   "label": "Batch Number",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "expiry_date",
+   "fieldtype": "Date",
+   "label": "Expiry Date",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "preferred_resolution",
+   "fieldtype": "Select",
+   "label": "Preferred Resolution",
+   "options": "\nRefund\nReplacement\nOther",
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "attachment_video",
+   "fieldtype": "Attach",
+   "label": "Attachment video"
+  },
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Invoice / Delivery Reference",
+   "collapsible": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Select",
+   "label": "Reference Type",
+   "options": "\nSales Invoice\nDelivery Note\nSales Order"
+  },
+  {
+   "fieldname": "column_break_ref",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference No",
+   "options": "reference_doctype"
+  },
+  {
+   "fieldname": "handling_and_resolution_section",
+   "fieldtype": "Section Break",
+   "label": "Handling and Resolution ",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:!doc.__islocal"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Open\nAssigned\nPending Approval\nAccounts Approval\nResolved\nClosed\nRejected",
+   "default": "Open",
+   "reqd": 1,
+   "read_only": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Moved by the workflow Actions menu",
+   "search_index": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "assigned_user",
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "User",
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "assigned_on",
+   "fieldtype": "Datetime",
+   "label": "Assigned On",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date",
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "escalated",
+   "fieldtype": "Check",
+   "label": "Escalated",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "escalated_to",
+   "fieldtype": "Link",
+   "label": "Escalated To",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "column_break_pzqj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "follow_up_required",
+   "fieldtype": "Check",
+   "label": "Follow up Required",
+   "default": "0"
+  },
+  {
+   "fieldname": "follow_up_date",
+   "fieldtype": "Date",
+   "label": "Follow Up Date",
+   "depends_on": "follow_up_required"
+  },
+  {
+   "fieldname": "root_cause",
+   "fieldtype": "Small Text",
+   "label": "Root Cause"
+  },
+  {
+   "fieldname": "action_taken",
+   "fieldtype": "Small Text",
+   "label": "Action Taken",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "resolution_type",
+   "fieldtype": "Select",
+   "label": "Resolution Type",
+   "options": "\nReplacement\nCredit Note\nRefund\nExplanation Given\nProcess Fixed\nNo Action Needed\nOther",
+   "no_copy": 1,
+   "description": "Refund / Credit Note also need Accounts approval"
+  },
+  {
+   "fieldname": "resolution_reference",
+   "fieldtype": "Data",
+   "label": "Resolution Ref (CN / DN No.)",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "resolved_by",
+   "fieldtype": "Link",
+   "label": "Resolution By",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "resolved_on",
+   "fieldtype": "Datetime",
+   "label": "Resolution Submitted On",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "resolution_hours",
+   "fieldtype": "Float",
+   "label": "Resolution Time (Hours)",
+   "read_only": 1,
+   "no_copy": 1,
+   "precision": "1"
+  },
+  {
+   "fieldname": "approval_section",
+   "fieldtype": "Section Break",
+   "label": "Approval",
+   "depends_on": "eval:in_list(['Pending Approval','Accounts Approval','Resolved','Closed','Rejected'], doc.status) || doc.approver_remarks"
+  },
+  {
+   "fieldname": "approver_remarks",
+   "fieldtype": "Small Text",
+   "label": "Approver Remarks",
+   "description": "Required when sending back or rejecting"
+  },
+  {
+   "fieldname": "column_break_appr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "accounts_approved_by",
+   "fieldtype": "Link",
+   "label": "Accounts Approved By",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "accounts_approved_on",
+   "fieldtype": "Datetime",
+   "label": "Accounts Approved On",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "closing_section",
+   "fieldtype": "Section Break",
+   "label": "Closing",
+   "depends_on": "eval:in_list(['Resolved','Closed'], doc.status)"
+  },
+  {
+   "fieldname": "customer_satisfied",
+   "fieldtype": "Select",
+   "label": "Customer Satisfied?",
+   "options": "\nYes\nNo",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "closing_remarks",
+   "fieldtype": "Small Text",
+   "label": "Closing Remarks",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "column_break_close",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "closed_by",
+   "fieldtype": "Link",
+   "label": "Closed By",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "closed_on",
+   "fieldtype": "Datetime",
+   "label": "Closed On",
+   "read_only": 1,
+   "no_copy": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-13 13:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Customer Service",
+ "name": "Customer Complaint",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "print": 1,
+   "email": 1
+  }
+ ],
+ "search_fields": "raised_by_name,complaint_id,item_code,status",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "raised_by_name",
+ "track_changes": 1,
+ "track_views": 1
+}

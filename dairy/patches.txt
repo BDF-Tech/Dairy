@@ -1,6 +1,11 @@
 [pre_model_sync]
+dairy.patches.v1_0.add_customer_service_module
 
 [post_model_sync]
 dairy.patches.v1_0.add_accounts_dashboard_indexes
 dairy.patches.v1_0.exempt_milk_standardisation_from_bom_lock
 dairy.patches.v1_0.seed_login_user_type_rules
+dairy.patches.v1_0.upgrade_customer_complaint
+dairy.patches.v1_0.setup_complaint_workflow
+dairy.patches.v1_0.seed_complaint_id_series
+dairy.patches.v1_0.create_app_roles

@@ -1,0 +1,22 @@
+{
+ "aggregate_function_based_on": "",
+ "color": "#ECAD4B",
+ "creation": "2026-11-11 18:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Number Card",
+ "document_type": "Customer Complaint",
+ "dynamic_filters_json": "[]",
+ "filters_json": "[[\"Customer Complaint\", \"status\", \"=\", \"Open\", false]]",
+ "function": "Count",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "label": "Open Complaints",
+ "modified": "2026-11-11 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Customer Service",
+ "name": "Open Complaints",
+ "owner": "Administrator",
+ "show_percentage_stats": 0,
+ "type": "Document Type"
+}

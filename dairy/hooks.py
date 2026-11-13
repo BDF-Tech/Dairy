@@ -280,6 +280,9 @@ scheduler_events = {
 	"daily_long": [
 		"dairy.milk_entry.doctype.dairy_settings.dairy_settings.purchase_invoice",
 	],
+	"daily": [
+		"dairy.customer_service.doctype.customer_complaint.customer_complaint.escalate_overdue",
+	],
 # # 	"weekly": [
 # # 		"dairy.tasks.weekly"
 # # 	]
