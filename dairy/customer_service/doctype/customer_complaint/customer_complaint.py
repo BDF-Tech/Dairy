@@ -24,6 +24,15 @@ ACCOUNTS_RESOLUTIONS = ("Refund", "Credit Note")
 # used when no Complaint Category is picked
 DAYS_BY_SEVERITY = {"Critical": 1, "Major": 2, "Minor": 3}
 # Issue Type options per group (the form shows only the group's own list; checked again on save)
+# Resolution Type options per group (customer.js shows only these; checked again on save)
+RESOLUTION_TYPES = {
+	"Customer": ["Replacement", "Credit Note", "Refund", "Explanation Given", "Process Fixed", "No Action Needed", "Other"],
+	"Employee": ["Issue Fixed", "Policy / Process Changed", "Explanation Given", "Escalated to Management", "Referred to Department", "Disciplinary Action Taken", "No Action Needed", "Other"],
+	"Farmer": ["Payment Released", "Fat / SNF Corrected", "Rate Corrected", "Explanation Given", "Process Fixed", "No Action Needed", "Other"],
+	"Vendor": ["Payment Released", "PO Corrected", "Goods Returned / Replaced", "Explanation Given", "No Action Needed", "Other"],
+	"Other": ["Explanation Given", "Process Fixed", "Replacement", "No Action Needed", "Other"],
+}
+
 ISSUE_TYPES = {
 	"Farmer": ["Payment Pending", "Wrong Fat / SNF", "Wrong Quantity", "Collection Timing", "Milk Rate", "Bonus / Incentive", "Other"],
 	"Vendor": ["Payment Delay", "Purchase Order Issue", "Quality", "Returns", "Vehicle / Transport", "Other"],
@@ -103,10 +112,19 @@ class CustomerComplaint(Document):
 			self.validate_required()
 		if self.complaint_from == "Employee" and not self.department and self.against_department:
 			self.department = self.against_department
+		self.validate_resolution_type()
 		self.apply_category_defaults()
 		self.set_due_date()
 		self.auto_assign_status()
 		self.on_status_change()
+
+	def validate_resolution_type(self):
+		# only when picked/changed: older records keep whatever they already had
+		if not self.resolution_type or not (self.is_new() or self.has_value_changed("resolution_type")):
+			return
+		group = self.complaint_from or "Customer"
+		if self.resolution_type not in RESOLUTION_TYPES.get(group, []):
+			frappe.throw(_("Resolution Type {0} is not valid for {1} complaints").format(self.resolution_type, group))
 
 	def validate_required(self):
 		"""The few fields a new complaint needs (the form shows the same via mandatory_depends_on, which Frappe

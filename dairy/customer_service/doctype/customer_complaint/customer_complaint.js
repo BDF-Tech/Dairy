@@ -8,12 +8,63 @@ const CC_ISSUE_TYPES = {
 	Other: ["General", "Quality", "Service", "Other"],
 };
 
+// Resolution Type options per group (same lists as RESOLUTION_TYPES in customer_complaint.py)
+const CC_RESOLUTION_TYPES = {
+	"Customer": [
+		"Replacement",
+		"Credit Note",
+		"Refund",
+		"Explanation Given",
+		"Process Fixed",
+		"No Action Needed",
+		"Other"
+	],
+	"Employee": [
+		"Issue Fixed",
+		"Policy / Process Changed",
+		"Explanation Given",
+		"Escalated to Management",
+		"Referred to Department",
+		"Disciplinary Action Taken",
+		"No Action Needed",
+		"Other"
+	],
+	"Farmer": [
+		"Payment Released",
+		"Fat / SNF Corrected",
+		"Rate Corrected",
+		"Explanation Given",
+		"Process Fixed",
+		"No Action Needed",
+		"Other"
+	],
+	"Vendor": [
+		"Payment Released",
+		"PO Corrected",
+		"Goods Returned / Replaced",
+		"Explanation Given",
+		"No Action Needed",
+		"Other"
+	],
+	"Other": [
+		"Explanation Given",
+		"Process Fixed",
+		"Replacement",
+		"No Action Needed",
+		"Other"
+	]
+};
+
 // show only the chosen group's issue types, and call the name field just "Name" for the Other group
 function cc_apply_group(frm) {
 	const g = frm.doc.complaint_from;
 	frm.set_df_property("issue_type", "options", ["", ...(CC_ISSUE_TYPES[g] || [])].join("\n"));
 	frm.set_df_property("name_of_a_customer", "label", g === "Other" ? __("Name") : __("Name of a Customer"));
 	frm.set_df_property("supplier", "label", g === "Farmer" ? __("Farmer") : __("Supplier"));
+	const res = CC_RESOLUTION_TYPES[g || "Customer"] || [];
+	// an old record may hold a value from the previous single list: keep it visible so it isn't blanked
+	const cur = frm.doc.resolution_type;
+	frm.set_df_property("resolution_type", "options", ["", ...res, ...(cur && !res.includes(cur) ? [cur] : [])].join("\n"));
 }
 
 frappe.ui.form.on("Customer Complaint", {
@@ -67,7 +118,7 @@ frappe.ui.form.on("Customer Complaint", {
 			frm.set_value("source", "ERP");
 		}
 		// a value picked for another group would not fit this one
-		const clear = { issue_type: null };
+		const clear = { issue_type: null, resolution_type: null };
 		if (!["Farmer", "Vendor"].includes(frm.doc.complaint_from)) Object.assign(clear, { supplier: null, purchase_order: null });
 		if (frm.doc.complaint_from !== "Customer") Object.assign(clear, { customer_id: null, complaint_type: null, category: null });
 		frm.set_value(clear);

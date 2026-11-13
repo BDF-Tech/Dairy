@@ -601,7 +601,7 @@
    "fieldname": "resolution_type",
    "fieldtype": "Select",
    "label": "Resolution Type",
-   "options": "\nReplacement\nCredit Note\nRefund\nExplanation Given\nProcess Fixed\nNo Action Needed\nOther",
+   "options": "\nReplacement\nCredit Note\nRefund\nExplanation Given\nProcess Fixed\nNo Action Needed\nOther\nIssue Fixed\nPolicy / Process Changed\nEscalated to Management\nReferred to Department\nDisciplinary Action Taken\nPayment Released\nFat / SNF Corrected\nRate Corrected\nPO Corrected\nGoods Returned / Replaced",
    "no_copy": 1,
    "description": "Refund / Credit Note also need Accounts approval"
   },
@@ -609,7 +609,8 @@
    "fieldname": "resolution_reference",
    "fieldtype": "Data",
    "label": "Resolution Ref (CN / DN No.)",
-   "no_copy": 1
+   "no_copy": 1,
+   "depends_on": "eval:doc.complaint_from=='Customer'"
   },
   {
    "fieldname": "resolved_by",
@@ -721,7 +722,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-13 13:00:00.000000",
+ "modified": "2026-11-13 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Customer Service",
  "name": "Customer Complaint",
