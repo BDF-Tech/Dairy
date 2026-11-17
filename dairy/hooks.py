@@ -201,6 +201,9 @@ doc_events = {
                     #    "dairy.milk_entry.custom_sales_invoice.calculate_crate"
                        ],
         # "after_insert": "dairy.milk_entry.custom_sales_invoice.calculate_crate"
+        # Franchise POS: an invoice to a POS franchise is that franchise's stock received (own ledger, no BDF stock/GL)
+        "on_submit": "dairy.franchise_pos.stock.on_sales_invoice_submit",
+        "on_cancel": "dairy.franchise_pos.stock.on_sales_invoice_cancel",
     },
     "Stock Entry":{
         "before_validate": "dairy.milk_entry.custom_stock_entry.clear_inherited_transit_links",

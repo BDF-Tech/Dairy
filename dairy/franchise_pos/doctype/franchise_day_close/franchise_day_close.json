@@ -1,0 +1,207 @@
+{
+ "actions": [],
+ "creation": "2026-11-16 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "franchise",
+  "franchise_code",
+  "franchise_name",
+  "cb1",
+  "posting_date",
+  "get_stock",
+  "sb_items",
+  "items",
+  "sb_sales",
+  "bill_count",
+  "total_sales",
+  "return_amount",
+  "net_sales",
+  "cb2",
+  "cash_sales",
+  "upi_sales",
+  "card_sales",
+  "credit_sales",
+  "sb_more",
+  "remarks",
+  "source",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "franchise",
+   "fieldtype": "Link",
+   "label": "Franchise",
+   "options": "Customer",
+   "reqd": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "franchise_code",
+   "fieldtype": "Data",
+   "label": "Franchise Code",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "no_copy": 0,
+   "description": "Customer code. The Franchise field shows the customer's name because of the Customer setting."
+  },
+  {
+   "fieldname": "franchise_name",
+   "fieldtype": "Data",
+   "label": "Franchise Name",
+   "fetch_from": "franchise.customer_name",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1,
+   "default": "Today",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "get_stock",
+   "fieldtype": "Button",
+   "label": "Get Stock",
+   "depends_on": "eval:doc.docstatus==0"
+  },
+  {
+   "fieldname": "sb_items",
+   "fieldtype": "Section Break",
+   "label": "Stock"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Franchise Day Close Item"
+  },
+  {
+   "fieldname": "sb_sales",
+   "fieldtype": "Section Break",
+   "label": "Sales of the Day"
+  },
+  {
+   "fieldname": "bill_count",
+   "fieldtype": "Int",
+   "label": "Bills",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_sales",
+   "fieldtype": "Currency",
+   "label": "Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "return_amount",
+   "fieldtype": "Currency",
+   "label": "Sale Returns",
+   "read_only": 1
+  },
+  {
+   "fieldname": "net_sales",
+   "fieldtype": "Currency",
+   "label": "Net Sales",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cash_sales",
+   "fieldtype": "Currency",
+   "label": "Cash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "upi_sales",
+   "fieldtype": "Currency",
+   "label": "UPI",
+   "read_only": 1
+  },
+  {
+   "fieldname": "card_sales",
+   "fieldtype": "Currency",
+   "label": "Card",
+   "read_only": 1
+  },
+  {
+   "fieldname": "credit_sales",
+   "fieldtype": "Currency",
+   "label": "Credit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_more",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Desk\nMobile App",
+   "default": "Desk",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Franchise Day Close",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-17 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Franchise POS",
+ "name": "Franchise Day Close",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "export": 1,
+   "report": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "FDC-.YY..MM.-.#####",
+ "naming_rule": "Expression (old style)",
+ "is_submittable": 1,
+ "track_changes": 1,
+ "title_field": "franchise_code",
+ "search_fields": "franchise_code,franchise_name,posting_date"
+}

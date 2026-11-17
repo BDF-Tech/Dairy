@@ -1,0 +1,120 @@
+{
+ "actions": [],
+ "creation": "2026-11-16 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_name",
+  "uom",
+  "opening_qty",
+  "received_qty",
+  "sold_qty",
+  "returned_qty",
+  "expected_qty",
+  "wastage_qty",
+  "actual_qty",
+  "difference_qty"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "fieldname": "opening_qty",
+   "fieldtype": "Float",
+   "label": "Opening",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "received_qty",
+   "fieldtype": "Float",
+   "label": "Received",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "sold_qty",
+   "fieldtype": "Float",
+   "label": "Sold",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "returned_qty",
+   "fieldtype": "Float",
+   "label": "Returned to BDF",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "expected_qty",
+   "fieldtype": "Float",
+   "label": "System Closing",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Opening + Received - Sold - Returned to BDF"
+  },
+  {
+   "fieldname": "wastage_qty",
+   "fieldtype": "Float",
+   "label": "Wastage",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "actual_qty",
+   "fieldtype": "Float",
+   "label": "Counted Closing",
+   "in_list_view": 1,
+   "columns": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "difference_qty",
+   "fieldtype": "Float",
+   "label": "Difference",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Counted Closing - (System Closing - Wastage)"
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-16 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Franchise POS",
+ "name": "Franchise Day Close Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

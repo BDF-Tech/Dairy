@@ -1,0 +1,229 @@
+{
+ "actions": [],
+ "creation": "2026-11-16 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "franchise",
+  "franchise_code",
+  "franchise_name",
+  "cb1",
+  "posting_date",
+  "posting_time",
+  "sb_buyer",
+  "buyer_name",
+  "buyer_mobile",
+  "cb2",
+  "payment_mode",
+  "source",
+  "sb_return",
+  "is_return",
+  "cb3",
+  "return_against",
+  "sb_items",
+  "items",
+  "sb_total",
+  "total_qty",
+  "cb4",
+  "grand_total",
+  "sb_more",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "franchise",
+   "fieldtype": "Link",
+   "label": "Franchise",
+   "options": "Customer",
+   "reqd": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "franchise_code",
+   "fieldtype": "Data",
+   "label": "Franchise Code",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "no_copy": 0,
+   "description": "Customer code. The Franchise field shows the customer's name because of the Customer setting."
+  },
+  {
+   "fieldname": "franchise_name",
+   "fieldtype": "Data",
+   "label": "Franchise Name",
+   "fetch_from": "franchise.customer_name",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1,
+   "default": "Today",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "posting_time",
+   "fieldtype": "Time",
+   "label": "Time"
+  },
+  {
+   "fieldname": "sb_buyer",
+   "fieldtype": "Section Break",
+   "label": "Buyer"
+  },
+  {
+   "fieldname": "buyer_name",
+   "fieldtype": "Data",
+   "label": "Buyer Name"
+  },
+  {
+   "fieldname": "buyer_mobile",
+   "fieldtype": "Data",
+   "label": "Buyer Mobile",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_mode",
+   "fieldtype": "Select",
+   "label": "Payment Mode",
+   "options": "Cash\nUPI\nCard\nCredit",
+   "default": "Cash",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Desk\nMobile App",
+   "default": "Desk",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_return",
+   "fieldtype": "Section Break",
+   "label": "Return"
+  },
+  {
+   "fieldname": "is_return",
+   "fieldtype": "Check",
+   "label": "Is Return",
+   "in_standard_filter": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "return_against",
+   "fieldtype": "Link",
+   "label": "Return Against",
+   "options": "Franchise Sale",
+   "depends_on": "is_return",
+   "mandatory_depends_on": "is_return",
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "sb_items",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Franchise Sale Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sb_total",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "label": "Total Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Bill Total",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "sb_more",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Franchise Sale",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-17 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Franchise POS",
+ "name": "Franchise Sale",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "export": 1,
+   "report": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "FS-.YY..MM.-.#####",
+ "naming_rule": "Expression (old style)",
+ "is_submittable": 1,
+ "track_changes": 1,
+ "title_field": "franchise_code",
+ "search_fields": "franchise_code,franchise_name,buyer_name,buyer_mobile,posting_date,grand_total"
+}
