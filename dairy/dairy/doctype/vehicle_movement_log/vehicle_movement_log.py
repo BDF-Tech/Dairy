@@ -2,7 +2,15 @@ import frappe
 import json
 
 from frappe.model.document import Document
-from frappe.utils import getdate, nowdate, flt
+from frappe import _
+from frappe.utils import getdate, nowdate, flt, now_datetime
+
+
+# Trip states in which the vehicle is out and the driver holds crates.
+ON_ROUTE_STATES = ("Submitted",)
+
+# Trip states before the vehicle leaves — no crate entries exist yet.
+PRE_DISPATCH_STATES = ("Route Planning", "Dispatch Loading", "Gate Check")
 
 
 class VehicleMovementLog(Document):
@@ -13,9 +21,14 @@ class VehicleMovementLog(Document):
 
     def validate(self):
 
+        self.block_direct_crew_edit_on_route()
+
         self.check_vehicle_not_on_active_trip()
 
-        self.check_vehicle_documents()
+        # A driver-only change mid-trip keeps the same vehicle (already
+        # checked at dispatch) — don't block it on documents expiring since.
+        if self.flags.crew_change != "Driver":
+            self.check_vehicle_documents()
 
         self.update_crate_summary_balance()
 
@@ -626,7 +639,8 @@ class VehicleMovementLog(Document):
                     "sales_invoice": row.sales_invoice,
                     "entry_type": "OUT",
                     "ledger_type": "Driver",
-                    "vehicle_movement_log": self.name
+                    "vehicle_movement_log": self.name,
+                    "driver_transfer": 0
                 }
             )
 
@@ -725,7 +739,8 @@ class VehicleMovementLog(Document):
                 "ledger_type": "Driver",
                 "entry_type": "IN",
                 "sales_invoice": ["is", "not set"],
-                "crate_type": ["is", "not set"]
+                "crate_type": ["is", "not set"],
+                "driver_transfer": 0
             },
             "name"
         )
@@ -787,7 +802,8 @@ class VehicleMovementLog(Document):
                     "stock_entry": row.stock_entry,
                     "entry_type": "OUT",
                     "ledger_type": "Driver",
-                    "vehicle_movement_log": self.name
+                    "vehicle_movement_log": self.name,
+                    "driver_transfer": 0
                 }
             )
 
@@ -860,7 +876,8 @@ class VehicleMovementLog(Document):
                     "vehicle_movement_log": self.name,
                     "crate_type": row.crate_item,
                     "entry_type": "OUT",
-                    "ledger_type": "Driver"
+                    "ledger_type": "Driver",
+                    "driver_transfer": 0
                 }
             )
 
@@ -931,7 +948,8 @@ class VehicleMovementLog(Document):
                     "vehicle_movement_log": self.name,
                     "crate_type": row.crate_type,
                     "entry_type": "IN",
-                    "ledger_type": "Driver"
+                    "ledger_type": "Driver",
+                    "driver_transfer": 0
                 }
             )
 
@@ -1012,6 +1030,37 @@ class VehicleMovementLog(Document):
 
     def create_stock_entry_for_loose_items(self):
         pass
+
+    # =========================================================
+    # DRIVER / VEHICLE CHANGE GUARD
+    # =========================================================
+
+    def block_direct_crew_edit_on_route(self):
+        """
+        Once the vehicle has gone out (Submitted / Vehicle Returned) the
+        driver already holds crates in the ledger, so driver / vehicle may
+        only change through the Change Driver / Change Vehicle buttons,
+        which move the crates properly and log the change.
+        """
+
+        if self.is_new() or self.flags.crew_change:
+            return
+
+        before = self.get_doc_before_save()
+
+        if not before or before.workflow_state not in ON_ROUTE_STATES + ("Vehicle Returned",):
+            return
+
+        for field, button in (("driver", "Change Driver"), ("vehicle", "Change Vehicle")):
+            if (before.get(field) or None) != (self.get(field) or None):
+                frappe.throw(
+                    title="Use the Change Button",
+                    msg=(
+                        f"The vehicle is already out on this trip. "
+                        f"Use the <b>{button}</b> button so crates "
+                        f"and history are updated correctly."
+                    )
+                )
 
     # =========================================================
     # VEHICLE DOUBLE-BOOKING CHECK
@@ -1522,3 +1571,250 @@ def get_stock_entry_query(
         },
         as_dict=as_dict
     )
+
+
+# =========================================================
+# CHANGE DRIVER / CHANGE VEHICLE (mid-trip)
+# =========================================================
+
+def _get_crew_changeable_vml(vml):
+    doc = frappe.get_doc("Vehicle Movement Log", vml)
+    doc.check_permission("write")
+
+    if doc.workflow_state not in PRE_DISPATCH_STATES + ON_ROUTE_STATES:
+        frappe.throw(_(
+            "Driver / vehicle can only be changed before the vehicle returns. "
+            "This trip is in state {0}."
+        ).format(frappe.bold(doc.workflow_state)))
+
+    if _vehicle_already_returned(doc):
+        frappe.throw(_(
+            "This vehicle has already returned (security return count is entered). "
+            "Driver / vehicle can no longer be changed."
+        ))
+
+    return doc
+
+
+def _vehicle_already_returned(doc):
+    """A trip goes Vehicle Returned → Submitted again, so 'Submitted' alone is not 'on route'."""
+    if flt(doc.security_total_crates_in) or doc.get("security_loose_crate_entries"):
+        return True
+    return bool(frappe.db.exists("Customer Crate Ledger", {
+        "vehicle_movement_log": doc.name,
+        "ledger_type": "Driver",
+        "entry_type": "IN",
+        "driver_transfer": 0,
+    }))
+
+
+def get_driver_trip_holding(vml, driver):
+    """
+    Crates `driver` is holding right now on trip `vml`:
+      invoice crates = driver ledger OUT - IN (invoice / stock entry / transfers)
+                       - crates delivered + crates returned (applied Crate Deliveries)
+      loose crates   = driver ledger OUT - IN per crate type
+    """
+
+    rows = frappe.db.sql(
+        """
+        SELECT crate_category, crate_type,
+               SUM(IFNULL(crates_out, 0)) AS crates_out,
+               SUM(IFNULL(crates_in, 0))  AS crates_in
+        FROM `tabCustomer Crate Ledger`
+        WHERE vehicle_movement_log = %(vml)s
+          AND ledger_type = 'Driver'
+          AND driver = %(driver)s
+        GROUP BY crate_category, crate_type
+        """,
+        {"vml": vml, "driver": driver},
+        as_dict=True,
+    )
+
+    invoice_crates = 0
+    loose = {}
+
+    for r in rows:
+        net = flt(r.crates_out) - flt(r.crates_in)
+        if r.crate_category == "Loose Crate" and r.crate_type:
+            loose[r.crate_type] = loose.get(r.crate_type, 0) + net
+        else:
+            invoice_crates += net
+
+    # Crate Deliveries change the driver balance directly (no driver ledger row).
+    # Invoice deliveries only count once the customer OTP is confirmed.
+    cd = frappe.db.sql(
+        """
+        SELECT SUM(IFNULL(crates_delivered, 0)) AS delivered,
+               SUM(IFNULL(crates_returned, 0))  AS returned
+        FROM `tabCrate Delivery`
+        WHERE vehicle_movement_log = %(vml)s
+          AND driver = %(driver)s
+          AND docstatus = 1
+          AND (IFNULL(stock_entry, '') != '' OR customer_confirmed = 1)
+        """,
+        {"vml": vml, "driver": driver},
+        as_dict=True,
+    )[0]
+
+    invoice_crates += flt(cd.returned) - flt(cd.delivered)
+
+    return {
+        "invoice_crates": max(0, invoice_crates),
+        "loose": {ct: qty for ct, qty in loose.items() if qty > 0},
+    }
+
+
+def _add_driver_balance(driver, change):
+    current = flt(frappe.db.get_value("Driver", driver, "custom_invoice_crate_balance"))
+    new = max(0, current + change)
+    frappe.db.set_value("Driver", driver, "custom_invoice_crate_balance", new)
+    return new
+
+
+def _transfer_ledger(doc, driver, entry_type, qty, crate_type=None, balance=0):
+    ledger = frappe.new_doc("Customer Crate Ledger")
+    ledger.posting_date = nowdate()
+    ledger.ledger_type = "Driver"
+    ledger.driver = driver
+    ledger.vehicle = doc.vehicle
+    ledger.vehicle_movement_log = doc.name
+    ledger.driver_transfer = 1
+    ledger.entry_type = entry_type
+    ledger.crates_out = qty if entry_type == "OUT" else 0
+    ledger.crates_in = qty if entry_type == "IN" else 0
+    ledger.balance_crates = balance
+    if crate_type:
+        ledger.crate_type = crate_type
+        ledger.crate_category = "Loose Crate"
+    ledger.insert(ignore_permissions=True)
+
+
+def _move_pending_crate_deliveries(vml, field, old, new):
+    """Drafts and invoice deliveries still waiting for OTP follow the new driver/vehicle."""
+    names = frappe.db.sql(
+        f"""
+        SELECT name FROM `tabCrate Delivery`
+        WHERE vehicle_movement_log = %(vml)s
+          AND `{field}` = %(old)s
+          AND (docstatus = 0
+               OR (docstatus = 1 AND IFNULL(sales_invoice, '') != ''
+                   AND IFNULL(customer_confirmed, 0) = 0))
+        """,
+        {"vml": vml, "old": old},
+        pluck="name",
+    )
+    for name in names:
+        frappe.db.set_value("Crate Delivery", name, field, new, update_modified=False)
+    return names
+
+
+def _log_crew_change(doc, **values):
+    doc.append("crew_changes", dict(
+        changed_on=now_datetime(),
+        changed_by=frappe.session.user,
+        trip_stage=doc.workflow_state,
+        **values,
+    ))
+
+
+@frappe.whitelist()
+def get_crew_change_preview(vml):
+    doc = _get_crew_changeable_vml(vml)
+    on_route = doc.workflow_state in ON_ROUTE_STATES
+    holding = get_driver_trip_holding(doc.name, doc.driver) if (on_route and doc.driver) else None
+    return {"on_route": on_route, "holding": holding}
+
+
+@frappe.whitelist()
+def change_driver(vml, new_driver, reason):
+    doc = _get_crew_changeable_vml(vml)
+    old_driver = doc.driver
+    reason = (reason or "").strip()
+
+    if not reason:
+        frappe.throw(_("Please enter a reason."))
+    if not new_driver or new_driver == old_driver:
+        frappe.throw(_("Select a different driver."))
+    if frappe.db.get_value("Driver", new_driver, "status") != "Active":
+        frappe.throw(_("Driver {0} is not Active.").format(frappe.bold(new_driver)))
+
+    on_route = doc.workflow_state in ON_ROUTE_STATES and old_driver
+    invoice_qty = 0
+    loose = {}
+
+    if on_route:
+        holding = get_driver_trip_holding(doc.name, old_driver)
+        invoice_qty = holding["invoice_crates"]
+        loose = holding["loose"]
+
+        if invoice_qty:
+            old_bal = _add_driver_balance(old_driver, -invoice_qty)
+            new_bal = _add_driver_balance(new_driver, invoice_qty)
+            _transfer_ledger(doc, old_driver, "IN", invoice_qty, balance=old_bal)
+            _transfer_ledger(doc, new_driver, "OUT", invoice_qty, balance=new_bal)
+
+        for crate_type, qty in loose.items():
+            _transfer_ledger(doc, old_driver, "IN", qty, crate_type=crate_type)
+            _transfer_ledger(doc, new_driver, "OUT", qty, crate_type=crate_type, balance=qty)
+
+        if loose:
+            doc.driver = old_driver
+            doc._update_driver_loose_crate_balances({ct: -q for ct, q in loose.items()})
+            doc.driver = new_driver
+            doc._update_driver_loose_crate_balances(loose)
+
+        _move_pending_crate_deliveries(doc.name, "driver", old_driver, new_driver)
+
+    doc.driver = new_driver
+    doc.driver_name = frappe.db.get_value("Driver", new_driver, "full_name")
+
+    _log_crew_change(
+        doc,
+        change_type="Driver",
+        from_driver=old_driver,
+        to_driver=new_driver,
+        from_vehicle=doc.vehicle,
+        to_vehicle=doc.vehicle,
+        invoice_crates_transferred=invoice_qty,
+        loose_crates_transferred=", ".join(f"{ct}: {flt(q):g}" for ct, q in loose.items()),
+        reason=reason,
+    )
+
+    doc.flags.crew_change = "Driver"
+    doc.save()
+
+    return {"invoice_crates": invoice_qty, "loose": loose}
+
+
+@frappe.whitelist()
+def change_vehicle(vml, new_vehicle, reason):
+    doc = _get_crew_changeable_vml(vml)
+    old_vehicle = doc.vehicle
+    reason = (reason or "").strip()
+
+    if not reason:
+        frappe.throw(_("Please enter a reason."))
+    if not new_vehicle or new_vehicle == old_vehicle:
+        frappe.throw(_("Select a different vehicle."))
+
+    if doc.workflow_state in ON_ROUTE_STATES and old_vehicle:
+        _move_pending_crate_deliveries(doc.name, "vehicle", old_vehicle, new_vehicle)
+
+    doc.vehicle = new_vehicle
+
+    _log_crew_change(
+        doc,
+        change_type="Vehicle",
+        from_driver=doc.driver,
+        to_driver=doc.driver,
+        from_vehicle=old_vehicle,
+        to_vehicle=new_vehicle,
+        reason=reason,
+    )
+
+    # save() runs validate → vehicle document (RC / insurance / fitness) checks
+    doc.flags.crew_change = "Vehicle"
+    doc.save()
+
+    return {"vehicle": new_vehicle}

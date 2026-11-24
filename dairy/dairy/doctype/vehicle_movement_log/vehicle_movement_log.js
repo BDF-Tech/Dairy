@@ -510,3 +510,124 @@ frappe.ui.form.on("Vehicle Movement Log", {
     }
 
 });
+
+
+// =========================================================
+// CHANGE DRIVER / CHANGE VEHICLE (mid-trip)
+// =========================================================
+
+frappe.ui.form.on("Vehicle Movement Log", {
+
+    refresh(frm) {
+
+        const state = frm.doc.workflow_state;
+        const on_route = ["Submitted", "Vehicle Returned"].includes(state);
+        const can_change = !frm.is_new() && frm.perm[0]?.write &&
+            ["Route Planning", "Dispatch Loading", "Gate Check", "Submitted"].includes(state);
+
+        // After the vehicle is out, driver/vehicle change only via the buttons
+        frm.set_df_property("driver", "read_only", on_route ? 1 : 0);
+        frm.set_df_property("vehicle", "read_only", on_route ? 1 : 0);
+
+        if (!can_change) return;
+
+        frm.add_custom_button(__("Change Driver"), () => vml_change_driver(frm), __("Crew"));
+        frm.add_custom_button(__("Change Vehicle"), () => vml_change_vehicle(frm), __("Crew"));
+    },
+});
+
+const VML_API = "dairy.dairy.doctype.vehicle_movement_log.vehicle_movement_log";
+
+function vml_holding_html(holding) {
+    if (!holding) {
+        return `<p class="text-muted">${__("Vehicle has not gone out yet — no crates to transfer.")}</p>`;
+    }
+    const rows = [[__("Invoice / Stock Entry crates"), holding.invoice_crates]];
+    Object.entries(holding.loose || {}).forEach(([ct, qty]) => rows.push([`${__("Loose")}: ${frappe.utils.escape_html(ct)}`, qty]));
+    return `
+        <p><b>${__("Crates moving to the new driver")}</b></p>
+        <table class="table table-bordered table-sm">
+            ${rows.map(([l, q]) => `<tr><td>${l}</td><td class="text-right"><b>${flt(q)}</b></td></tr>`).join("")}
+        </table>`;
+}
+
+async function vml_change_driver(frm) {
+    if (frm.is_dirty()) {
+        frappe.msgprint(__("Please save the trip first."));
+        return;
+    }
+
+    const { message: preview } = await frappe.call({
+        method: `${VML_API}.get_crew_change_preview`,
+        args: { vml: frm.doc.name },
+    });
+
+    const d = new frappe.ui.Dialog({
+        title: __("Change Driver"),
+        fields: [
+            { fieldtype: "HTML", options: `<p>${__("Current driver")}: <b>${frappe.utils.escape_html(frm.doc.driver_name || frm.doc.driver || "-")}</b></p>` },
+            {
+                fieldname: "new_driver", fieldtype: "Link", options: "Driver", label: __("New Driver"), reqd: 1,
+                get_query: () => ({ filters: { status: "Active", name: ["!=", frm.doc.driver || ""] } }),
+            },
+            { fieldname: "reason", fieldtype: "Small Text", label: __("Reason"), reqd: 1,
+              description: __("e.g. driver unwell / absent") },
+            { fieldtype: "HTML", options: vml_holding_html(preview.holding) },
+        ],
+        primary_action_label: __("Change Driver"),
+        primary_action: async (values) => {
+            d.disable_primary_action();
+            try {
+                await frappe.call({
+                    method: `${VML_API}.change_driver`,
+                    args: { vml: frm.doc.name, new_driver: values.new_driver, reason: values.reason },
+                    freeze: true,
+                });
+                d.hide();
+                frappe.show_alert({ message: __("Driver changed"), indicator: "green" });
+                frm.reload_doc();
+            } finally {
+                d.enable_primary_action();
+            }
+        },
+    });
+    d.show();
+}
+
+function vml_change_vehicle(frm) {
+    if (frm.is_dirty()) {
+        frappe.msgprint(__("Please save the trip first."));
+        return;
+    }
+
+    const d = new frappe.ui.Dialog({
+        title: __("Change Vehicle"),
+        fields: [
+            { fieldtype: "HTML", options: `<p>${__("Current vehicle")}: <b>${frappe.utils.escape_html(frm.doc.vehicle || "-")}</b></p>` },
+            {
+                fieldname: "new_vehicle", fieldtype: "Link", options: "Vehicle", label: __("New Vehicle"), reqd: 1,
+                get_query: () => ({ filters: { name: ["!=", frm.doc.vehicle || ""] } }),
+            },
+            { fieldname: "reason", fieldtype: "Small Text", label: __("Reason"), reqd: 1,
+              description: __("e.g. breakdown on route") },
+            { fieldtype: "HTML", options: `<p class="text-muted">${__("Crates stay with the driver.")}</p>` },
+        ],
+        primary_action_label: __("Change Vehicle"),
+        primary_action: async (values) => {
+            d.disable_primary_action();
+            try {
+                await frappe.call({
+                    method: `${VML_API}.change_vehicle`,
+                    args: { vml: frm.doc.name, new_vehicle: values.new_vehicle, reason: values.reason },
+                    freeze: true,
+                });
+                d.hide();
+                frappe.show_alert({ message: __("Vehicle changed"), indicator: "green" });
+                frm.reload_doc();
+            } finally {
+                d.enable_primary_action();
+            }
+        },
+    });
+    d.show();
+}

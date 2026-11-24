@@ -34,7 +34,9 @@
   "security_return_entry_tab",
   "security_total_crates_in",
   "section_break_security_return",
-  "security_loose_crate_entries"
+  "security_loose_crate_entries",
+  "crew_changes_tab",
+  "crew_changes"
  ],
  "fields": [
   {
@@ -221,6 +223,18 @@
    "label": "Loose Crate Return (Physical Count)",
    "options": "Security Crate Return Entry",
    "read_only_depends_on": "eval:doc.workflow_state !== 'Vehicle Returned'"
+  },
+  {
+   "fieldname": "crew_changes_tab",
+   "fieldtype": "Tab Break",
+   "label": "Driver / Vehicle Changes"
+  },
+  {
+   "fieldname": "crew_changes",
+   "fieldtype": "Table",
+   "label": "Driver / Vehicle Changes",
+   "options": "VML Crew Change",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -239,7 +253,7 @@
    "link_fieldname": "vehicle_movement_log"
   }
  ],
- "modified": "2026-06-01 15:52:44.651618",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "dairy",
  "name": "Vehicle Movement Log",
