@@ -15,6 +15,7 @@
   "entry_type",
   "driver_balance_type",
   "crate_type",
+  "crate_items",
   "crates",
   "reason",
   "balance_section",
@@ -98,15 +99,25 @@
    "fieldtype": "Link",
    "label": "Crate Type",
    "options": "Crate Type",
+   "hidden": 1,
+   "read_only": 1,
+   "description": "Old single-type adjustments only. New ones use the Crate Types table."
+  },
+  {
+   "fieldname": "crate_items",
+   "fieldtype": "Table",
+   "label": "Crate Types",
+   "options": "Crate Balance Adjustment Item",
    "depends_on": "eval:['Driver','Warehouse'].includes(doc.party_type) && doc.driver_balance_type=='Loose Crate'",
-   "mandatory_depends_on": "eval:['Driver','Warehouse'].includes(doc.party_type) && doc.driver_balance_type=='Loose Crate'"
+   "allow_bulk_edit": 0
   },
   {
    "fieldname": "crates",
    "fieldtype": "Float",
    "label": "Crates",
-   "reqd": 1,
-   "description": "Positive = add to balance. Negative = reduce balance."
+   "description": "Positive = add to balance. Negative = reduce balance.",
+   "depends_on": "eval:!(['Driver','Warehouse'].includes(doc.party_type) && doc.driver_balance_type=='Loose Crate')",
+   "mandatory_depends_on": "eval:!(['Driver','Warehouse'].includes(doc.party_type) && doc.driver_balance_type=='Loose Crate')"
   },
   {
    "fieldname": "reason",
@@ -138,7 +149,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-06-29 00:00:00.000000",
+ "modified": "2026-11-24 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "dairy",
  "name": "Crate Balance Adjustment",

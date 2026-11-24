@@ -44,24 +44,61 @@ def get_party_crate_balances(party_type, party):
 class CrateBalanceAdjustment(Document):
 
     def validate(self):
-        if not self.crates:
-            frappe.throw("Crates cannot be zero.")
-
         cfg = PARTY_MAP.get(self.party_type)
         if not cfg:
             frappe.throw("Invalid Party Type.")
 
         _, _, supports_loose = cfg
-        if supports_loose:
-            if not self.driver_balance_type:
-                frappe.throw(f"Balance Type is required for {self.party_type}.")
-            if self.driver_balance_type == "Loose Crate" and not self.crate_type:
-                frappe.throw("Crate Type is required for Loose Crate adjustment.")
+        if supports_loose and not self.driver_balance_type:
+            frappe.throw(f"Balance Type is required for {self.party_type}.")
 
-        self._check_negative_balance()
+        if self._is_loose():
+            self._validate_crate_items()
+        elif not flt(self.crates):
+            frappe.throw("Crates cannot be zero.")
 
-    def _check_negative_balance(self):
-        crates = flt(self.crates)
+        for crate_type, crates in self._adjustment_rows():
+            self._check_negative_balance(crate_type, crates)
+
+    def _validate_crate_items(self):
+        """One row per crate type; rows left at 0 are dropped."""
+        doctype, party_name, _, _ = self._party()
+
+        # old single-type document (before the Crate Types table existed)
+        if not self.crate_items and self.crate_type:
+            if not flt(self.crates):
+                frappe.throw("Crates cannot be zero.")
+            return
+
+        self.crate_items = [r for r in self.crate_items if flt(r.crates)]
+        if not self.crate_items:
+            frappe.throw("Enter crates (+/-) for at least one crate type.")
+
+        seen = set()
+        for row in self.crate_items:
+            if row.crate_type in seen:
+                frappe.throw(f"Crate Type <b>{row.crate_type}</b> is entered more than once.")
+            seen.add(row.crate_type)
+            row.current_balance = self._get_loose_balance(doctype, party_name, row.crate_type)
+            row.new_balance = flt(row.current_balance) + flt(row.crates)
+
+        for i, row in enumerate(self.crate_items, 1):
+            row.idx = i
+
+        # loose adjustments keep the parent total for list view / reports
+        self.crates = sum(flt(r.crates) for r in self.crate_items)
+
+    def _adjustment_rows(self):
+        """[(crate_type or None, crates)] — one ledger entry per item."""
+        if not self._is_loose():
+            return [(None, flt(self.crates))]
+        if self.crate_items:
+            return [(r.crate_type, flt(r.crates)) for r in self.crate_items if flt(r.crates)]
+        if self.crate_type:  # old single-type document
+            return [(self.crate_type, flt(self.crates))]
+        return []
+
+    def _check_negative_balance(self, crate_type, crates):
         if crates >= 0:
             return  # Adding crates — always fine
 
@@ -69,10 +106,11 @@ class CrateBalanceAdjustment(Document):
         if allow_negative:
             return
 
-        current = self._get_current_balance()
+        current = self._get_current_balance(crate_type)
         if current + crates < 0:
+            label = f" for <b>{crate_type}</b>" if crate_type else ""
             frappe.throw(
-                f"This adjustment would reduce the balance to {current + crates:.0f}, "
+                f"This adjustment would reduce the balance{label} to {current + crates:.0f}, "
                 f"which is below zero. Current balance is {current:.0f}. "
                 f"Enable <b>Allow Negative Crate Balance</b> in Crate Settings to proceed."
             )
@@ -98,29 +136,30 @@ class CrateBalanceAdjustment(Document):
         _, _, _, supports_loose = self._party()
         return supports_loose and self.driver_balance_type == "Loose Crate"
 
-    def _get_current_balance(self):
+    def _get_current_balance(self, crate_type=None):
         doctype, party_name, invoice_field, _ = self._party()
         if not party_name:
             return 0
-        if self._is_loose():
-            return self._get_loose_balance(doctype, party_name, self.crate_type)
+        if crate_type:
+            return self._get_loose_balance(doctype, party_name, crate_type)
         return flt(frappe.db.get_value(doctype, party_name, invoice_field))
 
     def on_submit(self):
-        self._create_ledger_entry()
-        self._update_master_balance(flt(self.crates))
+        for crate_type, crates in self._adjustment_rows():
+            self._create_ledger_entry(crate_type, crates)
+            self._update_master_balance(crate_type, crates)
 
     def on_cancel(self):
-        self._delete_ledger_entry()
-        self._update_master_balance(-flt(self.crates))
+        self._delete_ledger_entries()
+        for crate_type, crates in self._adjustment_rows():
+            self._update_master_balance(crate_type, -crates)
 
     # =========================================================
     # LEDGER
     # =========================================================
 
-    def _create_ledger_entry(self):
-        crates = flt(self.crates)
-        doctype, party_name, _, _ = self._party()
+    def _create_ledger_entry(self, crate_type, crates):
+        _, party_name, _, _ = self._party()
 
         ledger = frappe.new_doc("Customer Crate Ledger")
         ledger.posting_date             = self.date
@@ -139,35 +178,32 @@ class CrateBalanceAdjustment(Document):
         elif self.party_type == "Warehouse":
             ledger.warehouse = party_name
 
-        if self._is_loose():
+        if crate_type:
             ledger.crate_category = "Loose Crate"
-            ledger.crate_type = self.crate_type
-            ledger.balance_crates = self._get_loose_balance(doctype, party_name, self.crate_type) + crates
-        else:
-            ledger.balance_crates = self._get_current_balance() + crates
+            ledger.crate_type = crate_type
 
+        ledger.balance_crates = self._get_current_balance(crate_type) + crates
         ledger.insert(ignore_permissions=True)
 
-    def _delete_ledger_entry(self):
-        name = frappe.db.get_value(
+    def _delete_ledger_entries(self):
+        for name in frappe.db.get_all(
             "Customer Crate Ledger",
-            {"crate_balance_adjustment": self.name},
-            "name"
-        )
-        if name:
+            filters={"crate_balance_adjustment": self.name},
+            pluck="name",
+        ):
             frappe.delete_doc("Customer Crate Ledger", name, ignore_permissions=True)
 
     # =========================================================
     # MASTER BALANCE
     # =========================================================
 
-    def _update_master_balance(self, delta):
+    def _update_master_balance(self, crate_type, delta):
         doctype, party_name, invoice_field, _ = self._party()
         if not party_name:
             return
 
-        if self._is_loose():
-            self._update_loose_balance(doctype, party_name, self.crate_type, delta)
+        if crate_type:
+            self._update_loose_balance(doctype, party_name, crate_type, delta)
         else:
             current = flt(frappe.db.get_value(doctype, party_name, invoice_field))
             frappe.db.set_value(doctype, party_name, invoice_field, current + delta)
