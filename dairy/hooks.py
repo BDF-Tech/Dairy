@@ -279,6 +279,8 @@ scheduler_events = {
 	# ],
 	"hourly": [
 		"dairy.dairy.doctype.crate_delivery.crate_delivery.clear_expired_otps",
+		# Franchise POS: take in deliveries not confirmed in time, then close days left open too long
+		"dairy.franchise_pos.stock.run_hourly",
 	],
 	"daily_long": [
 		"dairy.milk_entry.doctype.dairy_settings.dairy_settings.purchase_invoice",

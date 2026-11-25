@@ -42,6 +42,9 @@ class FranchisePOSDashboard {
 			d.can_stock ? [__("Wastage (MRP)"), money(k.wastage_value), __("in this period")] : null,
 			[__("Billed Today"), `${k.billed_today} / ${k.franchises}`, __("franchises")],
 			[__("Day Close Pending"), k.close_pending, __("franchises"), k.close_pending ? "red" : "green"],
+			d.can_cash ? [__("Cash Short"), money(-k.cash_short), __("at day close, this period"), k.cash_short ? "red" : "green"] : null,
+			d.can_delivery ? [__("Deliveries Not Confirmed"), k.deliveries_waiting, __("short / damaged not settled: {0}", [money(k.delivery_loss)]),
+				k.deliveries_waiting || k.delivery_loss ? "red" : "green"] : null,
 		].filter(Boolean);
 
 		const rows = d.franchises.map((r) => `
@@ -52,8 +55,16 @@ class FranchisePOSDashboard {
 				<td class="text-right"><b>${money(r.net_sales)}</b></td>
 				<td class="text-right">${r.bills}</td>
 				${d.can_stock ? `<td class="text-right">${money(r.stock_value)}</td><td class="text-right">${money(r.wastage_value)}</td>` : ""}
+				${d.can_cash ? `<td class="text-right ${r.cash_difference < 0 ? "text-danger" : ""}">${r.cash_difference ? money(r.cash_difference) : "-"}</td>` : ""}
+				${d.can_delivery ? `<td class="text-right">${r.deliveries_waiting
+					? `<span class="indicator-pill orange">${__("{0} waiting", [r.deliveries_waiting])}</span>` : ""}
+					${r.delivery_loss ? `<div class="text-danger small">${__("Not settled")} ${money(r.delivery_loss)}</div>` : ""}
+					${r.deliveries_auto ? `<div class="text-muted small">${__("{0} auto", [r.deliveries_auto])}</div>` : ""}
+					${!r.deliveries_waiting && !r.delivery_loss && !r.deliveries_auto ? "-" : ""}</td>` : ""}
 				<td>${date(r.last_bill)}</td>
-				<td><span class="indicator-pill ${r.close_pending ? "red" : "green"}">${date(r.last_close)}</span></td>
+				<td>${r.close_pending
+					? `<span class="indicator-pill red">${__("Pending since {0}", [date(r.pending_close)])}</span>`
+					: `<span class="indicator-pill ${r.last_close_auto ? "yellow" : "green"}">${date(r.last_close)}${r.last_close_auto ? " · " + __("auto") : ""}</span>`}</td>
 			</tr>`).join("");
 
 		const items = d.items.map((i) => `
@@ -75,8 +86,10 @@ class FranchisePOSDashboard {
 					<th>${__("Franchise")}</th>${d.can_invoice ? `<th class="text-right">${__("Bought from BDF")}</th>` : ""}
 					<th class="text-right">${__("Sold (MRP)")}</th><th class="text-right">${__("Bills")}</th>
 					${d.can_stock ? `<th class="text-right">${__("Stock in Hand")}</th><th class="text-right">${__("Wastage")}</th>` : ""}
+					${d.can_cash ? `<th class="text-right">${__("Cash +/-")}</th>` : ""}
+					${d.can_delivery ? `<th class="text-right">${__("Deliveries")}</th>` : ""}
 					<th>${__("Last Bill")}</th><th>${__("Last Day Close")}</th>
-				</tr></thead><tbody>${rows || empty(8)}</tbody></table></div></div>
+				</tr></thead><tbody>${rows || empty(10)}</tbody></table></div></div>
 			<div class="fpos-two">
 				<div class="fpos-box"><div class="fpos-title">${__("Top Items")}</div>
 					<table class="table table-sm fpos-table"><thead><tr><th>${__("Item")}</th>

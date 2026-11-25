@@ -123,7 +123,7 @@ class FranchiseSale(Document):
 		])
 
 	def before_cancel(self):
-		check_day_open(self.franchise, self.posting_date)
+		check_day_open(self.franchise, self.posting_date, need_previous_closed=False)
 		if not self.is_return and frappe.db.exists(
 			"Franchise Sale", {"return_against": self.name, "docstatus": 1, "is_return": 1}
 		):

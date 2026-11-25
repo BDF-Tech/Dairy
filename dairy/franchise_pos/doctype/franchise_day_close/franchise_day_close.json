@@ -22,9 +22,19 @@
   "upi_sales",
   "card_sales",
   "credit_sales",
+  "sb_cash",
+  "opening_cash",
+  "expected_cash",
+  "counted_cash",
+  "cash_difference",
+  "cb_cash",
+  "cash_handed_over",
+  "cash_in_drawer",
+  "cash_remarks",
   "sb_more",
   "remarks",
   "source",
+  "auto_closed",
   "amended_from"
  ],
  "fields": [
@@ -163,6 +173,15 @@
    "read_only": 1
   },
   {
+   "fieldname": "auto_closed",
+   "fieldtype": "Check",
+   "label": "Auto Closed",
+   "read_only": 1,
+   "no_copy": 1,
+   "in_standard_filter": 1,
+   "description": "Closed by the system because the franchise did not close the day"
+  },
+  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
@@ -170,10 +189,69 @@
    "read_only": 1,
    "no_copy": 1,
    "print_hide": 1
+  },
+  {
+   "fieldname": "sb_cash",
+   "fieldtype": "Section Break",
+   "label": "Cash Closing"
+  },
+  {
+   "fieldname": "opening_cash",
+   "fieldtype": "Currency",
+   "label": "Opening Cash",
+   "read_only": 1,
+   "description": "Cash left in the drawer at the last day close"
+  },
+  {
+   "fieldname": "expected_cash",
+   "fieldtype": "Currency",
+   "label": "Expected Cash",
+   "read_only": 1,
+   "description": "Opening Cash + Cash sales of the day (cash returns taken off)"
+  },
+  {
+   "fieldname": "counted_cash",
+   "fieldtype": "Currency",
+   "label": "Cash Counted",
+   "bold": 1,
+   "description": "Cash actually in the drawer at closing"
+  },
+  {
+   "fieldname": "cash_difference",
+   "fieldtype": "Currency",
+   "label": "Cash Difference",
+   "read_only": 1,
+   "bold": 1,
+   "in_list_view": 1,
+   "description": "Cash Counted - Expected Cash (minus = short)"
+  },
+  {
+   "fieldname": "cb_cash",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cash_handed_over",
+   "fieldtype": "Currency",
+   "label": "Cash Taken Out",
+   "description": "Deposited in the bank / given to the owner"
+  },
+  {
+   "fieldname": "cash_in_drawer",
+   "fieldtype": "Currency",
+   "label": "Cash Left in Drawer",
+   "read_only": 1,
+   "description": "Cash Counted - Cash Taken Out = tomorrow's Opening Cash"
+  },
+  {
+   "fieldname": "cash_remarks",
+   "fieldtype": "Small Text",
+   "label": "Reason for Cash Difference",
+   "depends_on": "eval:doc.cash_difference",
+   "mandatory_depends_on": "eval:doc.cash_difference && !doc.auto_closed"
   }
  ],
  "links": [],
- "modified": "2026-11-17 10:00:00.000000",
+ "modified": "2026-11-20 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Franchise POS",
  "name": "Franchise Day Close",

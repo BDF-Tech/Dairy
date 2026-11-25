@@ -1,0 +1,139 @@
+{
+ "actions": [],
+ "creation": "2026-11-20 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_name",
+  "uom",
+  "billed_qty",
+  "invoiced_qty",
+  "returned_qty",
+  "short_qty",
+  "damaged_qty",
+  "received_qty",
+  "reason",
+  "credited_qty",
+  "rate",
+  "loss_amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "fieldname": "invoiced_qty",
+   "fieldtype": "Float",
+   "label": "To Receive",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "On Invoice - Credit Note"
+  },
+  {
+   "fieldname": "short_qty",
+   "fieldtype": "Float",
+   "label": "Short",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Did not arrive"
+  },
+  {
+   "fieldname": "damaged_qty",
+   "fieldtype": "Float",
+   "label": "Damaged",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Arrived but cannot be sold (leaked, broken, expired)"
+  },
+  {
+   "fieldname": "received_qty",
+   "fieldtype": "Float",
+   "label": "Received (good)",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "bold": 1,
+   "description": "Invoiced - Short - Damaged. Only this goes into the franchise stock."
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Select",
+   "label": "Reason",
+   "options": "\nShort in crate\nLeaked\nBroken\nExpired\nWrong item\nOther",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "label": "Invoice Rate",
+   "read_only": 1,
+   "description": "Net invoice rate per stock unit"
+  },
+  {
+   "fieldname": "loss_amount",
+   "fieldtype": "Currency",
+   "label": "Short + Damaged Value",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "billed_qty",
+   "fieldtype": "Float",
+   "label": "On Invoice",
+   "read_only": 1,
+   "description": "Quantity on the BDF invoice, in stock units"
+  },
+  {
+   "fieldname": "returned_qty",
+   "fieldtype": "Float",
+   "label": "Credit Note",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Taken off by a BDF credit note before the franchise confirmed"
+  },
+  {
+   "fieldname": "credited_qty",
+   "fieldtype": "Float",
+   "label": "Settled by Credit Note",
+   "read_only": 1,
+   "description": "Short/damaged quantity a BDF credit note has settled (after confirming)"
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-21 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Franchise POS",
+ "name": "Franchise Stock Receipt Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

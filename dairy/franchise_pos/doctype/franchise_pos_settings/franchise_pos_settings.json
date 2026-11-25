@@ -7,7 +7,19 @@
   "mrp_price_list",
   "allow_negative_stock",
   "cb1",
-  "bill_footer"
+  "bill_footer",
+  "sb_delivery",
+  "confirm_deliveries",
+  "cb_delivery",
+  "auto_receive_after_days",
+  "sb_close",
+  "auto_close_after_days",
+  "sb_reorder",
+  "reorder_days",
+  "cb_reorder",
+  "safety_percent",
+  "sb_groups",
+  "reorder_groups"
  ],
  "fields": [
   {
@@ -34,10 +46,79 @@
    "fieldtype": "Small Text",
    "label": "Bill Footer",
    "default": "Thank you. Visit again."
+  },
+  {
+   "fieldname": "sb_close",
+   "fieldtype": "Section Break",
+   "label": "Day Close"
+  },
+  {
+   "fieldname": "auto_close_after_days",
+   "fieldtype": "Int",
+   "label": "Auto close after (days)",
+   "default": "2",
+   "description": "A day with bills that is still not closed after this many days is closed by the system with the book stock. 0 = never."
+  },
+  {
+   "fieldname": "sb_reorder",
+   "fieldtype": "Section Break",
+   "label": "Reorder Suggestion"
+  },
+  {
+   "fieldname": "reorder_days",
+   "fieldtype": "Int",
+   "label": "Average sales over (days)",
+   "default": "7",
+   "description": "Tomorrow's order = average daily sales of these days + safety margin - stock in hand - already ordered"
+  },
+  {
+   "fieldname": "cb_reorder",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "safety_percent",
+   "fieldtype": "Percent",
+   "label": "Safety Margin %",
+   "default": "10",
+   "description": "Extra on top of average sales, for item groups not listed below"
+  },
+  {
+   "fieldname": "sb_groups",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "reorder_groups",
+   "fieldtype": "Table",
+   "label": "Safety Margin by Item Group",
+   "options": "Franchise POS Reorder Group",
+   "description": "Short-life items (milk) should have 0%"
+  },
+  {
+   "fieldname": "sb_delivery",
+   "fieldtype": "Section Break",
+   "label": "Delivery from BDF"
+  },
+  {
+   "fieldname": "confirm_deliveries",
+   "fieldtype": "Check",
+   "label": "Franchise must confirm delivery",
+   "default": "1",
+   "description": "On: a BDF invoice makes a pending delivery; the stock is added only when the franchise confirms it, minus anything short or damaged. Off: the stock is added as soon as the invoice is submitted."
+  },
+  {
+   "fieldname": "cb_delivery",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "auto_receive_after_days",
+   "fieldtype": "Int",
+   "label": "Auto receive after (days)",
+   "default": "1",
+   "description": "A delivery not confirmed this many days after its invoice date is taken in full by the system (marked Auto Received). 0 = never (the day close still takes it in before closing)."
   }
  ],
  "links": [],
- "modified": "2026-11-16 10:00:00.000000",
+ "modified": "2026-11-20 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Franchise POS",
  "name": "Franchise POS Settings",

@@ -12,3 +12,6 @@ dairy.patches.v1_0.seed_complaint_id_series
 dairy.patches.v1_0.create_app_roles
 dairy.patches.v1_0.setup_franchise_pos
 dairy.patches.v1_0.set_franchise_code
+dairy.patches.v1_0.setup_franchise_reorder
+dairy.patches.v1_0.setup_franchise_delivery_cash
+dairy.patches.v1_0.setup_customer_order_shift

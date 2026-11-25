@@ -1,0 +1,290 @@
+{
+ "actions": [],
+ "creation": "2026-11-20 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "franchise",
+  "franchise_code",
+  "franchise_name",
+  "cb1",
+  "sales_invoice",
+  "invoice_date",
+  "posting_date",
+  "status",
+  "sb_items",
+  "items",
+  "sb_totals",
+  "total_invoiced_qty",
+  "total_received_qty",
+  "cb2",
+  "total_short_qty",
+  "total_damaged_qty",
+  "loss_amount",
+  "open_loss_amount",
+  "credit_note",
+  "credit_note_error",
+  "sb_credits",
+  "credits",
+  "sb_more",
+  "remarks",
+  "cb3",
+  "source",
+  "auto_received",
+  "confirmed_by",
+  "confirmed_on",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "franchise",
+   "fieldtype": "Link",
+   "label": "Franchise",
+   "options": "Customer",
+   "reqd": 1,
+   "read_only": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "franchise_code",
+   "fieldtype": "Data",
+   "label": "Franchise Code",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Customer code. The Franchise field shows the customer's name because of the Customer setting."
+  },
+  {
+   "fieldname": "franchise_name",
+   "fieldtype": "Data",
+   "label": "Franchise Name",
+   "fetch_from": "franchise.customer_name",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "BDF Sales Invoice",
+   "options": "Sales Invoice",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "invoice_date",
+   "fieldtype": "Date",
+   "label": "Invoice Date",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Stock Date",
+   "read_only": 1,
+   "no_copy": 1,
+   "description": "The franchise day the received stock is booked on (set when confirmed)"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Pending\nReceived\nShort Received\nAuto Received\nCancelled",
+   "default": "Pending",
+   "read_only": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "sb_items",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Franchise Stock Receipt Item"
+  },
+  {
+   "fieldname": "sb_totals",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "total_invoiced_qty",
+   "fieldtype": "Float",
+   "label": "Invoiced Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_received_qty",
+   "fieldtype": "Float",
+   "label": "Received Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_short_qty",
+   "fieldtype": "Float",
+   "label": "Short Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_damaged_qty",
+   "fieldtype": "Float",
+   "label": "Damaged Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "loss_amount",
+   "fieldtype": "Currency",
+   "label": "Short + Damaged Value",
+   "read_only": 1,
+   "bold": 1,
+   "in_list_view": 1,
+   "description": "At the invoice rate: the amount for a credit note, if BDF agrees"
+  },
+  {
+   "fieldname": "sb_more",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Confirmed From",
+   "options": "\nDesk\nMobile App\nSystem",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "auto_received",
+   "fieldtype": "Check",
+   "label": "Auto Received",
+   "read_only": 1,
+   "no_copy": 1,
+   "in_standard_filter": 1,
+   "description": "Confirmed by the system with full quantity because the franchise did not confirm in time"
+  },
+  {
+   "fieldname": "confirmed_by",
+   "fieldtype": "Link",
+   "label": "Confirmed By",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "confirmed_on",
+   "fieldtype": "Datetime",
+   "label": "Confirmed On",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Franchise Stock Receipt",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "open_loss_amount",
+   "fieldtype": "Currency",
+   "label": "Not Yet Settled",
+   "read_only": 1,
+   "no_copy": 1,
+   "in_list_view": 1,
+   "description": "Short + damaged value that no BDF credit note has settled yet"
+  },
+  {
+   "fieldname": "sb_credits",
+   "fieldtype": "Section Break",
+   "label": "BDF Credit Notes",
+   "collapsible": 1,
+   "depends_on": "eval:(doc.credits||[]).length"
+  },
+  {
+   "fieldname": "credits",
+   "fieldtype": "Table",
+   "label": "Credit Notes",
+   "options": "Franchise Stock Receipt Credit",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "credit_note",
+   "fieldtype": "Data",
+   "label": "Credit Note (made by system)",
+   "options": "",
+   "read_only": 1,
+   "no_copy": 1,
+   "in_standard_filter": 1,
+   "description": "Draft return invoice the system made for the short + damaged quantity. It goes through the Sales Invoice Return approval; only an approved one settles the shortage."
+  },
+  {
+   "fieldname": "credit_note_error",
+   "fieldtype": "Small Text",
+   "label": "Credit Note Not Made",
+   "read_only": 1,
+   "no_copy": 1,
+   "depends_on": "credit_note_error",
+   "description": "Why the system could not make the draft credit note. Make it by hand from the invoice (Create > Return / Credit Note)."
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-21 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Franchise POS",
+ "name": "Franchise Stock Receipt",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "export": 1,
+   "report": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "FSR-.YY..MM.-.#####",
+ "naming_rule": "Expression (old style)",
+ "is_submittable": 1,
+ "track_changes": 1,
+ "title_field": "franchise_code",
+ "search_fields": "franchise_code,franchise_name,sales_invoice"
+}

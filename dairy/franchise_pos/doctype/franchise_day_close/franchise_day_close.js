@@ -25,3 +25,13 @@ frappe.ui.form.on("Franchise Day Close Item", {
 		frm.refresh_field("items");
 	},
 });
+
+frappe.ui.form.on("Franchise Day Close", {
+	counted_cash: (frm) => set_cash(frm),
+	cash_handed_over: (frm) => set_cash(frm),
+});
+
+function set_cash(frm) {
+	frm.set_value("cash_difference", flt(frm.doc.counted_cash) - flt(frm.doc.expected_cash));
+	frm.set_value("cash_in_drawer", flt(frm.doc.counted_cash) - flt(frm.doc.cash_handed_over));
+}

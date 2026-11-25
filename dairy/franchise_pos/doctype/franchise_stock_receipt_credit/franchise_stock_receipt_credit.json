@@ -1,0 +1,28 @@
+{
+ "actions": [],
+ "creation": "2026-11-21 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["credit_note", "posting_date", "item_code", "item_name", "qty", "covered_qty", "stock_qty"],
+ "fields": [
+  {"fieldname": "credit_note", "fieldtype": "Link", "label": "Credit Note", "options": "Sales Invoice", "read_only": 1, "in_list_view": 1, "columns": 2},
+  {"fieldname": "posting_date", "fieldtype": "Date", "label": "Date", "read_only": 1, "in_list_view": 1, "columns": 1},
+  {"fieldname": "item_code", "fieldtype": "Link", "label": "Item", "options": "Item", "read_only": 1, "in_list_view": 1, "columns": 2},
+  {"fieldname": "item_name", "fieldtype": "Data", "label": "Item Name", "read_only": 1},
+  {"fieldname": "qty", "fieldtype": "Float", "label": "Credit Qty", "read_only": 1, "in_list_view": 1, "columns": 1, "description": "Stock units on the credit note"},
+  {"fieldname": "covered_qty", "fieldtype": "Float", "label": "Settles Short/Damaged", "read_only": 1, "in_list_view": 1, "columns": 2, "description": "Part of the credit that settles what the franchise marked short or damaged: no stock change"},
+  {"fieldname": "stock_qty", "fieldtype": "Float", "label": "Taken from Stock", "read_only": 1, "in_list_view": 1, "columns": 2, "description": "Part of the credit that reduced the franchise stock (goods sent back)"}
+ ],
+ "links": [],
+ "modified": "2026-11-21 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Franchise POS",
+ "name": "Franchise Stock Receipt Credit",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}
