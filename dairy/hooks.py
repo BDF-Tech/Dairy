@@ -287,9 +287,6 @@ scheduler_events = {
 # # 		"dairy.tasks.monthly"
 # # 	]
     "cron":{
-        "10 0 * * *": [
-        "dairy.milk_entry.custom_stock_entry.set_date"
-    ],
         "*/10 * * * *": [
         "dairy.dairy.page.accounts_dashboard.accounts_dashboard.warm_cache"
     ]}
